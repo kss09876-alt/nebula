@@ -23,6 +23,11 @@ VALIX의 X(Value X) = 무한한 우주. 전시 하나가 행성 하나. 미시�
 | `js/home-sound.js`, `js/bitssal-sound.js` | Web Audio 실시간 합성 사운드 (음원 파일 없음). 자동재생 시도 → 막히면 입장 화면 |
 | `css/style.css`, `css/bitssal.css` | 스타일 (끝부분에 모바일 블록) |
 | `first.html` | 예전 기획전 허브 → `cell.html?id=g001`로 이동만 함 |
+| `app.html` + `js/app.js` + `css/app.css` | **VALIX 앱 화면** (앱 껍데기가 불러오는 웹). 탭 4개(홈·전시·내 서재·MY), 착륙 로딩(우주인→행성), 전시는 iframe으로 기존 페이지를 그대로 띄움. 관람 기록은 기기 안(localStorage `valix-history`)에만 저장. 시트에 `ends`(YYYY-MM-DD)·`access` 칸을 추가하면 남은 기간·이용 방식 배지로 표시 |
+
+## 앱 (VALIX)
+- iOS/Android 앱은 별도 폴더 `valix-app`(Capacitor). 앱은 `app.html`을 원격으로 불러오는 껍데기라, 웹만 고치면 앱에도 바로 반영됨.
+- `app.html`의 주소가 바뀌면 앱 설정(`server.url`)도 바꿔서 앱을 다시 내야 하니 주소 변경은 신중히.
 
 ## PC / 모바일
 - 같은 주소, 같은 데이터. `IS_MOBILE`(터치 기기)일 때만 모바일 전용 모듈과 효과가 켜짐. PC 화면은 건드리지 않는 게 원칙.
