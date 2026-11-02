@@ -230,6 +230,7 @@ langSwitcher(document.querySelector('.topbar'));
 // 모바일: 첫 탭에서 기울기 권한 · 흔들면 화면에 보이는 양자 실험을 관측
 if (IS_MOBILE) {
   document.body.classList.add('is-mobile');
+  import('./cell-mobile.js?v=2');
   addEventListener('click', function once() { removeEventListener('click', once, true); sensor.enable(); keepAwake(); }, true);
   sensor.onShake(() => {
     const q = [...document.querySelectorAll('.q-stage')].find((el) => { const r = el.getBoundingClientRect(); return r.top < innerHeight * 0.7 && r.bottom > innerHeight * 0.3; });
@@ -456,31 +457,38 @@ function setupStars() {
     size(); addEventListener('resize', size);
     addEventListener('pointermove', (e) => { mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; });
     new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) requestAnimationFrame(draw); }).observe(sec);
-    let last = performance.now();
+    let last = performance.now(), hold = 0, holding = false, rot = 0;
+    if (IS_MOBILE) { sec.addEventListener('pointerdown', () => { holding = true; sensor.vibrate(15); }); addEventListener('pointerup', () => { holding = false; }); addEventListener('pointercancel', () => { holding = false; }); }
     function draw(now) {
       if (!visible) return;
       const dt = Math.min(50, now - last) / 1000; last = now;
       let speed = 0.03;
+      const mob = IS_MOBILE && sensor.on;
+      if (mob) { mx = -sensor.tiltX * 0.9; my = -sensor.tiltY * 0.9; if (sensor.heading != null) { let d = sensor.heading * Math.PI / 180 - rot; d = Math.atan2(Math.sin(d), Math.cos(d)); rot += d * 0.06; } }
+      hold += ((holding ? 1 : 0) - hold) * 0.05;
       if (mode === 'warp') {
         const r = sec.getBoundingClientRect();
         const p = Math.max(0, Math.min(1, -r.top / Math.max(1, r.height - innerHeight)));
         speed = 0.05 + Math.pow(p, 2) * 1.6;
         sec.style.setProperty('--p', p.toFixed(3));
       }
+      if (mob) speed += hold * 1.4 + sensor.shake * 1.2; // 누르고 있으면 빛의 속도로, 흔들면 튀어 나감
       g.fillStyle = mode === 'warp' ? `rgba(4,5,12,${speed > 0.6 ? 0.35 : 0.9})` : 'rgba(5,6,13,1)';
       g.fillRect(0, 0, w, h);
-      const cx = w / 2 - mx * 40, cy = h / 2 - my * 40, f = Math.max(w, h) * 0.6;
+      const cx = w / 2 - mx * (mob ? w * 0.35 : 40), cy = h / 2 - my * (mob ? h * 0.3 : 40), f = Math.max(w, h) * 0.6;
+      const cr = Math.cos(rot), sr = Math.sin(rot);
       for (const s of stars) {
         const pz = s.z;
         s.z -= speed * dt;
         if (s.z <= 0.02) { s.z = 1; s.x = (Math.random() - 0.5) * 2; s.y = (Math.random() - 0.5) * 2; continue; }
-        const sx = cx + (s.x / s.z) * f * 0.5, sy = cy + (s.y / s.z) * f * 0.5;
+        const qx = s.x * cr - s.y * sr, qy = s.x * sr + s.y * cr;
+        const sx = cx + (qx / s.z) * f * 0.5, sy = cy + (qy / s.z) * f * 0.5;
         if (sx < -50 || sx > w + 50 || sy < -50 || sy > h + 50) continue;
         const a = Math.min(1, (1 - s.z) * 1.4);
         const rad = Math.max(0.4, (1 - s.z) * 2.2);
         g.strokeStyle = g.fillStyle = s.hue ? `hsla(${s.hue},90%,75%,${a})` : `rgba(235,240,255,${a})`;
         if (speed > 0.25) {
-          const px = cx + (s.x / pz) * f * 0.5, py = cy + (s.y / pz) * f * 0.5;
+          const px = cx + (qx / pz) * f * 0.5, py = cy + (qy / pz) * f * 0.5;
           g.lineWidth = rad; g.beginPath(); g.moveTo(px, py); g.lineTo(sx, sy); g.stroke();
         } else { g.beginPath(); g.arc(sx, sy, rad, 0, 6.283); g.fill(); }
       }
@@ -514,12 +522,22 @@ function setupQuantum() {
       stateEl.textContent = tr('상태: 붕괴 — 위치 ({x}, {y})', { x: ((best.x / w) * 2 - 1).toFixed(2), y: (-(best.y / h) * 2 + 1).toFixed(2) });
       tip.classList.add('hide');
       stage.classList.add('flash'); setTimeout(() => stage.classList.remove('flash'), 300);
+      if (IS_MOBILE) sensor.vibrate([10, 40, 25]);
     });
+    // 모바일: 폰을 엎어두면 '보는 사람'이 사라져 다시 중첩으로
+    if (IS_MOBILE) sensor.onFaceDown((down) => {
+      const r = stage.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return;
+      if (down) { collapse = null; stage.classList.add('unseen'); }
+      else { stage.classList.remove('unseen'); stateEl.textContent = tr('보지 않는 동안, 다시 중첩으로 돌아갔어요'); sensor.vibrate(30); }
+    });
+    let swirl = 0, lastQ = 0;
     function draw(now) {
       if (!visible) return;
       const t = now / 1000;
       g.fillStyle = 'rgba(5,6,13,.28)'; g.fillRect(0, 0, w, h);
-      const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.42;
+      const mob = IS_MOBILE && sensor.on, dtq = Math.min(0.05, (now - (lastQ || now)) / 1000); lastQ = now;
+      if (mob) swirl += sensor.spin * dtq * 0.02;
+      const cx = w / 2 + (mob ? sensor.tiltX * w * 0.2 : 0), cy = h / 2 + (mob ? sensor.tiltY * h * 0.18 : 0), R = Math.min(w, h) * 0.42 * (mob ? 1 + sensor.shake * 0.25 : 1);
       let k = 0; // 0 = 중첩, 1 = 완전 붕괴
       if (collapse) {
         const e = (now - collapse.t) / 1000;
@@ -529,7 +547,7 @@ function setupQuantum() {
       const ease = k * k * (3 - 2 * k);
       for (const p of P) {
         // 오비탈처럼 보이는 확률 분포 (l = 엽 개수)
-        const ang = p.a + t * 0.15 * (p.l % 2 ? 1 : -1);
+        const ang = p.a + (t * 0.15 + swirl) * (p.l % 2 ? 1 : -1);
         const lobe = Math.abs(Math.cos(p.l * ang + Math.sin(t * 0.7 + p.ph) * 0.3));
         const rr = R * (0.15 + 0.85 * Math.sqrt(p.r) * lobe) + Math.sin(t * 3 + p.ph) * 4;
         const ox = cx + Math.cos(ang) * rr, oy = cy + Math.sin(ang) * rr * 0.8;
@@ -642,11 +660,14 @@ function setupWaves() {
       const r = sec.getBoundingClientRect();
       const p = 1 - (r.top + r.height) / (innerHeight + r.height); // 0→1 스크롤 진행
       g.clearRect(0, 0, w, h);
+      const mob = IS_MOBILE && sensor.on;
+      if (mob) mx += (0.5 + sensor.tiltX * 0.5 - mx) * 0.15;
+      const boost = mob ? 1 + Math.abs(sensor.tiltY) * 1.3 + sensor.shake * 2.5 : 1;
       const lines = 28;
       for (let i = 0; i < lines; i++) {
         const k = i / (lines - 1);
         const y0 = h * (0.15 + k * 0.7);
-        const amp = (h / 18) * Math.sin(Math.PI * k) * (0.3 + p * 1.4);
+        const amp = (h / 18) * Math.sin(Math.PI * k) * (0.3 + p * 1.4) * boost;
         g.beginPath();
         for (let x = 0; x <= w; x += 6) {
           const t = x / w;
@@ -686,7 +707,9 @@ function setupPianos() {
       actx = actx || new (window.AudioContext || window.webkitAudioContext)();
       if (actx.state === 'suspended') actx.resume();
       const detuned = toggle && toggle.checked;
-      const f = 261.63 * Math.pow(2, n / 12 + (detuned ? offsets[n] / 1200 : 0));
+      const bend = IS_MOBILE && sensor.on ? sensor.tiltX * 120 : 0; // 모바일: 기울이면 늘어진 테이프처럼 음이 휨 (센트)
+      const f = 261.63 * Math.pow(2, n / 12 + (detuned ? offsets[n] / 1200 : 0) + bend / 1200);
+      if (IS_MOBILE) sensor.vibrate(8);
       const t = actx.currentTime;
       const out = actx.createGain();
       out.gain.setValueAtTime(0, t);
@@ -709,6 +732,10 @@ function setupPianos() {
       el.dispatchEvent(new CustomEvent('note', { detail: n }));
     };
     el.addEventListener('pointerdown', (e) => { const k = e.target.closest('.key'); if (k) { e.preventDefault(); play(Number(k.dataset.n)); } });
+    if (IS_MOBILE) sensor.onShake((f) => { // 흔들면 어긋난 화음이 흩어짐
+      const r = el.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return;
+      const root = (Math.random() * 12) | 0; [0, 4, 7, 11, 14].slice(0, 3 + Math.round(f * 2)).forEach((d, i) => setTimeout(() => play(Math.min(24, root + d)), i * (60 + Math.random() * 80)));
+    });
     el.addEventListener('pointerover', (e) => { const k = e.target.closest('.key'); if (k && e.buttons) play(Number(k.dataset.n)); });
     addEventListener('keydown', (e) => {
       if (e.repeat || e.metaKey || e.ctrlKey) return;
@@ -781,7 +808,7 @@ function canvasLoop(cv, draw, opts = {}) {
   host.addEventListener('pointerdown', (e) => { const r = cv.getBoundingClientRect(); st.mx = e.clientX - r.left; st.my = e.clientY - r.top; st.inside = true; st.touchT = performance.now(); }); // 터치: 누른 곳으로 이동
   host.addEventListener('pointerleave', () => { st.inside = false; });
   // 모바일: 프리즘·그림자 실험은 폰을 기울여 빛을 움직임 (화면을 누른 직후 2초는 손가락 우선)
-  const tiltLight = IS_MOBILE && host.matches && host.matches('.b-prism .lab-stage, .b-shadow .lab-stage');
+  const tiltLight = IS_MOBILE && host.matches && (host.matches('.b-prism .lab-stage, .b-shadow .lab-stage') || !!host.querySelector('.beam-cv'));
   const tick = (now) => {
     if (!st.visible) return;
     if (tiltLight && sensor.on && now - (st.touchT || 0) > 2000) { st.mx = st.w * (0.5 + sensor.tiltX * 0.48); st.my = st.h * (0.45 + sensor.tiltY * 0.45); st.inside = true; }
@@ -842,27 +869,34 @@ function setupPrism() {
   document.querySelectorAll('.prism-cv').forEach((cv) => {
     const tip = cv.parentElement.querySelector('.q-tip');
     cv.parentElement.addEventListener('pointermove', () => tip.classList.add('hide'), { once: true });
+    let prot = 0, lastP = 0;
     canvasLoop(cv, (g, st, t) => {
       const { w, h } = st, s = Math.min(w, h) * 0.42, cx = w * 0.5, cy = h * 0.55;
-      const A = { x: cx, y: cy - s * 0.85 }, B = { x: cx - s * 0.6, y: cy + s * 0.35 }, C = { x: cx + s * 0.6, y: cy + s * 0.35 };
+      const dtp = Math.min(0.05, t - (lastP || t)); lastP = t;
+      if (IS_MOBILE && sensor.on) { prot += (sensor.spin * Math.PI / 180) * dtp * 0.6; prot *= 0.995; }
+      const wob = IS_MOBILE && sensor.on ? Math.sin(t * 30) * sensor.shake * 0.08 : 0;
+      const rp = (p) => { const a = prot + wob, c = Math.cos(a), sn = Math.sin(a), dx = p.x - cx, dy = p.y - (cy - s * 0.05); return { x: cx + dx * c - dy * sn, y: cy - s * 0.05 + dx * sn + dy * c }; };
+      const A = rp({ x: cx, y: cy - s * 0.85 }), B = rp({ x: cx - s * 0.6, y: cy + s * 0.35 }), C = rp({ x: cx + s * 0.6, y: cy + s * 0.35 });
       g.fillStyle = 'rgba(10,9,6,.5)'; g.fillRect(0, 0, w, h);
       const src = st.inside && st.mx < cx - s * 0.3 ? { x: st.mx, y: st.my } : { x: w * 0.06, y: cy + s * 0.25 + Math.sin(t * 0.6) * h * 0.12 };
       const target = { x: (A.x + B.x) / 2, y: (A.y + B.y) / 2 };
       const d0 = norm({ x: target.x - src.x, y: target.y - src.y });
-      const n1raw = norm({ x: -(B.y - A.y), y: B.x - A.x }); // AB 법선
-      const n1 = n1raw.x * d0.x + n1raw.y * d0.y > 0 ? { x: -n1raw.x, y: -n1raw.y } : n1raw;
-      const e1 = hit(src, d0, A, B);
+      // 빛이 처음 닿는 면을 찾음 (프리즘이 돌아가도 어느 면으로든 들어갈 수 있게)
+      const EDGES = [[A, B], [B, C], [C, A]];
+      const outN = (a, b, d) => { const n = norm({ x: -(b.y - a.y), y: b.x - a.x }); return n.x * d.x + n.y * d.y > 0 ? { x: -n.x, y: -n.y } : n; };
+      let e1 = null, ei = -1;
+      EDGES.forEach(([a, b], i) => { const hh = hit(src, d0, a, b); if (hh && (!e1 || hh.t < e1.t)) { e1 = hh; ei = i; } });
+      const n1 = e1 ? outN(EDGES[ei][0], EDGES[ei][1], d0) : null;
       g.globalCompositeOperation = 'lighter';
       if (e1) {
         g.strokeStyle = 'rgba(255,250,235,.95)'; g.lineWidth = 4; g.shadowColor = '#fff'; g.shadowBlur = 16;
         g.beginPath(); g.moveTo(src.x, src.y); g.lineTo(e1.x, e1.y); g.stroke(); g.shadowBlur = 0;
         for (const [hue, n] of BANDS) {
           const d1 = refract(d0, n1, 1 / n); if (!d1) continue;
-          let e2 = hit(e1, d1, A, C) || hit(e1, d1, B, C); if (!e2) continue;
-          const onAC = !!hit(e1, d1, A, C);
-          const fa = onAC ? A : B, fb = C;
-          let n2 = norm({ x: -(fb.y - fa.y), y: fb.x - fa.x });
-          if (n2.x * d1.x + n2.y * d1.y > 0) n2 = { x: -n2.x, y: -n2.y };
+          let e2 = null, ej = -1;
+          EDGES.forEach(([a, b], j) => { if (j === ei) return; const hh = hit(e1, d1, a, b); if (hh && (!e2 || hh.t < e2.t)) { e2 = hh; ej = j; } });
+          if (!e2) continue;
+          const n2 = outN(EDGES[ej][0], EDGES[ej][1], d1);
           const d2 = refract(d1, n2, n);
           g.strokeStyle = `hsla(${hue},100%,62%,.35)`; g.lineWidth = 3;
           g.beginPath(); g.moveTo(e1.x, e1.y); g.lineTo(e2.x, e2.y); g.stroke();
@@ -886,8 +920,13 @@ function setupShadow() {
     cv.parentElement.addEventListener('pointermove', () => tip.classList.add('hide'), { once: true });
     const boxes = [[0.3, 0.35, 0.07], [0.62, 0.3, 0.05], [0.5, 0.62, 0.09], [0.78, 0.62, 0.045], [0.2, 0.7, 0.04]].map(([x, y, r], i) => ({ x, y, r, a: i, sp: (i % 2 ? 1 : -1) * (0.15 + i * 0.05) }));
     const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#f2c14e';
+    let dark = 0, lastS = 0;
     canvasLoop(cv, (g, st, t) => {
       const { w, h } = st, m = Math.min(w, h);
+      const dts = Math.min(0.05, t - (lastS || t)); lastS = t;
+      const mob = IS_MOBILE && sensor.on;
+      dark += ((mob && sensor.faceDown ? 1 : 0) - dark) * 0.08;
+      if (mob) boxes.forEach((b) => { b.a += sensor.shake * dts * 9 * Math.sign(b.sp); });
       const L = st.inside ? { x: st.mx, y: st.my } : { x: w * (0.5 + Math.cos(t * 0.4) * 0.3), y: h * (0.5 + Math.sin(t * 0.55) * 0.3) };
       const grd = g.createRadialGradient(L.x, L.y, 0, L.x, L.y, Math.max(w, h) * 0.8);
       grd.addColorStop(0, '#fff3cf'); grd.addColorStop(0.08, '#f2c14e'); grd.addColorStop(0.45, '#5a4310'); grd.addColorStop(1, '#0a0906');
@@ -908,6 +947,7 @@ function setupShadow() {
         g.beginPath(); P.forEach((p, k) => (k ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath(); g.fill(); g.stroke();
       }
       g.fillStyle = '#fff'; g.beginPath(); g.arc(L.x, L.y, 5, 0, 6.283); g.fill();
+      if (dark > 0.01) { g.fillStyle = `rgba(4,3,2,${dark})`; g.fillRect(0, 0, w, h); if (dark > 0.6) { g.fillStyle = `rgba(242,193,78,${(dark - 0.6) * 2})`; g.font = '15px Pretendard, sans-serif'; g.textAlign = 'center'; g.fillText(tr('빛이 없으면 그림자도 없다'), w / 2, h / 2); } }
     });
   });
 }
@@ -918,6 +958,7 @@ function setupRippleCover() {
     const rings = [];
     const sec = cv.closest('section');
     sec.addEventListener('pointerdown', (e) => { const r = cv.getBoundingClientRect(); rings.push({ x: e.clientX - r.left, y: e.clientY - r.top, t0: performance.now() / 1000, big: true }); });
+    if (IS_MOBILE) sensor.onShake((f) => { const r = cv.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return; for (let k = 0; k < 1 + Math.round(f * 3); k++) rings.push({ x: r.width * (0.3 + Math.random() * 0.4), y: r.height * (0.3 + Math.random() * 0.4), t0: performance.now() / 1000 + k * 0.12, big: true }); sensor.vibrate(25); });
     let next = 0;
     canvasLoop(cv, (g, st, t) => {
       const { w, h } = st;
@@ -1005,23 +1046,49 @@ function setupSoundmap() {
         smCtx = smCtx || new (window.AudioContext || window.webkitAudioContext)(); smCtx.resume();
         if (active.has(p.id)) { const a = active.get(p.id); a.g.gain.linearRampToValueAtTime(0, smCtx.currentTime + 0.8); setTimeout(() => a.place.stop(), 900); active.delete(p.id); b.classList.remove('on'); }
         else {
-          const g = smCtx.createGain(), pan = smCtx.createStereoPanner(); pan.pan.value = (p.x - 0.5) * 1.6;
-          g.gain.value = 0; g.gain.linearRampToValueAtTime(1, smCtx.currentTime + 1.2); g.connect(pan).connect(smCtx.destination);
-          active.set(p.id, { place: makePlace(smCtx, p.id, g), g }); b.classList.add('on');
+          const g = smCtx.createGain(), dg = smCtx.createGain(), pan = smCtx.createStereoPanner(); pan.pan.value = (p.x - 0.5) * 1.6;
+          g.gain.value = 0; g.gain.linearRampToValueAtTime(1, smCtx.currentTime + 1.2); g.connect(dg).connect(pan).connect(smCtx.destination);
+          active.set(p.id, { place: makePlace(smCtx, p.id, g), g, dg, pan }); b.classList.add('on');
+          if (IS_MOBILE) sensor.vibrate(20);
           rings.push({ p, t0: performance.now() / 1000, big: true });
         }
         now.textContent = active.size ? tr('지금 듣는 곳: ') + PLACES.filter((q) => active.has(q.id)).map((q) => q.name).join(' · ') : tr('지도 위 장소를 눌러 소리를 켜고 끄세요');
         cnt.textContent = `${active.size} / ${PLACES.length}`;
       });
-      wrap.appendChild(b);
+      wrap.appendChild(b); p.btn = b;
     });
     let next = 0;
+    // 모바일: 듣는 사람(나)의 위치와 방향
+    const me = { x: 0.5, y: 0.5, near: null }; let lastM = 0, heading = null;
+    if (IS_MOBILE) sensor.onShake(() => { const r = stage.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return; const off = PLACES.filter((q) => !active.has(q.id)); if (off.length) off[(Math.random() * off.length) | 0].btn.click(); });
     const st = canvasLoop(cv, (g, st, t) => {
       const { w, h } = st;
       g.fillStyle = '#0e0808'; g.fillRect(0, 0, w, h);
       g.strokeStyle = 'rgba(242,241,236,.07)';
       for (const r of roads) { g.lineWidth = r.w; g.beginPath(); g.moveTo(r.x1 * w, r.y1 * h); g.lineTo(r.x2 * w, r.y2 * h); g.stroke(); }
       if (t > next && active.size) { const ids = [...active.keys()]; rings.push({ p: PLACES.find((q) => q.id === ids[(Math.random() * ids.length) | 0]), t0: t }); next = t + 0.35; }
+      if (IS_MOBILE && sensor.on) {
+        const dtm = Math.min(0.05, t - (lastM || t)); lastM = t;
+        me.x = Math.max(0.04, Math.min(0.96, me.x + sensor.tiltX * dtm * 0.22));
+        me.y = Math.max(0.06, Math.min(0.94, me.y + sensor.tiltY * dtm * 0.22));
+        if (sensor.heading != null) { const hr = sensor.heading * Math.PI / 180; if (heading == null) heading = hr; else { let d = hr - heading; d = Math.atan2(Math.sin(d), Math.cos(d)); heading += d * 0.1; } }
+        // 가까이 가면 그 장소의 소리가 저절로 켜짐
+        const near = PLACES.find((q) => Math.hypot(q.x - me.x, (q.y - me.y) * h / w) < 0.07);
+        if (near && near !== me.near && !active.has(near.id)) near.btn.click();
+        me.near = near || null;
+        // 거리에 따라 크기, 바라보는 방향에 따라 좌우
+        if (smCtx) active.forEach((a, id) => {
+          const q = PLACES.find((x) => x.id === id), dx = q.x - me.x, dy = (q.y - me.y) * h / w, d = Math.hypot(dx, dy);
+          const rel = Math.atan2(dx, -dy) - (heading || 0);
+          a.dg.gain.setTargetAtTime(Math.max(0.06, 1 / (1 + (d * 4.5) ** 2)), smCtx.currentTime, 0.15);
+          a.pan.pan.setTargetAtTime(Math.max(-1, Math.min(1, Math.sin(rel) * Math.min(1, d * 6))), smCtx.currentTime, 0.15);
+        });
+        // 나: 점 + 바라보는 방향의 부채꼴
+        const mx = me.x * w, my = me.y * h;
+        if (heading != null) { const a = -Math.PI / 2 + heading; const fan = g.createRadialGradient(mx, my, 0, mx, my, 90); fan.addColorStop(0, 'rgba(255,255,255,.25)'); fan.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = fan; g.beginPath(); g.moveTo(mx, my); g.arc(mx, my, 90, a - 0.45, a + 0.45); g.closePath(); g.fill(); }
+        g.fillStyle = '#fff'; g.beginPath(); g.arc(mx, my, 6, 0, 6.283); g.fill();
+        g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1; g.beginPath(); g.arc(mx, my, 12 + Math.sin(t * 3) * 3, 0, 6.283); g.stroke();
+      }
       for (let i = rings.length - 1; i >= 0; i--) {
         const r = rings[i], age = Math.max(0, t - r.t0), life = r.big ? 3 : 2.4;
         if (age > life || !r.p) { rings.splice(i, 1); continue; }
@@ -1066,6 +1133,7 @@ function setupListen() {
           g.fillStyle = 'rgba(242,241,236,.6)'; g.fillRect((x + 2) % W, 0, 1, H);
           col += 2;
           dbEl.textContent = tr('상대 음량 ') + Math.round((sum / H) * 100);
+          if (IS_MOBILE && sum / H > 0.42 && performance.now() - (stage._buzz || 0) > 450) { stage._buzz = performance.now(); sensor.vibrate(Math.round(20 + (sum / H) * 60)); }
           requestAnimationFrame(draw);
         };
         draw();
