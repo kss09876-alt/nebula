@@ -3,44 +3,39 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-  <meta name="theme-color" content="#05060c" />
+  <meta name="theme-color" content="#ffffff" />
   <title>VALIX</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-  <link rel="stylesheet" href="css/app.css?v=1" />
+  <link rel="stylesheet" href="css/app.css?v=2" />
 </head>
 <body class="vx">
-  <header class="vx-top">
-    <span class="vx-logo">VALIX</span>
-    <span class="vx-top-title" id="top-title"></span>
-  </header>
+  <!-- 첫 실행: 시작 화면 → 소개 → 로그인 → 닉네임 -->
+  <section id="splash" class="vx-splash"><div class="mark"><span class="x"></span><b>VALIX</b><small>XPACE</small></div><p class="foot">VALIX LAB · Online Interactive Exhibition</p></section>
+  <section id="onboard" class="vx-onboard" hidden></section>
 
-  <main id="view" class="vx-view" aria-live="polite"></main>
+  <main id="view" class="vx-view" hidden></main>
 
-  <nav class="vx-tabs" aria-label="메뉴">
-    <button data-tab="home" class="on"><svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg><span data-t="홈">홈</span></button>
-    <button data-tab="list"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5.5"/><ellipse cx="12" cy="12" rx="10" ry="3.6" transform="rotate(-20 12 12)"/></svg><span data-t="전시">전시</span></button>
-    <button data-tab="library"><svg viewBox="0 0 24 24"><path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1z"/></svg><span data-t="내 서재">내 서재</span></button>
-    <button data-tab="my"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span data-t="MY">MY</span></button>
+  <nav id="tabs" class="vx-tabs" hidden aria-label="메뉴">
+    <div class="pill">
+      <button data-tab="home" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5.5"/><ellipse cx="12" cy="12" rx="10" ry="3.6" transform="rotate(-20 12 12)"/></svg><span data-t="전시">전시</span></button>
+      <button data-tab="play"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="3.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><path d="M16.5 13 20 20h-7z"/></svg><span data-t="플레이">플레이</span></button>
+      <button data-tab="reward"><svg viewBox="0 0 24 24"><path d="M12 3.5 14.4 9l5.6.5-4.3 3.7 1.3 5.6L12 15.9 7 18.8l1.3-5.6L4 9.5 9.6 9z"/></svg><span data-t="리워드">리워드</span></button>
+      <button data-tab="my"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span data-t="마이">마이</span></button>
+    </div>
+    <button class="orb" data-orb aria-label="오늘의 행성으로 바로 입장"><svg viewBox="0 0 24 24"><path d="M5 19c3-1 5-3 6.5-6.5M14 4l1.2 2.8L18 8l-2.8 1.2L14 12l-1.2-2.8L10 8l2.8-1.2z"/><circle cx="7" cy="17" r="2"/></svg></button>
   </nav>
 
-  <!-- 전시 보기: 같은 주소의 전시 페이지를 그대로 띄움 -->
   <section id="viewer" class="vx-viewer" hidden>
     <iframe id="frame" title="전시" allow="accelerometer; gyroscope; magnetometer; camera; microphone; geolocation; autoplay; fullscreen; screen-wake-lock"></iframe>
     <button id="close" class="vx-close" aria-label="전시 나가기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </section>
 
-  <!-- 착륙 로딩: 우주인이 행성으로 들어감 -->
   <section id="landing" class="vx-landing" hidden aria-live="polite">
     <canvas id="land-cv"></canvas>
-    <div class="vx-land-text">
-      <p id="land-code"></p>
-      <h2 id="land-title"></h2>
-      <p id="land-state"></p>
-      <button id="land-retry" hidden></button>
-    </div>
+    <div class="vx-land-text"><p id="land-code"></p><h2 id="land-title"></h2><p id="land-state"></p><button id="land-retry" hidden></button></div>
   </section>
 
-  <div id="boot" class="vx-boot"><span></span></div>
-  <script type="module" src="js/app.js?v=1"></script>
+  <div id="toast" class="vx-toast" hidden></div>
+  <script type="module" src="js/app.js?v=2"></script>
 </body>
 </html>
