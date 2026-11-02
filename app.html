@@ -6,17 +6,17 @@
   <meta name="theme-color" content="#05060c" />
   <title>VALIX</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-  <link rel="stylesheet" href="css/app.css?v=4" />
+  <link rel="stylesheet" href="css/app.css?v=5" />
 </head>
 <body class="vx">
   <!-- 첫 실행: 시작 화면 → 소개 → 로그인 → 닉네임 -->
-  <section id="splash" class="vx-splash"><div class="mark"><span class="x"></span><b>VALIX</b><small>XPACE</small></div><p class="foot">VALIX LAB · Online Interactive Exhibition</p></section>
+  <section id="splash" class="vx-splash"><div class="mark"><span class="halo"></span><span class="x"></span><b>VALIX</b><small>XPACE</small></div><p class="foot">VALIX LAB · Online Interactive Exhibition</p></section>
   <section id="onboard" class="vx-onboard" hidden></section>
 
   <main id="view" class="vx-view" hidden></main>
 
   <nav id="tabs" class="vx-tabs" hidden aria-label="메뉴">
-    <div class="pill">
+    <div class="pill"><span class="ind"></span>
       <button data-tab="home" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5.5"/><ellipse cx="12" cy="12" rx="10" ry="3.6" transform="rotate(-20 12 12)"/></svg><span data-t="전시">전시</span></button>
       <button data-tab="play"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="3.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><path d="M16.5 13 20 20h-7z"/></svg><span data-t="플레이">플레이</span></button>
       <button data-tab="reward"><svg viewBox="0 0 24 24"><path d="M12 3.5 14.4 9l5.6.5-4.3 3.7 1.3 5.6L12 15.9 7 18.8l1.3-5.6L4 9.5 9.6 9z"/></svg><span data-t="리워드">리워드</span></button>
@@ -36,6 +36,6 @@
   </section>
 
   <div id="toast" class="vx-toast" hidden></div>
-  <script type="module" src="js/app.js?v=4"></script>
+  <script type="module" src="js/app.js?v=6"></script>
 </body>
 </html>

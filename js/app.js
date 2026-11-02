@@ -15,7 +15,7 @@ const t = (k, n) => { let s = (T[lang] && T[lang][k]) ?? k; if (n != null) s = s
 const br = (s) => esc(s).replace(/\n/g, '<br>');
 document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
 
-const VERSION = '0.3.0';
+const VERSION = '0.4.0';
 
 /* ---------- 우주 방랑자 이름 ---------- */
 const NAMES = {
@@ -129,97 +129,248 @@ ob.addEventListener('click', (e) => {
   showOB(k);
 });
 
+/* ---------- 추가 문구 ---------- */
+const T2 = {
+  en: { '알림': 'Notifications', '모두 읽음': 'Mark all read', '행성이 열렸어요': 'planet is open', '이번 주 행성이 도착했어요': 'This week’s planets have arrived', '플레이 마감까지': 'Play closes in', '새 알림이 없어요.': 'No new notifications.', '지난 호': 'Past issues', '진행 중': 'Now', '전체 행성': 'All planets', '착륙하기': 'Land', '좋아요': 'Like', '좋아요한 행성': 'Liked planets', '아직 좋아요한 행성이 없어요.': 'No liked planets yet.', '좋아요에 담았어요.': 'Added to likes.', '좋아요를 뺐어요.': 'Removed from likes.', '방': 'Rooms', '이렇게 체험해요': 'How to experience', '휴대폰을 기울이고, 흔들고, 엎어 보세요. 권한은 입장할 때 한 번 물어봐요.': 'Tilt, shake and lay your phone down. Permission is asked once when you enter.', '참여 방법': 'How rewards work', '매주 월요일 새 Vol.이 열려요.': 'A new Vol. opens every Monday.', '그 주에 행성 한 곳 이상 착륙하면 그 주의 책이 채워져요.': 'Land on at least one planet that week to fill its book.', '한 주에 서로 다른 행성 3곳에 착륙하면 스탬프가 완성돼요.': 'Land on 3 different planets in a week to complete the stamps.', '3주 연속으로 책을 채우면 항해 리포트가 열려요.': 'Fill books 3 weeks in a row to unlock your voyage report.', '연속': 'streak', '주': 'wk', '닫기': 'Close', '지난 호는 이번 주와 같은 행성으로 보여줘요. (프로토타입)': 'Past issues show the planets open at that time. (prototype)', '항해 리포트가 열렸어요': 'Your voyage report is open', '가장 오래 머문 행성': 'Longest stay', '처음 착륙한 날': 'First landing' },
+  zh: { '알림': '通知', '모두 읽음': '全部已读', '행성이 열렸어요': '行星已开放', '이번 주 행성이 도착했어요': '本周的行星已抵达', '플레이 마감까지': '互动截止还有', '새 알림이 없어요.': '没有新通知。', '지난 호': '往期', '진행 중': '进行中', '전체 행성': '全部行星', '착륙하기': '着陆', '좋아요': '喜欢', '좋아요한 행성': '喜欢的行星', '아직 좋아요한 행성이 없어요.': '还没有喜欢的行星。', '좋아요에 담았어요.': '已加入喜欢。', '좋아요를 뺐어요.': '已取消喜欢。', '방': '展厅', '이렇게 체험해요': '体验方法', '휴대폰을 기울이고, 흔들고, 엎어 보세요. 권한은 입장할 때 한 번 물어봐요.': '倾斜、摇晃、把手机朝下放。进入时会询问一次权限。', '참여 방법': '参与方法', '매주 월요일 새 Vol.이 열려요.': '每周一开启新的 Vol.。', '그 주에 행성 한 곳 이상 착륙하면 그 주의 책이 채워져요.': '当周登陆任一行星，即可填满当周的书。', '한 주에 서로 다른 행성 3곳에 착륙하면 스탬프가 완성돼요.': '一周内登陆 3 颗不同行星即可集齐印章。', '3주 연속으로 책을 채우면 항해 리포트가 열려요.': '连续 3 周填满书即可解锁航行报告。', '연속': '连续', '주': '周', '닫기': '关闭', '지난 호는 이번 주와 같은 행성으로 보여줘요. (프로토타입)': '往期显示当时开放的行星。（原型）', '항해 리포트가 열렸어요': '航行报告已开启', '가장 오래 머문 행성': '停留最久的行星', '처음 착륙한 날': '首次着陆' },
+  ja: { '알림': 'お知らせ', '모두 읽음': 'すべて既読', '행성이 열렸어요': 'の惑星がひらきました', '이번 주 행성이 도착했어요': '今週の惑星が届きました', '플레이 마감까지': 'プレイ締切まで', '새 알림이 없어요.': '新しいお知らせはありません。', '지난 호': 'バックナンバー', '진행 중': '公開中', '전체 행성': 'すべての惑星', '착륙하기': '着陸する', '좋아요': 'いいね', '좋아요한 행성': 'いいねした惑星', '아직 좋아요한 행성이 없어요.': 'まだいいねした惑星はありません。', '좋아요에 담았어요.': 'いいねに追加しました。', '좋아요를 뺐어요.': 'いいねを外しました。', '방': '部屋', '이렇게 체험해요': '体験のしかた', '휴대폰을 기울이고, 흔들고, 엎어 보세요. 권한은 입장할 때 한 번 물어봐요.': 'スマホを傾けたり、振ったり、伏せたりしてみましょう。権限は入場時に一度だけ聞きます。', '참여 방법': '参加方法', '매주 월요일 새 Vol.이 열려요.': '毎週月曜日に新しいVol.がひらきます。', '그 주에 행성 한 곳 이상 착륙하면 그 주의 책이 채워져요.': 'その週に惑星へ一度でも着陸すると、その週の本が埋まります。', '한 주에 서로 다른 행성 3곳에 착륙하면 스탬프가 완성돼요.': '1週間で異なる惑星3つに着陸するとスタンプ完成です。', '3주 연속으로 책을 채우면 항해 리포트가 열려요.': '3週連続で本を埋めると航海レポートがひらきます。', '연속': '連続', '주': '週', '닫기': '閉じる', '지난 호는 이번 주와 같은 행성으로 보여줘요. (프로토타입)': 'バックナンバーは当時公開中の惑星を表示します。（プロトタイプ）', '항해 리포트가 열렸어요': '航海レポートがひらきました', '가장 오래 머문 행성': '最も長く滞在した惑星', '처음 착륙한 날': '初めて着陸した日' },
+};
+Object.keys(T2).forEach((l) => Object.assign(T[l], T2[l]));
+
+/* ---------- 별빛 배경 (천천히 흐르는 별 + 가끔 유성) ---------- */
+const sky = (() => {
+  const cv = document.createElement('canvas'); cv.id = 'sky'; document.body.prepend(cv);
+  const x = cv.getContext('2d'), calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W, H, dpr, stars = [], meteor = null, raf = 0, on = true, last = 0, scrollY0 = 0;
+  const size = () => { dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    stars = Array.from({ length: Math.round(W * H / 2600) }, () => ({ x: Math.random() * W, y: Math.random() * H, z: Math.random() ** 2, p: Math.random() * 6.28, c: Math.random() < 0.15 ? '255,226,180' : Math.random() < 0.3 ? '190,205,255' : '255,255,255' })); };
+  function frame(now) {
+    const dt = Math.min(50, now - (last || now)); last = now;
+    x.clearRect(0, 0, W, H);
+    const sy = scrollY * 0.15, dsy = sy - scrollY0; scrollY0 = sy;
+    for (const s of stars) {
+      if (!calm) { s.x -= (0.004 + s.z * 0.02) * dt; s.y -= dsy * (0.3 + s.z); }
+      if (s.x < -2) s.x += W + 4; if (s.y < -2) s.y += H + 4; if (s.y > H + 2) s.y -= H + 4;
+      const tw = 0.45 + 0.55 * Math.sin(now / (900 + s.z * 600) + s.p);
+      x.fillStyle = `rgba(${s.c},${(0.15 + s.z * 0.75) * tw})`; const r = 0.4 + s.z * 1.3; x.fillRect(s.x, s.y, r, r);
+    }
+    if (!calm && !meteor && Math.random() < dt / 7000) meteor = { x: W * (0.3 + Math.random() * 0.7), y: Math.random() * H * 0.4, t: 0 };
+    if (meteor) {
+      meteor.t += dt; const k = meteor.t / 900, mx = meteor.x - k * 260, my = meteor.y + k * 130;
+      const g = x.createLinearGradient(mx, my, mx + 90, my - 45); g.addColorStop(0, `rgba(255,255,255,${0.9 * (1 - k)})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+      x.strokeStyle = g; x.lineWidth = 1.4; x.beginPath(); x.moveTo(mx, my); x.lineTo(mx + 90, my - 45); x.stroke();
+      if (k >= 1) meteor = null;
+    }
+    raf = on ? requestAnimationFrame(frame) : 0;
+  }
+  addEventListener('resize', size); size();
+  return { start() { if (!raf) { on = true; last = 0; raf = requestAnimationFrame(frame); } }, stop() { on = false; cancelAnimationFrame(raf); raf = 0; } };
+})();
+sky.start();
+
+/* ---------- 아래에서 올라오는 시트 ---------- */
+const sheet = (() => {
+  const bg = document.createElement('div'); bg.className = 'sheet-bg'; bg.hidden = true;
+  const el = document.createElement('section'); el.className = 'sheet'; el.hidden = true; el.setAttribute('role', 'dialog');
+  document.body.append(bg, el);
+  let y0 = null, dy = 0;
+  const close = () => { el.classList.remove('in'); bg.classList.remove('in'); setTimeout(() => { el.hidden = bg.hidden = true; el.innerHTML = ''; }, 320); };
+  bg.addEventListener('click', close);
+  el.addEventListener('touchstart', (e) => { if (el.scrollTop <= 0) y0 = e.touches[0].clientY; }, { passive: true });
+  el.addEventListener('touchmove', (e) => { if (y0 == null) return; dy = Math.max(0, e.touches[0].clientY - y0); el.style.transform = `translateY(${dy}px)`; }, { passive: true });
+  el.addEventListener('touchend', () => { el.style.transform = ''; if (dy > 90) close(); y0 = null; dy = 0; });
+  el.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) close(); });
+  return {
+    open(html, cls = '') { el.className = 'sheet ' + cls; el.innerHTML = `<i class="grab"></i>${html}`; el.hidden = bg.hidden = false; el.scrollTop = 0; requestAnimationFrame(() => { el.classList.add('in'); bg.classList.add('in'); }); return el; },
+    close, get isOpen() { return !el.hidden; }, el,
+  };
+})();
+
+/* ---------- 좋아요 · 알림 ---------- */
+const likes = () => store.get('valix-likes', []);
+const isLiked = (id) => likes().includes(id);
+function toggleLike(id) { const l = likes(); const i = l.indexOf(id); if (i >= 0) l.splice(i, 1); else l.unshift(id); store.set('valix-likes', l); toast(t(i >= 0 ? '좋아요를 뺐어요.' : '좋아요에 담았어요.')); return i < 0; }
+const heart = (on) => `<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" ${on ? 'fill="#ef4a4a" stroke="#ef4a4a"' : ''}/></svg>`;
+const unread = () => store.get('valix-noti', 0) < vol();
+function notiSheet() {
+  const open = cells.filter(isOpen).slice().reverse(), mon = monday(Date.now());
+  const d = Math.ceil((weekEnd() - Date.now()) / DAY);
+  const items = [
+    { c: featured(), h: `Vol. ${vol()} · ${t('이번 주 행성이 도착했어요')}`, s: open.map(name).join(' · '), at: mon },
+    { c: featured(), h: `${t('플레이 마감까지')} ${d}${t('일')}`, s: playOf(featured()).how, at: Date.now() - 3600e3 },
+    ...open.map((c, i) => ({ c, h: `${name(c)} ${t('행성이 열렸어요')}`, s: c.artist || '', at: mon - (i + 1) * DAY })),
+  ];
+  const isNew = unread();
+  sheet.open(`<div class="sh-h"><h3>${t('알림')}</h3><button data-read>${t('모두 읽음')}</button></div>
+    <div class="noti">${items.map((n, i) => `<button class="nrow${isNew && i < 2 ? ' new' : ''}" data-detail="${esc(n.c.id)}"><img src="${planetURL(n.c, 192)}" alt=""><span><b>${esc(n.h)}</b><small>${esc(n.s)}</small></span><em>${new Date(n.at).toLocaleDateString(lang, { month: 'numeric', day: 'numeric' })}</em></button>`).join('')}</div>`);
+}
+
+/* ---------- 지난 호 (Vol 목록) ---------- */
+let viewVol = 0; // 0 = 이번 주
+const volStart = (n) => new Date(LAUNCH.getTime() + (n - 1) * 7 * DAY);
+const startOf = (c) => { const m = String(c.period || '').match(/(\d{4})\.(\d{1,2})/); return m ? new Date(+m[1], +m[2] - 1, 1) : new Date(0); };
+const openAt = (n) => cells.filter((c) => isOpen(c) && startOf(c) <= new Date(volStart(n).getTime() + 7 * DAY));
+function volSheet() {
+  const now = vol(), fmt = (d) => d.toLocaleDateString(lang, { month: 'numeric', day: 'numeric' });
+  sheet.open(`<div class="sh-h"><h3>${t('지난 호')}</h3></div><div class="vols">${Array.from({ length: now }, (_, i) => now - i).map((n) => { const list = openAt(n), f = list[list.length - 1];
+    return `<button class="vrow${(viewVol || now) === n ? ' on' : ''}" data-vol="${n}">${f ? `<img src="${planetURL(f, 192)}" alt="">` : '<span class="ph"></span>'}<span><b>Vol. ${n}</b><small>${fmt(volStart(n))} – ${fmt(new Date(volStart(n).getTime() + 6 * DAY))} · ${list.map(name).join(' · ') || '—'}</small></span>${n === now ? `<em>${t('진행 중')}</em>` : ''}</button>`; }).join('')}</div>`);
+}
+
+/* ---------- 전시 상세 ---------- */
+function detailSheet(c) {
+  const p = playOf(c), liked = isLiked(c.id);
+  const el = sheet.open(`
+    <div class="dt-stage" style="--c:${esc(c.color || '#9db8ff')}"><span class="dt-orbit"><i></i></span><img class="dt-pl" src="${planetURL(c, 768)}" alt=""></div>
+    <div class="dt-body">
+      <p class="dt-code">${esc(c.code)} ${kindTag(c)}</p>
+      <h2>${esc(name(c))}</h2>
+      <p class="dt-sub">${esc(c.subtitle || '')}</p>
+      <p class="dt-meta">${esc(c.artist || '')}${c.period ? ' · ' + esc(c.period) : ''}</p>
+      ${c.summary ? `<p class="dt-sum">${esc(c.summary)}</p>` : ''}
+      ${c.rooms && c.rooms.length ? `<div class="dt-rooms"><h4>${t('방')}</h4>${c.rooms.map((r, i) => `<div><em>${String(i + 1).padStart(2, '0')}</em><span><b>${esc(r.short || name(r))}</b><small>${esc(r.subtitle || '')}</small></span></div>`).join('')}</div>` : ''}
+      <div class="dt-how"><h4>${t('이렇게 체험해요')}</h4><p>${esc(p.how)}</p><p class="small">${t('휴대폰을 기울이고, 흔들고, 엎어 보세요. 권한은 입장할 때 한 번 물어봐요.')}</p></div>
+    </div>
+    <div class="dt-cta"><button class="like${liked ? ' on' : ''}" data-like="${esc(c.id)}" aria-label="${t('좋아요')}">${heart(liked)}</button><button class="btn black" data-land="${esc(c.id)}">${t('착륙하기')}</button></div>`, 'detail');
+  return el;
+}
+
 /* ---------- 탭 화면 ---------- */
 let tab = 'home', ticker = 0;
-const bell = `<button class="dot" aria-label="알림"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20a2 2 0 0 0 4 0"/></svg></button>`;
-const clock = `<button data-tab-go="my" aria-label="기록"><svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6M3.5 4v4h4M12 8v4l3 2"/></svg></button>`;
+const bell = () => `<button class="${unread() ? 'dot' : ''}" data-noti aria-label="${t('알림')}"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20a2 2 0 0 0 4 0"/></svg></button>`;
+const clock = `<button data-recent aria-label="${t('최근 본 전시')}"><svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6M3.5 4v4h4M12 8v4l3 2"/></svg></button>`;
 const plus = `<svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg>`;
+const lock = `<svg viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 0 1 10 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V8a3 3 0 0 0-6 0z"/></svg>`;
+function streakInfo() {
+  const p = me() || { since: Date.now() };
+  const startW = monday(p.since).getTime(), curW = Math.max(0, Math.floor((monday(Date.now()) - startW) / (7 * DAY)));
+  const v = visits(), weekHas = (w) => v.find((x) => monday(x.at).getTime() === startW + w * 7 * DAY);
+  let streak = 0; for (let w = curW; w >= 0 && weekHas(w); w--) streak++;
+  return { startW, curW, weekHas, streak };
+}
 
 const screens = {
   home() {
-    const f = featured(), open = cells.filter(isOpen), soon = cells.filter((c) => c.status === 'coming');
-    const card = (c) => `<button class="card" data-open="${esc(c.id)}">${poster(c)}<p class="ct">${esc(name(c))}</p><p class="cm">${kindTag(c)}${esc(c.period || '')}</p></button>`;
+    const n = viewVol || vol(), open = viewVol ? openAt(viewVol) : cells.filter(isOpen), f = open[open.length - 1] || featured(), soon = cells.filter((c) => c.status === 'coming');
+    const card = (c) => `<button class="card" data-detail="${esc(c.id)}">${poster(c)}<p class="ct">${esc(name(c))}</p><p class="cm">${kindTag(c)}${esc(c.period || '')}</p></button>`;
     return `
       <section class="hero" style="--c:${esc(f.color || '#9db8ff')}">
-        <div class="top"><div><p class="eyebrow">WEEKLY PLANET</p><p class="vol">Vol. ${vol()}<i></i></p></div><div class="icons">${clock}${bell}</div></div>
+        <div class="top"><button class="vol-btn" data-vols><p class="eyebrow">WEEKLY PLANET</p><p class="vol">Vol. ${n}<i></i></p></button><div class="icons">${clock}${bell()}</div></div>
         <p class="issue">${open.slice(-2).reverse().map((c) => esc(name(c))).join(' · ')}</p>
-        <div class="stage"><span class="orbit"></span><img class="big" src="${planetURL(f, 768)}" alt="" draggable="false"><button class="enter" data-open="${esc(f.id)}">${t('입장하기')} →</button></div>
+        <div class="stage"><span class="orbit"><i class="sat"></i></span><img class="big" data-parallax src="${planetURL(f, 768)}" alt="" draggable="false"><button class="enter" data-open="${esc(f.id)}">${t('착륙하기')} →</button></div>
       </section>
-      <section class="sec"><div class="sec-h"><h2>NEW</h2><button data-tab-go="play" aria-label="더 보기">${plus}</button></div>
+      <section class="sec"><div class="sec-h"><h2>NEW</h2><button data-all aria-label="${t('전체 행성')}">${plus}</button></div>
         <p class="sec-sub">${t('이번 주 열린 행성')}</p><div class="hscroll">${open.slice().reverse().map(card).join('')}</div></section>
       <section class="sec"><div class="sec-h"><h2>NOW SHOWING</h2></div>
-        <p class="sec-sub">${t('지금 상영 중')}</p><div class="grid2">${open.map((c) => `<button data-open="${esc(c.id)}" style="text-align:left">${poster(c)}<p class="ct" style="font-size:16px;font-weight:600;margin-top:10px">${esc(name(c))}</p><p style="font-size:13px;color:var(--tx2);margin-top:4px">${esc(c.artist || '')}</p></button>`).join('')}</div></section>
+        <p class="sec-sub">${t('지금 상영 중')}</p><div class="grid2">${cells.filter(isOpen).map((c) => `<button class="gcard" data-detail="${esc(c.id)}">${poster(c)}<p class="ct">${esc(name(c))}</p><p class="ga">${esc(c.artist || '')}</p></button>`).join('')}</div></section>
       ${soon.length ? `<section class="sec"><div class="sec-h"><h2>COMING SOON</h2></div><p class="sec-sub">${t('곧 착륙할 행성')}</p><div class="hscroll">${soon.map(card).join('')}</div></section>` : ''}
       <section class="sec"><p class="about">VALIX · XPACE — ${esc(t('생각과 마음의 폭을 넓히는 시간'))}</p></section>`;
   },
   play() {
     const open = cells.filter(isOpen).slice().reverse();
     const wk = (Date.now() - monday(Date.now())) / (7 * DAY);
-    return `<header class="page-h"><h1>PLAY</h1><div class="icons">${bell}</div></header>
+    return `<header class="page-h"><h1>PLAY</h1><div class="icons">${bell()}</div></header>
       <div class="plays">${open.map((c) => { const p = playOf(c); return `
         <div class="play" style="--c:${esc(c.color || '#9db8ff')}">
-          <div class="art"><img class="pl" src="${planetURL(c, 640)}" alt="" draggable="false"><span class="timer" data-left="${esc(c.id)}">${left(c)}</span></div>
+          <div class="art" data-detail="${esc(c.id)}"><img class="pl" src="${planetURL(c, 640)}" alt="" draggable="false"><span class="timer" data-left="${esc(c.id)}">${left(c)}</span></div>
           <div class="body"><p class="who">${esc(c.code)} · ${esc(c.artist || '')}</p><h3>${br(p.q)}</h3><p class="how">${esc(p.how)}</p>
-            <div class="bar"><i style="width:${Math.round(wk * 100)}%"></i></div>
-            <div class="two"><span data-how="${esc(c.id)}">${t('체험 방법')}</span><span data-open="${esc(c.id)}" style="background:#fff;color:#111;border-color:#fff">${t('입장하기')}</span></div></div>
+            <div class="bar"><i style="--w:${Math.round(wk * 100)}%"></i></div>
+            <div class="two"><button data-how="${esc(c.id)}">${t('체험 방법')}</button><button class="w" data-open="${esc(c.id)}">${t('입장하기')}</button></div></div>
         </div>`; }).join('')}</div>`;
   },
   reward() {
-    const p = me() || { since: Date.now() };
-    const startW = monday(p.since).getTime(), curW = Math.floor((monday(Date.now()) - startW) / (7 * DAY)); // 0부터
-    const v = visits(), weekHas = (w) => v.find((x) => monday(x.at).getTime() === startW + w * 7 * DAY);
+    const { startW, curW, weekHas, streak } = streakInfo();
     const base = Math.floor(curW / 6) * 6;
     const books = Array.from({ length: 6 }, (_, i) => { const w = base + i, hit = weekHas(w), c = hit && cells.find((x) => x.id === hit.id);
-      return `<div class="book${hit ? ' done' : ''}${w === curW ? ' now' : ''}" style="--c:${esc((c && c.color) || '#8a3a3a')}"><i>${hit ? `<b>Vol. ${vol() - (curW - w)}</b>` : ''}</i><span>${t('n주차', w + 1)}</span></div>`; }).join('');
-    let streak = 0; for (let w = curW; w >= 0 && weekHas(w); w--) streak++;
-    const thisWeek = [...new Set(v.filter((x) => monday(x.at).getTime() === monday(Date.now()).getTime()).map((x) => x.id))];
-    return `<header class="page-h"><h1>REWARDS</h1><button style="font-size:17px" data-guide>${t('참여 안내')}</button></header>
+      return `<div class="book${hit ? ' done' : ''}${w === curW ? ' now' : ''}" style="--c:${esc((c && c.color) || '#8a3a3a')};--i:${i}"><i>${hit ? `<b>Vol. ${vol() - (curW - w)}</b>` : ''}</i><span>${t('n주차', w + 1)}</span></div>`; }).join('');
+    const v = visits(), thisWeek = [...new Set(v.filter((x) => monday(x.at).getTime() === monday(Date.now()).getTime()).map((x) => x.id))];
+    return `<header class="page-h"><h1>REWARDS</h1><button class="txt" data-guide>${t('참여 안내')}</button></header>
       <p class="rw-h">${t('n주차, 함께 시작해요!', curW + 1)}</p>
-      <div class="shelf">${books}<div class="book sp"><i><b>SPECIAL</b></i><span>Special</span></div></div>
-      <div class="lockcard"><svg viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 0 1 10 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V8a3 3 0 0 0-6 0z"/></svg><div>${streak >= 3 ? `<em>${t('항해 리포트')}</em> ✓` : t('3주 연속 착륙하면 <em>항해 리포트</em>가 열려요')}</div></div>
+      <div class="shelf">${books}<div class="book sp" style="--i:6"><i><b>SPECIAL</b></i><span>Special</span></div></div>
+      <button class="lockcard${streak >= 3 ? ' open' : ''}" data-report>${lock}<div>${streak >= 3 ? `<em>${t('항해 리포트가 열렸어요')}</em>` : t('3주 연속 착륙하면 <em>항해 리포트</em>가 열려요')}<small class="prog"><i style="--w:${Math.min(100, streak / 3 * 100)}%"></i></small><small>${t('연속')} ${streak}/3${t('주')}</small></div></button>
       <div class="mission"><h3>${br(t('이번 주 행성 3곳에 착륙하면\n항해 스탬프 완성!'))}</h3>
-        <div class="stamps">${[0, 1, 2].map((i) => { const c = cells.find((x) => x.id === thisWeek[i]); return `<i class="${c ? 'on' : ''}">${c ? esc(c.code.replace('X-', '')) : i + 1}</i>`; }).join('')}</div>
+        <div class="stamps">${[0, 1, 2].map((i) => { const c = cells.find((x) => x.id === thisWeek[i]); return c ? `<i class="on" style="--d:${i * 0.15}s"><img src="${planetURL(c, 128)}" alt=""></i>` : `<i>${i + 1}</i>`; }).join('')}</div>
         <div class="note${thisWeek.length >= 3 ? ' ready' : ''}">${thisWeek.length >= 3 ? t('이번 주 스탬프 완성!') : t('행성 3곳에 착륙하면 완성돼요')}</div>
         <p>${t('스탬프와 기록은 이 기기에만 저장돼요.')}</p></div>`;
   },
   my() {
     const p = me() || { nick: wanderer(), since: Date.now() }, h = hist();
     const seen = Object.entries(h).filter(([id]) => cells.some((c) => c.id === id)).sort((a, b) => b[1].last - a[1].last);
-    const total = seen.reduce((s, [, x]) => s + (x.time || 0), 0);
+    const total = seen.reduce((s, [, x]) => s + (x.time || 0), 0), lk = likes().map((id) => cells.find((c) => c.id === id)).filter(Boolean);
+    const { streak } = streakInfo();
     const avatar = `<svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="30" cy="25" r="15"/><rect x="21" y="19" width="18" height="12" rx="6" fill="#1c2240" stroke="none"/><path d="M24 22c1.5-1 3-1 4 0" stroke="#ffd68c"/><path d="M10 58c2-9 10-14 20-14s18 5 20 14"/></svg>`;
     return `<header class="page-h"><h1>MY</h1><div class="icons">${clock}</div></header>
-      <div class="me"><span class="avatar">${avatar}</span><div><b>${esc(p.nick)}</b><p style="font-size:14px;color:var(--tx2);margin-top:4px">${new Date(p.since).toLocaleDateString(lang)} ${t('탑승')} · ${seen.length}${t('곳 착륙')}</p><button data-rename>${t('이름 바꾸기')} ›</button></div></div>
-      <section class="sec"><div class="sec-h"><h2 style="font-size:20px">${t('나의 기록')}</h2></div>
-        <div class="lockcard v" style="margin:18px 0 0"><svg viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 0 1 10 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V8a3 3 0 0 0-6 0z"/></svg><div><small>${t('항해 리포트')}</small>${t('3주 연속 착륙하면 <em>항해 리포트</em>가 열려요')}</div></div>
+      <div class="me"><span class="avatar">${avatar}</span><div><b>${esc(p.nick)}</b><p class="mesub">${new Date(p.since).toLocaleDateString(lang)} ${t('탑승')} · ${seen.length}${t('곳 착륙')}</p><button data-rename>${t('이름 바꾸기')} ›</button></div></div>
+      <section class="sec"><div class="sec-h"><h2 class="h20">${t('나의 기록')}</h2></div>
+        <button class="lockcard v${streak >= 3 ? ' open' : ''}" data-report style="margin:18px 0 0">${lock}<div><small>${t('항해 리포트')}</small>${streak >= 3 ? `<em>${t('항해 리포트가 열렸어요')}</em>` : t('3주 연속 착륙하면 <em>항해 리포트</em>가 열려요')}</div></button>
         <div class="stat2"><div>${t('다녀온 행성')}<b>${seen.length || '-'}</b></div><div>${t('머문 시간')}<b>${total ? fmtTime(total) : '-'}</b></div></div></section>
-      <section class="sec"><div class="sec-h"><h2 style="font-size:20px">${t('최근 본 전시')}</h2></div>
-        ${seen.length ? `<div class="list">${seen.map(([id, x]) => { const c = cells.find((y) => y.id === id); return `<button class="row" data-open="${esc(id)}">${poster(c)}<div><b>${esc(name(c))}</b><span>${new Date(x.last).toLocaleDateString(lang)}</span></div><span class="v">${fmtTime(x.time || 0)}</span></button>`; }).join('')}</div>` : `<p class="empty">${t('아직 다녀온 행성이 없어요.')}</p>`}</section>
-      <section class="sec"><div class="sec-h"><h2 style="font-size:20px">${t('언어')}</h2></div><div class="chips">${LANGS.map((l) => `<button data-lang="${l.id}" class="${l.id === lang ? 'on' : ''}">${l.name}</button>`).join('')}</div></section>
-      <section class="sec"><div class="sec-h"><h2 style="font-size:20px">${t('체험 권한')}</h2></div><p class="small">${t('기울기·흔들기·마이크·카메라·위치는 전시 안에서 체험할 때만 쓰고, 기기 밖으로 저장하거나 보내지 않아요.')}</p></section>
+      <section class="sec"><div class="sec-h"><h2 class="h20">${t('좋아요한 행성')}</h2></div>
+        ${lk.length ? `<div class="hscroll mini">${lk.map((c) => `<button data-detail="${esc(c.id)}"><img src="${planetURL(c, 192)}" alt=""><span>${esc(name(c))}</span></button>`).join('')}</div>` : `<p class="empty">${t('아직 좋아요한 행성이 없어요.')}</p>`}</section>
+      <section class="sec"><div class="sec-h"><h2 class="h20">${t('최근 본 전시')}</h2></div>
+        ${seen.length ? `<div class="list">${seen.map(([id, x]) => { const c = cells.find((y) => y.id === id); return `<button class="row" data-detail="${esc(id)}">${poster(c)}<div><b>${esc(name(c))}</b><span>${new Date(x.last).toLocaleDateString(lang)}</span></div><span class="v">${fmtTime(x.time || 0)}</span></button>`; }).join('')}</div>` : `<p class="empty">${t('아직 다녀온 행성이 없어요.')}</p>`}</section>
+      <section class="sec"><div class="sec-h"><h2 class="h20">${t('언어')}</h2></div><div class="chips">${LANGS.map((l) => `<button data-lang="${l.id}" class="${l.id === lang ? 'on' : ''}">${l.name}</button>`).join('')}</div></section>
+      <section class="sec"><div class="sec-h"><h2 class="h20">${t('체험 권한')}</h2></div><p class="small">${t('기울기·흔들기·마이크·카메라·위치는 전시 안에서 체험할 때만 쓰고, 기기 밖으로 저장하거나 보내지 않아요.')}</p></section>
       <section class="sec list"><button class="row" data-clear><b>${t('관람 기록 지우기')}</b></button><div class="row"><b>${t('버전')}</b><span class="v">VALIX ${VERSION}</span></div></section>`;
   },
 };
 
-function go(next) {
-  tab = next; view.hidden = false; tabsEl.hidden = false;
-  view.className = 'vx-view' + (tab === 'reward' ? ' gray' : '');
+const TAB_I = { home: 0, play: 1, reward: 2, my: 3 };
+function go(next, keepScroll) {
+  const prev = tab; tab = next; view.hidden = false; tabsEl.hidden = false;
+  view.className = 'vx-view';
   view.innerHTML = screens[tab]();
+  // 순서대로 떠오르는 등장 효과
+  let i = 0; view.querySelectorAll('.hero, .page-h, .rw-h, .sec-h, .sec-sub, .card, .gcard, .play, .shelf, .lockcard, .mission, .me, .stat2, .row, .chips, .about, .hscroll.mini, .empty').forEach((el) => { el.classList.add('rv'); el.style.animationDelay = `${Math.min(i++, 14) * 45}ms`; });
   tabsEl.querySelectorAll('[data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
-  document.querySelector('meta[name=theme-color]').content = '#05060c';
-  scrollTo(0, 0);
+  tabsEl.querySelector('.ind').style.transform = `translateX(${TAB_I[tab] * 100}%)`;
+  if (!keepScroll || prev !== next) scrollTo(0, 0);
   clearInterval(ticker);
-  if (tab === 'play') ticker = setInterval(() => view.querySelectorAll('[data-left]').forEach((el) => { el.textContent = left(cells.find((c) => c.id === el.dataset.left)); }), 1000);
+  if (tab === 'play') ticker = setInterval(() => view.querySelectorAll('[data-left]').forEach((el) => { const c = cells.find((x) => x.id === el.dataset.left); el.textContent = left(c); el.classList.toggle('urgent', Math.floor((weekEnd() - Date.now()) / DAY) < 1); }), 1000);
 }
-tabsEl.addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) go(b.dataset.tab); else if (e.target.closest('[data-orb]')) openExhibit(featured()); });
-view.addEventListener('click', (e) => {
-  const o = e.target.closest('[data-open]'); if (o) { const c = cells.find((x) => x.id === o.dataset.open); if (c && isOpen(c)) openExhibit(c); return; }
-  const g = e.target.closest('[data-tab-go]'); if (g) { go(g.dataset.tabGo); return; }
-  const hw = e.target.closest('[data-how]'); if (hw) { const c = cells.find((x) => x.id === hw.dataset.how); toast(playOf(c).how + ' · ' + t('휴대폰에서 더 많은 체험을 할 수 있어요.')); return; }
-  if (e.target.closest('[data-guide]')) { toast(t('매주 월요일에 새 주차가 시작돼요. 그 주에 전시에 한 번 이상 입장하면 그 주의 책이 채워져요.')); return; }
-  if (e.target.closest('[data-rename]')) { showOB('nick'); return; }
-  const l = e.target.closest('[data-lang]'); if (l && l.dataset.lang !== lang) { try { localStorage.setItem('xpace-lang', l.dataset.lang); } catch (er) {} location.reload(); return; }
-  if (e.target.closest('[data-clear]')) { store.set('valix-history', {}); store.set('valix-visits', []); toast(t('기록을 지웠어요.')); go(tab); }
-});
+// 홈 큰 행성 패럴랙스
+addEventListener('scroll', () => { const p = view.querySelector('[data-parallax]'); if (p) p.style.transform = `translateY(${scrollY * 0.35}px) scale(${1 - Math.min(scrollY, 400) / 2000})`; }, { passive: true });
+
+tabsEl.addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) { if (b.dataset.tab === 'home') viewVol = 0; go(b.dataset.tab); } else if (e.target.closest('[data-orb]')) openExhibit(featured()); });
+
+// 화면·시트 공통 버튼
+function onAction(e) {
+  const q = (s) => e.target.closest(s), byId = (id) => cells.find((x) => x.id === id);
+  let b;
+  if ((b = q('[data-land]'))) { const c = byId(b.dataset.land); sheet.close(); setTimeout(() => openExhibit(c), 200); return true; }
+  if ((b = q('[data-open]'))) { const c = byId(b.dataset.open); if (c && isOpen(c)) { if (sheet.isOpen) sheet.close(); openExhibit(c); } return true; }
+  if ((b = q('[data-detail]'))) { const c = byId(b.dataset.detail); if (c) detailSheet(c); return true; }
+  if ((b = q('[data-like]'))) { const on = toggleLike(b.dataset.like); b.classList.toggle('on', on); b.innerHTML = heart(on); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); if (tab === 'my') go('my', true); return true; }
+  if (q('[data-noti]')) { notiSheet(); return true; }
+  if (q('[data-read]')) { store.set('valix-noti', vol()); sheet.close(); go(tab, true); return true; }
+  if (q('[data-recent]')) {
+    const seen = Object.entries(hist()).filter(([id]) => byId(id)).sort((a, b2) => b2[1].last - a[1].last);
+    sheet.open(`<div class="sh-h"><h3>${t('최근 본 전시')}</h3></div>${seen.length ? `<div class="noti">${seen.map(([id, x]) => { const c = byId(id); return `<button class="nrow" data-detail="${esc(id)}"><img src="${planetURL(c, 192)}" alt=""><span><b>${esc(name(c))}</b><small>${fmtTime(x.time || 0)} · ${new Date(x.last).toLocaleDateString(lang)}</small></span></button>`; }).join('')}</div>` : `<p class="empty">${t('아직 다녀온 행성이 없어요.')}</p>`}`);
+    return true;
+  }
+  if (q('[data-vols]')) { volSheet(); return true; }
+  if ((b = q('[data-vol]'))) { const n = +b.dataset.vol; viewVol = n === vol() ? 0 : n; sheet.close(); if (viewVol) toast(t('지난 호는 이번 주와 같은 행성으로 보여줘요. (프로토타입)')); go('home'); return true; }
+  if (q('[data-all]')) {
+    sheet.open(`<div class="sh-h"><h3>${t('전체 행성')}</h3></div><div class="grid2">${cells.map((c) => `<button class="gcard" data-detail="${esc(c.id)}">${poster(c)}<p class="ct">${esc(name(c))}</p><p class="ga">${esc(c.artist || '')}</p></button>`).join('')}</div>`);
+    return true;
+  }
+  if ((b = q('[data-how]'))) { detailSheet(byId(b.dataset.how)); setTimeout(() => { const h = sheet.el.querySelector('.dt-how'); if (h) sheet.el.scrollTo({ top: h.offsetTop - 40, behavior: 'smooth' }); }, 380); return true; }
+  if (q('[data-guide]')) {
+    sheet.open(`<div class="sh-h"><h3>${t('참여 방법')}</h3></div><ol class="guide">${['매주 월요일 새 Vol.이 열려요.', '그 주에 행성 한 곳 이상 착륙하면 그 주의 책이 채워져요.', '한 주에 서로 다른 행성 3곳에 착륙하면 스탬프가 완성돼요.', '3주 연속으로 책을 채우면 항해 리포트가 열려요.'].map((s, i) => `<li><em>${i + 1}</em>${t(s)}</li>`).join('')}</ol><p class="small" style="padding:0 24px">${t('스탬프와 기록은 이 기기에만 저장돼요.')}</p><div style="padding:20px 24px 0"><button class="btn line" data-close>${t('닫기')}</button></div>`);
+    return true;
+  }
+  if (q('[data-report]')) {
+    const { streak } = streakInfo(), h = Object.entries(hist()).filter(([id]) => byId(id)).sort((a, b2) => (b2[1].time || 0) - (a[1].time || 0)), v = visits();
+    if (streak < 3) { toast(`${t('연속')} ${streak}/3${t('주')} — ${t('3주 연속으로 책을 채우면 항해 리포트가 열려요.')}`); return true; }
+    const top = h[0] && byId(h[0][0]);
+    sheet.open(`<div class="sh-h"><h3>${t('항해 리포트')}</h3></div><div class="report">${top ? `<img src="${planetURL(top, 384)}" alt="">` : ''}<p>${t('가장 오래 머문 행성')}<b>${top ? esc(name(top)) : '-'}</b></p><p>${t('처음 착륙한 날')}<b>${v[0] ? new Date(v[0].at).toLocaleDateString(lang) : '-'}</b></p><p>${t('다녀온 행성')}<b>${h.length}</b></p></div>`);
+    return true;
+  }
+  if (q('[data-rename]')) { showOB('nick'); return true; }
+  if ((b = q('[data-lang]'))) { if (b.dataset.lang !== lang) { try { localStorage.setItem('xpace-lang', b.dataset.lang); } catch (er) {} location.reload(); } return true; }
+  if (q('[data-clear]')) { store.set('valix-history', {}); store.set('valix-visits', []); toast(t('기록을 지웠어요.')); go(tab, true); return true; }
+  return false;
+}
+view.addEventListener('click', onAction);
+sheet.el.addEventListener('click', onAction);
 
 /* ---------- 전시 보기 ---------- */
 const viewer = $('#viewer'), frame = $('#frame');
@@ -229,16 +380,16 @@ function openExhibit(c) {
   current = c; enteredAt = Date.now();
   const h = hist(); h[c.id] = { ...(h[c.id] || {}), last: Date.now(), visits: ((h[c.id] && h[c.id].visits) || 0) + 1 }; store.set('valix-history', h);
   const v = visits(); v.push({ id: c.id, at: Date.now() }); store.set('valix-visits', v.slice(-500));
-  landing.start(c); viewer.hidden = false; frame.src = 'about:blank';
+  $('#toast').hidden = true; landing.start(c); viewer.hidden = false; frame.src = 'about:blank'; sky.stop();
   requestAnimationFrame(() => { frame.src = href(c); });
   history.pushState({ viewer: true }, '');
 }
 function closeExhibit(fromPop) {
   if (viewer.hidden) return;
   if (current) { const h = hist(); const r = h[current.id] || {}; r.time = (r.time || 0) + Math.round((Date.now() - enteredAt) / 1000); r.last = Date.now(); h[current.id] = r; store.set('valix-history', h); }
-  landing.stop(); viewer.hidden = true; frame.src = 'about:blank'; current = null;
+  landing.stop(); viewer.hidden = true; frame.src = 'about:blank'; current = null; sky.start();
   if (!fromPop && history.state && history.state.viewer) history.back();
-  go(tab);
+  go(tab, true);
 }
 $('#close').addEventListener('click', () => closeExhibit());
 addEventListener('popstate', () => closeExhibit(true));
@@ -251,7 +402,7 @@ frame.addEventListener('load', () => {
   landing.loaded();
 });
 const CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
-if (CapApp) CapApp.addListener('backButton', () => { if (!viewer.hidden) closeExhibit(); else if (!ob.hidden) showOB('login'); else if (tab !== 'home') go('home'); else CapApp.exitApp(); });
+if (CapApp) CapApp.addListener('backButton', () => { if (sheet.isOpen) sheet.close(); else if (!viewer.hidden) closeExhibit(); else if (!ob.hidden) showOB('login'); else if (tab !== 'home') go('home'); else CapApp.exitApp(); });
 
 /* ---------- 착륙 로딩 화면 ---------- */
 const landing = (() => {
