@@ -146,6 +146,12 @@ export const hsound = {
     [base - 24, base - 12, base - 5, base, base + 4].forEach((m, k) => star(m, 0.8, 0, k * 0.09, 3));
     master.gain.setTargetAtTime(0, ctx.currentTime + 0.9, 0.25);
   },
+  // 흔들기: 별빛이 쏟아지는 소리 (모바일)
+  shake(v = 0.5) {
+    if (!ctx || !on) return;
+    whoosh(0.7, true, 0.5 + v * 0.5);
+    for (let k = 0; k < 7; k++) star(LYD[Math.floor(Math.random() * LYD.length)] + 12, 0.35 + Math.random() * 0.4, Math.random() * 1.6 - 0.8, k * 0.05 + Math.random() * 0.05, 2.5);
+  },
   ui(open) { if (ctx && on) star(open ? 81 : 74, 0.5, 0, 0, 1.6); },
   tick() { if (ctx && on) star(86, 0.25, 0, 0, 0.8); },
 };

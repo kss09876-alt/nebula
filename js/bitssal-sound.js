@@ -74,6 +74,21 @@ function setScene(id) {
 }
 
 // 맑은 음 (쌀알이 유리에 닿는 듯한 소리)
+// 쌀알 소리: 통 속의 쌀이 흔들리는 듯한 짧은 알갱이 소리 묶음
+let riceBuf = null;
+function rattle(v = 0.5) {
+  if (!ctx) return;
+  if (!riceBuf) { riceBuf = ctx.createBuffer(1, ctx.sampleRate * 0.03, ctx.sampleRate); const d = riceBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 6); }
+  const n = Math.round(6 + v * 26), t0 = ctx.currentTime;
+  for (let k = 0; k < n; k++) {
+    const t = t0 + Math.random() * (0.12 + v * 0.25), src = ctx.createBufferSource(); src.buffer = riceBuf; src.playbackRate.value = 0.7 + Math.random() * 0.9;
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2500 + Math.random() * 4500; f.Q.value = 2.5;
+    const g = ctx.createGain(); g.gain.value = (0.05 + Math.random() * 0.08) * (0.5 + v);
+    const p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    src.connect(f); f.connect(g); if (p) { p.pan.value = Math.random() * 1.6 - 0.8; g.connect(p); p.connect(dry); } else g.connect(dry);
+    src.start(t);
+  }
+}
 function bell(m, vel = 1, when = 0) {
   if (!ctx) return;
   const t = ctx.currentTime + when, f = NOTE(m);
@@ -153,5 +168,6 @@ export const sound = {
     if (kind === 'slide') bell(pick([74, 76, 81]), 0.5);
   },
   // 영상 재생 중에는 줄이기
+  rattle(v) { if (ctx && on) rattle(v); },
   duck(v) { if (ctx && on) { dry.gain.setTargetAtTime(0.6 * v, ctx.currentTime, 0.5); wet.gain.setTargetAtTime(0.55 * v, ctx.currentTime, 0.5); } },
 };

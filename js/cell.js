@@ -1,5 +1,6 @@
-import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=15';
-import { tr, langSwitcher } from './i18n.js?v=1';
+import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=16';
+import { tr, langSwitcher } from './i18n.js?v=2';
+import { IS_MOBILE, sensor } from './sensors.js?v=1';
 
 const story = document.getElementById('story');
 const wipe = document.getElementById('wipe');
@@ -226,6 +227,18 @@ const R = {
 
 let TOP = [];
 langSwitcher(document.querySelector('.topbar'));
+// 모바일: 첫 탭에서 기울기 권한 · 흔들면 화면에 보이는 양자 실험을 관측
+if (IS_MOBILE) {
+  document.body.classList.add('is-mobile');
+  addEventListener('click', function once() { removeEventListener('click', once, true); sensor.enable(); }, true);
+  sensor.onShake(() => {
+    const q = [...document.querySelectorAll('.q-stage')].find((el) => { const r = el.getBoundingClientRect(); return r.top < innerHeight * 0.7 && r.bottom > innerHeight * 0.3; });
+    if (!q) return;
+    const r = q.getBoundingClientRect();
+    q.dispatchEvent(new PointerEvent('pointerdown', { clientX: r.left + r.width * (0.2 + Math.random() * 0.6), clientY: r.top + r.height * (0.2 + Math.random() * 0.6), bubbles: true }));
+    sensor.vibrate([20, 30, 40]);
+  });
+}
 (async () => {
   const { cells: top, all: cells, groups, blocks } = await loadData();
   TOP = top;
@@ -765,9 +778,15 @@ function canvasLoop(cv, draw, opts = {}) {
   size(); addEventListener('resize', size);
   const host = opts.host || cv.parentElement;
   host.addEventListener('pointermove', (e) => { const r = cv.getBoundingClientRect(); st.mx = e.clientX - r.left; st.my = e.clientY - r.top; st.inside = true; });
-  host.addEventListener('pointerdown', (e) => { const r = cv.getBoundingClientRect(); st.mx = e.clientX - r.left; st.my = e.clientY - r.top; st.inside = true; }); // 터치: 누른 곳으로 이동
+  host.addEventListener('pointerdown', (e) => { const r = cv.getBoundingClientRect(); st.mx = e.clientX - r.left; st.my = e.clientY - r.top; st.inside = true; st.touchT = performance.now(); }); // 터치: 누른 곳으로 이동
   host.addEventListener('pointerleave', () => { st.inside = false; });
-  const tick = (now) => { if (!st.visible) return; draw(g, st, now / 1000); requestAnimationFrame(tick); };
+  // 모바일: 프리즘·그림자 실험은 폰을 기울여 빛을 움직임 (화면을 누른 직후 2초는 손가락 우선)
+  const tiltLight = IS_MOBILE && host.matches && host.matches('.b-prism .lab-stage, .b-shadow .lab-stage');
+  const tick = (now) => {
+    if (!st.visible) return;
+    if (tiltLight && sensor.on && now - (st.touchT || 0) > 2000) { st.mx = st.w * (0.5 + sensor.tiltX * 0.48); st.my = st.h * (0.45 + sensor.tiltY * 0.45); st.inside = true; }
+    draw(g, st, now / 1000); requestAnimationFrame(tick);
+  };
   new IntersectionObserver(([e]) => { st.visible = e.isIntersecting; if (st.visible) requestAnimationFrame(tick); }).observe(host);
   return st;
 }

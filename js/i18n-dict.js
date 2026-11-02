@@ -146,6 +146,15 @@ const T = {
   '신원이 확인된 사람': ['An identified person', '身份已确认的人', '身元が確認された人'],
   '127명 가운데 한 사람입니다. 이 전시는 이름을 표시하지 않습니다.': ['One of the 127 people identified. This exhibition does not display names.', '是127人中的一位。本展览不显示姓名。', '127人のうちのひとりです。この展示では名前を表示しません。'],
   '작품 영상': ['Artwork video', '作品影像', '作品映像'],
+  // ---------- 모바일 ----------
+  '착륙하기': ['Land', '降落', '着陸する'],
+  '좌우로 밀어 행성 넘기기 · 폰을 기울이거나 흔들어 보세요': ['Swipe left or right to change planets · Try tilting or shaking your phone', '左右滑动切换行星 · 试着倾斜或摇晃手机', '左右にスワイプで惑星を切り替え · スマホを傾けたり振ったりしてみてください'],
+  '기울이기·흔들기 켜기': ['Turn on tilt & shake', '开启倾斜·摇晃', '傾き・シェイクをオン'],
+  '폰을 기울이면 그릇의 쌀이 쏟아지고, 흔들면 쌀이 흔들립니다.': ['Tilt your phone and the rice spills from the bowls; shake it and the rice rattles.', '倾斜手机，碗里的米就会洒出来；摇一摇，米粒就会晃动。', 'スマホを傾けると器のお米がこぼれ、振るとお米が揺れます。'],
+  '카메라로 내 공간에 빛 남기기': ['Leave lights in your space with the camera', '用相机在你的空间留下光', 'カメラで自分の空間に光を残す'],
+  '카메라 영상은 이 화면에서만 보이고 저장·전송되지 않습니다.': ['The camera image is shown only on this screen and is never saved or sent.', '相机画面只显示在此屏幕上，不会被保存或传送。', 'カメラの映像はこの画面にだけ表示され、保存・送信されません。'],
+  'AR 끝내기': ['Exit AR', '退出 AR', 'AR を終了'],
+  '카메라를 쓸 수 없어요 (권한을 확인해 주세요)': ['Camera unavailable (check permissions)', '无法使用相机（请检查权限）', 'カメラを使えません（許可を確認してください）'],
 };
 const IDX = { en: 0, zh: 1, ja: 2 };
 export const DICT = { en: {}, zh: {}, ja: {} };

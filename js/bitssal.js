@@ -1,8 +1,9 @@
 // X-003 · 빛쌀 — 한 톨의 쌀을 따라가는 연속 스크롤 이야기
 // 사실 서술 출처: 진실·화해를위한과거사정리위원회 「대구10월사건 관련 민간인 희생 사건」(jinsil.go.kr/KoreanWar/30.do),
 //                「경산 코발트광산 사건」(jinsil.go.kr/KoreanWar/36.do)
-import { sound } from './bitssal-sound.js?v=2';
-import { lang, tr, langSwitcher } from './i18n.js?v=1';
+import { sound } from './bitssal-sound.js?v=3';
+import { lang, tr, langSwitcher } from './i18n.js?v=2';
+import { IS_MOBILE, sensor, startCamera } from './sensors.js?v=1';
 const BX = lang !== 'ko' ? (await import(`./bitssal-i18n-${lang}.js?v=1`)).default : null;
 const SRC1 = tr('진실·화해를위한과거사정리위원회, 「대구10월사건 관련 민간인 희생 사건」');
 const SRC2 = tr('진실·화해를위한과거사정리위원회, 「경산 코발트광산 사건」');
@@ -123,6 +124,12 @@ const TOUCH_TXT = {
   ja: [['闇の中の米粒にカーソルを近づけてみてください。押してついていくと、物語が始まります。', '闇の中の米粒をタップしてください。物語が始まります。'], ['カーソルを動かしてみてください。米粒があなたのほうへ集まってきます。', '画面をタップしてみてください。米粒がタップした場所へ集まってきます。'], ['右の文書の上を<b>カーソルでこすって</b>', '文書の上を<b>指で何度かタップして</b>'], ['闇の中では、<b>カーソルが懐中電灯</b>になります。', '闇の中では、<b>タップした場所が懐中電灯</b>のように明るくなります。']],
 };
 if (TOUCH) SCENES.forEach((sc) => sc.cards.forEach((c) => { if (c.html) (TOUCH_TXT[lang] || []).forEach(([a, b]) => { c.html = c.html.split(a).join(b); }); }));
+// 모바일 전용 안내 · AR 버튼
+if (IS_MOBILE) {
+  const life = SCENES.find((s) => s.id === 'life'), light = SCENES.find((s) => s.id === 'light');
+  if (life && life.cards[1]) life.cards[1].html += `<p class="try">${tr('폰을 기울이면 그릇의 쌀이 쏟아지고, 흔들면 쌀이 흔들립니다.')}</p>`;
+  if (light && light.cards[0]) light.cards[0].html += `<button class="act-btn ar-btn">${tr('카메라로 내 공간에 빛 남기기')}</button><p class="note">${tr('카메라 영상은 이 화면에서만 보이고 저장·전송되지 않습니다.')}</p>`;
+}
 const CREDITS = `<footer class="bs-credits"><div>
   <h3>${tr('출처와 안내')}</h3>
   <p>${tr('역사 서술: ')}${SRC1}(jinsil.go.kr/KoreanWar/30.do), ${SRC2}(jinsil.go.kr/KoreanWar/36.do)</p>
@@ -191,6 +198,7 @@ function autoSound() {
     if (ok) { GEST.forEach((ev) => removeEventListener(ev, firstGesture)); sndUI(); return; }
     closeGate = sndGate(tr('X-003 · 진시영 · 김동선'), tr('빛쌀 — 80년의 기억'), (withSound) => {
       GEST.forEach((ev) => removeEventListener(ev, firstGesture));
+      sensor.enable();
       if (withSound) sound.start().then(sndUI);
       else { sndUserOff = true; sndUI(); }
     });
@@ -260,7 +268,7 @@ document.querySelectorAll('.car').forEach((c) => {
   v.addEventListener('click', (e) => { if (c._sw) { c._sw = false; e.stopPropagation(); e.preventDefault(); } }, true);
 });
 // 한 톨 보태기
-document.querySelectorAll('.add-voice').forEach((b) => b.addEventListener('click', () => { state.voice = Math.min(200, state.voice + 1); sound.ping('voice'); document.querySelectorAll('.voice-n').forEach((n) => (n.textContent = state.voice)); }));
+document.querySelectorAll('.add-voice').forEach((b) => b.addEventListener('click', () => { state.voice = Math.min(200, state.voice + 1); sound.ping('voice'); sensor.vibrate(12); document.querySelectorAll('.voice-n').forEach((n) => (n.textContent = state.voice)); }));
 
 // ---------------- 캔버스 / 입자 ----------------
 const cv = document.getElementById('stage'), g = cv.getContext('2d');
@@ -294,6 +302,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const seg = (p, a, b) => sm((p - a) / (b - a));
 
 // 상태 (인터랙션)
+let stopARref = null;
 const state = { entered: false, share: 0, balls: [], memories: [], bowls: new Array(10).fill(0), voice: 0, hold: 0, lamps: [], rub: new Float32Array(900), carK: 0 };
 let ptrDown = false;
 addEventListener('pointerdown', (e) => { if (!e.target.closest('.card, .bs-top, .bs-menu, .bs-progress, .lab, .lb')) ptrDown = true; });
@@ -627,11 +636,24 @@ function frame(now) {
   [...prog.children].forEach((b, i) => b.classList.toggle('on', i <= cur));
   prog.children[cur].querySelector('i').style.width = Math.round(p * 100) + '%';
 
-  g.fillStyle = id === 'mine' ? '#020202' : '#050505'; g.fillRect(0, 0, W, H);
+  if (!state.ar) { g.fillStyle = id === 'mine' ? '#020202' : '#050505'; g.fillRect(0, 0, W, H); }
   drawBackdrop(id, p, t);
   const wander = TOUCH && !ptr.in; // 터치: 누르지 않을 땐 손전등이 천천히 바닥을 훑음
   const torch = id === 'mine' && (ptr.in || TOUCH) ? state.torch || 0 : 0, tx = wander ? CX + Math.sin(t * 0.5) * R * 0.7 : ptr.x, ty = wander ? CY + R * 0.62 + Math.sin(t * 0.9) * R * 0.08 : ptr.y;
+  // 모바일: 기울이면 쌀알이 낮은 쪽으로 쏠리고(밥상·굶주림 장면에선 그릇에서 쏟아짐), 흔들면 떨림. 광산·진실규명 장에서는 쓰지 않음
+  const calm = id === 'boundary' || id === 'mine' || id === 'truth';
+  const gx = IS_MOBILE && sensor.on && !calm ? sensor.tiltX : 0, gy = IS_MOBILE && sensor.on && !calm ? sensor.tiltY : 0, sh = IS_MOBILE && !calm ? sensor.shake : 0;
+  if (IS_MOBILE && (id === 'life' || id === 'hunger')) {
+    const before = state.spill || 0;
+    if (Math.abs(gx) > 0.45) { state.spill = Math.min(1, before + dt * (Math.abs(gx) - 0.45) * 2.2); state.spillDir = Math.sign(gx); }
+    else state.spill = Math.max(0, before - dt * 0.18);
+    if (state.spill > before + 0.002 && now - (state.rt || 0) > 140) { state.rt = now; sound.rattle(0.25 + Math.abs(gx) * 0.4); sensor.vibrate(8); }
+    const n = id === 'life' ? 540 : 140;
+    for (let i = 0; i < n; i++) if (R1[i] < state.spill) { TX[i] = state.spillDir > 0 ? W - 14 - R2[i] * 70 : 14 + R2[i] * 70; TY[i] = H - 18 - R3[i] * 46 * (1 - Math.abs(R2[i] - 0.5)); }
+  } else if (IS_MOBILE) state.spill = 0;
+  const ox = gx * W * 0.07, oy = gy * H * 0.05;
   const ease = reduced ? 1 : state.freeze ? 0 : id === 'mine' ? 0.035 : 0.075;
+  if (state.ar) { g.clearRect(0, 0, W, H); g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(0, 0, W, H); }
   for (let i = 0; i < N; i++) {
     X[i] += (TX[i] - X[i]) * ease; Y[i] += (TY[i] - Y[i]) * ease; A[i] += (TA[i] - A[i]) * 0.08;
     if (A[i] < 0.01) continue;
@@ -639,13 +661,16 @@ function frame(now) {
     let al = A[i];
     if (torch > 0) { const d = Math.hypot(X[i] - tx, Y[i] - ty); al *= lerp(1, d < 150 ? 1.25 - d / 300 : 0.12, torch); }
     if (al < 0.01) continue;
-    grain(X[i], Y[i], ROT[i], Math.min(1, al), COLORS[C[i]], i === 0 && id === 'prologue' ? 3 : 1);
+    const k = 0.4 + R1[i], jx = sh ? (Math.random() - 0.5) * sh * 16 : 0, jy = sh ? (Math.random() - 0.5) * sh * 16 : 0;
+    grain(X[i] + ox * k + jx, Y[i] + oy * k + jy, ROT[i] + jx * 0.1, Math.min(1, al), COLORS[C[i]], i === 0 && id === 'prologue' ? 3 : 1);
   }
   if (id === 'prologue') { // 첫 쌀알의 빛
     const hg = g.createRadialGradient(X[0], Y[0], 0, X[0], Y[0], 120); hg.addColorStop(0, 'rgba(255,240,210,.22)'); hg.addColorStop(1, 'rgba(255,240,210,0)'); g.fillStyle = hg; g.fillRect(X[0] - 120, Y[0] - 120, 240, 240);
   }
   if (torch > 0) { const tg = g.createRadialGradient(tx, ty, 0, tx, ty, 170); tg.addColorStop(0, `rgba(255,236,200,${0.1 * torch})`); tg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = tg; g.fillRect(tx - 170, ty - 170, 340, 340); }
-  if (id === 'light') state.lamps.forEach((l) => { l.y -= l.v; l.x += Math.sin(t + l.ph) * 0.3; const r = 10 + Math.sin(t * 3 + l.ph) * 2; const lg = g.createRadialGradient(l.x, l.y, 0, l.x, l.y, r * 2.4); lg.addColorStop(0, 'rgba(255,240,205,.95)'); lg.addColorStop(1, 'rgba(255,214,150,0)'); g.fillStyle = lg; g.beginPath(); g.arc(l.x, l.y, r * 2.4, 0, 6.283); g.fill(); if (l.y < -40) l.y = H + 40; });
+  const ax = state.ar ? -sensor.tiltX * W * 0.6 : 0, ay = state.ar ? -sensor.tiltY * H * 0.5 : 0;
+  if (id === 'light') state.lamps.forEach((l0) => { l0.y -= l0.v; l0.x += Math.sin(t + l0.ph) * 0.3; const l = { x: l0.x + (l0.ar ? ax : 0), y: l0.y + (l0.ar ? ay : 0) }; const r = 10 + Math.sin(t * 3 + l0.ph) * 2; const lg = g.createRadialGradient(l.x, l.y, 0, l.x, l.y, r * 2.4); lg.addColorStop(0, 'rgba(255,240,205,.95)'); lg.addColorStop(1, 'rgba(255,214,150,0)'); g.fillStyle = lg; g.beginPath(); g.arc(l.x, l.y, r * 2.4, 0, 6.283); g.fill(); if (l0.y < -40) l0.y = H + 40; });
+  if (state.ar && id !== 'light') stopAR();
   if (id === 'hunger' && state.hold > 0.05) { g.strokeStyle = `rgba(255,248,230,${0.5 * state.hold})`; g.beginPath(); g.arc(ptr.x, ptr.y, 26 + state.hold * 10, -Math.PI / 2, -Math.PI / 2 + state.hold * 6.283); g.stroke(); }
   sound.update(id, p, { freeze: state.freeze, lamps: state.lamps.length });
   placeLabels(id, p);
@@ -656,19 +681,19 @@ function frame(now) {
 addEventListener('click', (e) => {
   if (e.target.closest('.card, .bs-top, .bs-menu, .bs-progress, .lab, .bs-credits, .lb')) return;
   const id = SCENES[cur].id;
-  if (id === 'prologue' && Math.hypot(e.clientX - X[0], e.clientY - Y[0]) < 60) { state.entered = true; sound.ping('enter'); setTimeout(() => window.scrollTo({ top: sections[0].offsetTop + sections[0].offsetHeight * 0.55, behavior: 'smooth' }), 300); }
+  if (id === 'prologue' && Math.hypot(e.clientX - X[0], e.clientY - Y[0]) < 60) { state.entered = true; sound.ping('enter'); sensor.vibrate(25); setTimeout(() => window.scrollTo({ top: sections[0].offsetTop + sections[0].offsetHeight * 0.55, behavior: 'smooth' }), 300); }
   if (id === 'life') {
-    BOWLS.forEach((b, k) => { const q = bowlPos(k); if (Math.hypot(e.clientX - q.x, e.clientY - q.y) < 36 && state.bowls[k] < 1) { state.bowls[k] = Math.min(1, state.bowls[k] + 0.5); const done = state.bowls.filter((v) => v >= 1).length; sound.ping(done === 10 && state.bowls[k] >= 1 ? 'bowlsDone' : 'bowl'); document.querySelectorAll('.bowl-n').forEach((n) => (n.textContent = done)); if (done === 10) showTip(tr('한 집의 하루'), tr('열 그릇이 모두 찼습니다. 이 평범한 밥상이 다음 장면에서 비어 갑니다.'), { getBoundingClientRect: () => ({ left: CX - 120, top: CY + R * 0.7 }) }); else showTip(b.t, state.bowls[k] >= 1 ? tr('한 그릇을 다 담았습니다.') : tr('한 번 더 누르면 가득 찹니다.'), { getBoundingClientRect: () => ({ left: q.x - 40, top: q.y - 10 }) }); } });
+    BOWLS.forEach((b, k) => { const q = bowlPos(k); if (Math.hypot(e.clientX - q.x, e.clientY - q.y) < 36 && state.bowls[k] < 1) { state.bowls[k] = Math.min(1, state.bowls[k] + 0.5); const done = state.bowls.filter((v) => v >= 1).length; sound.ping(done === 10 && state.bowls[k] >= 1 ? 'bowlsDone' : 'bowl'); sensor.vibrate(done === 10 && state.bowls[k] >= 1 ? [30, 50, 30, 50, 60] : 15); sound.rattle(0.3); document.querySelectorAll('.bowl-n').forEach((n) => (n.textContent = done)); if (done === 10) showTip(tr('한 집의 하루'), tr('열 그릇이 모두 찼습니다. 이 평범한 밥상이 다음 장면에서 비어 갑니다.'), { getBoundingClientRect: () => ({ left: CX - 120, top: CY + R * 0.7 }) }); else showTip(b.t, state.bowls[k] >= 1 ? tr('한 그릇을 다 담았습니다.') : tr('한 번 더 누르면 가득 찹니다.'), { getBoundingClientRect: () => ({ left: q.x - 40, top: q.y - 10 }) }); } });
   }
   if (TOUCH && (id === 'mine' || id === 'truth')) { // 터치: 밝은 점 근처를 누르면 설명
     for (let i = 0; i < 1800; i += 14) { if (C[i] === 3 && A[i] > 0.5 && Math.hypot(e.clientX - X[i], e.clientY - Y[i]) < 24) { showTip(tr('신원이 확인된 사람'), tr('127명 가운데 한 사람입니다. 이 전시는 이름을 표시하지 않습니다.'), { getBoundingClientRect: () => ({ left: X[i] - 20, top: Y[i] }) }); break; } }
   }
-  if (id === 'light' && state.lamps.length < 60) { sound.ping('lamp'); state.lamps.push({ x: e.clientX, y: e.clientY, v: 0.25 + Math.random() * 0.35, ph: Math.random() * 6 }); document.querySelectorAll('.lamp-n').forEach((n) => (n.textContent = state.lamps.length)); }
+  if (id === 'light' && state.lamps.length < 60) { sound.ping('lamp'); state.lamps.push({ x: e.clientX - (state.ar ? -sensor.tiltX * W * 0.6 : 0), y: e.clientY - (state.ar ? -sensor.tiltY * H * 0.5 : 0), v: state.ar ? 0.12 + Math.random() * 0.15 : 0.25 + Math.random() * 0.35, ph: Math.random() * 6, ar: !!state.ar }); sensor.vibrate(15); document.querySelectorAll('.lamp-n').forEach((n) => (n.textContent = state.lamps.length)); }
   if (id === 'share') {
     // 가장 가까운 주먹밥을 옆 자리로 건넴
     let best = null, bd = 1e9;
     state.balls.forEach((b) => { const x = CX + Math.cos(b.a) * R * b.r, y = CY + Math.sin(b.a) * R * b.r * 0.75, d = Math.hypot(e.clientX - x, e.clientY - y); if (d < bd) { bd = d; best = b; } });
-    if (best && bd < 70) { best.ta += Math.PI * 2 / 10 * (1 + Math.floor(Math.random() * 3)); best.tr = 0.55 + Math.random() * 0.35; state.share++; sound.ping('share'); document.querySelectorAll('.share-n').forEach((n) => (n.textContent = state.share)); }
+    if (best && bd < 70) { best.ta += Math.PI * 2 / 10 * (1 + Math.floor(Math.random() * 3)); best.tr = 0.55 + Math.random() * 0.35; state.share++; sound.ping('share'); sensor.vibrate(20); document.querySelectorAll('.share-n').forEach((n) => (n.textContent = state.share)); }
   }
 });
 addEventListener('pointermove', (e) => {
@@ -698,3 +723,27 @@ document.querySelectorAll('.mem-f').forEach((f) => {
 
 // 시작
 document.fonts.ready.catch(() => {}).then(() => { document.querySelector('.bs-loader').classList.add('done'); autoSound(); requestAnimationFrame(frame); });
+
+// ---------------- 모바일 전용: 센서 · 흔들기 · AR ----------------
+if (IS_MOBILE) {
+  document.body.classList.add('is-mobile');
+  addEventListener('click', function once() { removeEventListener('click', once, true); sensor.enable(); }, true); // iPhone: 첫 탭에서 기울기 권한
+  sensor.onShake((v) => {
+    const id = SCENES[cur].id;
+    if (id === 'boundary' || id === 'mine' || id === 'truth') return;
+    sound.rattle(0.4 + v * 0.6); sensor.vibrate([25, 30, 25]);
+  });
+  const vid = document.createElement('video'); vid.className = 'ar-video'; vid.setAttribute('playsinline', ''); vid.muted = true; vid.hidden = true; document.body.prepend(vid);
+  const exit = document.createElement('button'); exit.className = 'ar-exit'; exit.hidden = true; exit.textContent = tr('AR 끝내기'); document.body.appendChild(exit);
+  let stopCam = null;
+  window.stopAR = stopAR;
+  document.querySelectorAll('.ar-btn').forEach((btn) => btn.addEventListener('click', async (e) => {
+    e.stopPropagation(); sensor.enable();
+    try { stopCam = await startCamera(vid); vid.hidden = false; exit.hidden = false; state.ar = true; document.body.classList.add('ar-on'); sensor.vibrate(20); }
+    catch (err) { btn.textContent = tr('카메라를 쓸 수 없어요 (권한을 확인해 주세요)'); }
+  }));
+  exit.addEventListener('click', (e) => { e.stopPropagation(); stopAR(); });
+  function stopAR() { if (stopCam) stopCam(); stopCam = null; state.ar = false; vid.hidden = true; exit.hidden = true; document.body.classList.remove('ar-on'); }
+  stopARref = stopAR;
+}
+function stopAR() { stopARref && stopARref(); }

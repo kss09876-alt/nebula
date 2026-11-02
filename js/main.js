@@ -1,8 +1,10 @@
 // XPACE — 메인: 중앙의 X를 도는 전시 행성계
 import * as THREE from 'three';
-import { loadData, imageUrl, esc } from './data.js?v=15';
-import { hsound } from './home-sound.js?v=3';
-import { tr, lang, langSwitcher } from './i18n.js?v=1';
+import { loadData, imageUrl, esc } from './data.js?v=16';
+import { hsound } from './home-sound.js?v=4';
+import { tr, lang, langSwitcher } from './i18n.js?v=2';
+import { IS_MOBILE } from './sensors.js?v=1';
+const M = {}; // 모바일 전용 기능 연결점 (home-mobile.js가 채움)
 
 const canvas = document.getElementById('stage');
 const card = document.getElementById('hover-card');
@@ -214,7 +216,7 @@ function makePlanet(cell, i, total) {
     label.className = 'p-label' + (open ? '' : ' is-coming');
     label.style.setProperty('--accent', cell.color || '#7ee0d0');
     label.innerHTML = `<b>${code(i)}</b><span>${esc(open ? shortTitle(cell.title) : 'Coming soon')}</span>`;
-    label.addEventListener('click', () => open && enter(planet));
+    label.addEventListener('click', () => open && (M.onTap ? M.onTap(planet) : enter(planet)));
     label.addEventListener('pointerenter', () => { labelHover = planet; });
     label.addEventListener('pointerleave', () => { labelHover = null; });
     labelsEl.appendChild(label);
@@ -250,8 +252,10 @@ canvas.addEventListener('pointerup', (e) => {
   state.dragging = false;
   if (state.moved < 6) {
     ptr.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
-    const p = pick(); if (p && p.open) enter(p);
-  }
+    const p = pick();
+    if (M.onTap) { if (state.swiped) state.swiped = false; else M.onTap(p && p.open ? p : null); ptr.set(-9, -9); }
+    else if (p && p.open) enter(p);
+  } else if (M.onTap) { state.swiped = false; ptr.set(-9, -9); }
 });
 canvas.addEventListener('pointerleave', () => ptr.set(-9, -9));
 canvas.addEventListener('wheel', (e) => { state.tDist = Math.max(state.baseDist * 0.45, Math.min(state.baseDist * 1.6, state.tDist + e.deltaY * 0.02)); }, { passive: true });
@@ -297,7 +301,8 @@ let last = performance.now(), t0 = performance.now();
 function tick(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   const t = (now - t0) / 1000;
-  if (!state.entering) setHover(labelHover || pick());
+  if (!state.entering) setHover(state.mFocus || labelHover || pick());
+  M.frame && M.frame(dt);
   const slow = state.hovered || state.entering ? 0.15 : 1;
   if (!state.dragging && !state.entering) state.tAz += dt * 0.02;
 
@@ -305,12 +310,12 @@ function tick(now) {
   const pulse = 1 + Math.sin(t * 1.4) * 0.04;
   arms[0].material.rotation = Math.PI / 4 + Math.sin(t * 0.3) * 0.05;
   arms[1].material.rotation = -Math.PI / 4 - Math.sin(t * 0.3) * 0.05;
-  arms.forEach((a) => a.scale.set(9 * pulse, 0.55, 1));
+  arms.forEach((a) => a.scale.set(9 * pulse * (1 + (state.boost || 0) * 0.04), 0.55, 1));
 
   planets.forEach((p) => {
     p.intro = Math.min(1.6, p.intro + dt * 0.8);
     const e = 1 - Math.pow(1 - Math.max(0, Math.min(1, p.intro * 1.4 - p.i * 0.12)), 3);
-    p.angle += dt * p.speed * slow;
+    p.angle += dt * p.speed * slow * (1 + (state.boost || 0));
     const r = p.orbitR * (0.6 + 0.4 * e);
     p.group.position.set(Math.cos(p.angle) * r, Math.sin(p.angle * 2 + p.i) * 0.08, Math.sin(p.angle) * r);
     p.body.rotation.y += dt * p.spin;
@@ -428,6 +433,7 @@ function autoSound() {
     if (ok) { GEST.forEach((ev) => removeEventListener(ev, firstGesture)); sndUI(); return; }
     closeGate = sndGate('ONLINE INTERACTIVE EXHIBITION', 'XPACE', (withSound) => {
       GEST.forEach((ev) => removeEventListener(ev, firstGesture));
+      M.onGateEnter && M.onGateEnter();
       if (withSound) hsound.start().then(sndUI); else { hsound.stop(); sndUI(); }
     });
   });
@@ -451,6 +457,7 @@ document.querySelectorAll('.cell-list').forEach((l) => l.addEventListener('point
     </li>`).join('');
   resize();
   t0 = last = performance.now();
+  if (IS_MOBILE) { const { initHomeMobile } = await import('./home-mobile.js?v=1'); initHomeMobile(Object.assign(M, { state, planets, world, camera, THREE, enter, hsound, code, shortTitle, canvas })); }
   loader.classList.add('done');
   autoSound();
   requestAnimationFrame(tick);
