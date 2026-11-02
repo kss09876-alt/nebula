@@ -23,7 +23,8 @@ VALIX의 X(Value X) = 무한한 우주. 전시 하나가 행성 하나. 미시�
 | `js/home-sound.js`, `js/bitssal-sound.js` | Web Audio 실시간 합성 사운드 (음원 파일 없음). 자동재생 시도 → 막히면 입장 화면 |
 | `css/style.css`, `css/bitssal.css` | 스타일 (끝부분에 모바일 블록) |
 | `first.html` | 예전 기획전 허브 → `cell.html?id=g001`로 이동만 함 |
-| `app.html` + `js/app.js` + `css/app.css` | **VALIX 앱 화면** (앱 껍데기가 불러오는 웹, 밝은 테마). 첫 실행: 시작 화면 → 소개 2장 → 로그인(카카오·Apple은 아직 안내만) → 닉네임. 탭: 전시(WEEKLY PLANET Vol.N, 2026-10-05 주를 Vol.1로 계산) · 플레이(주말까지 카운트다운, 체험 문구는 `PLAYS`) · 리워드(주차별 책, 주 3곳 스탬프) · 마이 + 오른쪽 둥근 버튼(이번 주 행성 바로 입장). 착륙 로딩(우주인→행성) 뒤 전시는 iframe으로 기존 페이지를 띄움. 기록·닉네임은 기기 안(localStorage `valix-*`)에만. 시트에 `ends`(YYYY-MM-DD)가 있으면 카운트다운이 그 날짜까지 |
+| `app.html` + `js/app.js` + `css/app.css` | **VALIX 앱 화면** (앱 껍데기가 불러오는 웹, 검은 우주 테마). 첫 실행: 시작 화면 → 소개 2장 → 로그인(카카오·Apple은 아직 안내만) → 항해명(우주 방랑자 이름 자동 생성 `NAMES`, 주사위로 다시 뽑기). 탭: 전시(WEEKLY PLANET Vol.N, 2026-10-05 주를 Vol.1로 계산) · 플레이(주말까지 카운트다운, 체험 문구는 `PLAYS`) · 리워드(주차별 책, 주 3곳 스탬프) · 마이 + 오른쪽 둥근 버튼(이번 주 행성 바로 입장). 착륙 로딩(우주인→행성) 뒤 전시는 iframe으로 기존 페이지를 띄움. 기록·닉네임은 기기 안(localStorage `valix-*`)에만. 시트에 `ends`(YYYY-MM-DD)가 있으면 카운트다운이 그 날짜까지 |
+| `js/planets.js` | **행성 그림 생성기** (이미지 파일 없이 캔버스로 그림). 종류: gas·rocky·ice·ocean·lava·crystal·rice. 전시 `fx`로 정함(rice→쌀알, prism→수정, ripple→바다, stars/trio→가스), 없으면 id로 고름. 시트에 `planet` 칸을 넣으면 그 종류로. 같은 전시는 항상 같은 모양. 앱의 포스터·홈·플레이·착륙 로딩에 공통 사용 |
 
 ## 앱 (VALIX)
 - iOS/Android 앱은 별도 폴더 `valix-app`(Capacitor). 앱은 `app.html`을 원격으로 불러오는 껍데기라, 웹만 고치면 앱에도 바로 반영됨.

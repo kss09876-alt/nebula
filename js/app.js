@@ -3,18 +3,31 @@
 // 데이터는 기존 data.js(구글 시트 → 백업 JSON)를 그대로 씁니다. 개인 기록은 기기 안(localStorage)에만 저장합니다.
 import { loadData, esc } from './data.js?v=17';
 import { lang, LANGS } from './i18n.js?v=3';
+import { planetURL, planetCanvas, planetType, hasRing } from './planets.js?v=3';
 
 /* ---------- 문구 ---------- */
 const T = {
-  en: { '전시': 'Exhibits', '플레이': 'Play', '리워드': 'Rewards', '마이': 'My', '일상은 작고,\n우주는 넓으니까': 'Days feel small,\nthe universe is vast', '잠시 고개를 들어 더 큰 것을 바라보는 시간': 'Look up for a moment at something bigger', '전시 하나가\n행성 하나가 되는 곳': 'Where every exhibition\nbecomes a planet', '매주 새로운 행성에 착륙해 보세요': 'Land on a new planet every week', '다음': 'Next', '건너뛰기': 'Skip', '매주 착륙하는\n온라인 인터랙티브 전시': 'An interactive exhibition\nyou land on every week', '생각과 마음의 폭을 넓히는 시간': 'Widen your thoughts and heart', '카카오로 시작하기': 'Continue with Kakao', 'Apple로 계속하기': 'Continue with Apple', '로그인 전 둘러보기': 'Look around first', '로그인은 곧 열려요. 지금은 둘러보기로 시작할게요.': 'Sign-in is coming soon. Let’s start by looking around.', '마지막으로\n닉네임을 정해주세요': 'Last step:\nchoose a nickname', '닉네임': 'Nickname', '최대 8자까지 입력 가능해요': 'Up to 8 characters', '닉네임은 이 기기에만 저장돼요.': 'Your nickname stays on this device.', '시작하기': 'Start', '입장하기': 'Enter', '이번 주 열린 행성': 'Planets open this week', '지금 상영 중': 'Now showing', '곧 착륙할 행성': 'Landing soon', '기획전': 'Group show', '단독전': 'Solo', '공개': 'Open', '예정': 'Soon', '남음': 'left', '일': 'd', '체험 방법': 'How to play', '휴대폰에서 더 많은 체험을 할 수 있어요.': 'More to try on your phone.', 'n주차, 함께 시작해요!': 'Week {n}, let’s go!', 'n주차': 'Wk {n}', '참여 안내': 'How it works', '3주 연속 착륙하면 <em>항해 리포트</em>가 열려요': 'Land 3 weeks in a row to unlock your <em>voyage report</em>', '이번 주 행성 3곳에 착륙하면\n항해 스탬프 완성!': 'Land on 3 planets this week\nto complete your stamps!', '행성 3곳에 착륙하면 완성돼요': 'Land on 3 planets to complete', '이번 주 스탬프 완성!': 'Stamps complete this week!', '스탬프와 기록은 이 기기에만 저장돼요.': 'Stamps and records stay on this device.', '매주 월요일에 새 주차가 시작돼요. 그 주에 전시에 한 번 이상 입장하면 그 주의 책이 채워져요.': 'A new week starts every Monday. Enter any exhibition that week to fill its book.', '내 프로필': 'My profile', '나의 기록': 'My records', '항해 리포트': 'Voyage report', '다녀온 행성': 'Planets visited', '머문 시간': 'Time spent', '최근 본 전시': 'Recently viewed', '아직 다녀온 행성이 없어요.': 'No planets visited yet.', '언어': 'Language', '체험 권한': 'Sensor access', '기울기·흔들기·마이크·카메라·위치는 전시 안에서 체험할 때만 쓰고, 기기 밖으로 저장하거나 보내지 않아요.': 'Tilt, shake, mic, camera and location are only used during the experience and never stored or sent.', '관람 기록 지우기': 'Clear history', '버전': 'Version', '닉네임을 바꿀까요?': 'Change nickname?', '우주인': 'Astronaut', '분': 'min', '시간': 'h', '착륙하는 중': 'Landing', '대기권 진입': 'Entering atmosphere', '착륙 완료': 'Landed', '신호가 약해요. 연결을 확인해 주세요.': 'Weak signal. Check your connection.', '다시 시도': 'Try again', '전시를 불러오지 못했어요.': 'Could not load exhibitions.', '기록을 지웠어요.': 'History cleared.' },
-  zh: { '전시': '展览', '플레이': '互动', '리워드': '奖励', '마이': '我的', '일상은 작고,\n우주는 넓으니까': '日常很小，\n宇宙很大', '잠시 고개를 들어 더 큰 것을 바라보는 시간': '抬起头，看看更大的世界', '전시 하나가\n행성 하나가 되는 곳': '一个展览\n就是一颗行星', '매주 새로운 행성에 착륙해 보세요': '每周登陆一颗新行星', '다음': '下一步', '건너뛰기': '跳过', '매주 착륙하는\n온라인 인터랙티브 전시': '每周登陆的\n线上互动展览', '생각과 마음의 폭을 넓히는 시간': '拓宽思想与心灵', '카카오로 시작하기': '使用 Kakao 开始', 'Apple로 계속하기': '通过 Apple 继续', '로그인 전 둘러보기': '先逛逛', '로그인은 곧 열려요. 지금은 둘러보기로 시작할게요.': '登录功能即将开放，先随便看看吧。', '마지막으로\n닉네임을 정해주세요': '最后，\n请设置昵称', '닉네임': '昵称', '최대 8자까지 입력 가능해요': '最多 8 个字', '닉네임은 이 기기에만 저장돼요.': '昵称只保存在本设备上。', '시작하기': '开始', '입장하기': '进入', '이번 주 열린 행성': '本周开放的行星', '지금 상영 중': '正在展出', '곧 착륙할 행성': '即将登陆', '기획전': '策划展', '단독전': '个展', '공개': '开放', '예정': '即将', '남음': '后结束', '일': '天', '체험 방법': '体验方法', '휴대폰에서 더 많은 체험을 할 수 있어요.': '在手机上可以体验更多。', 'n주차, 함께 시작해요!': '第 {n} 周，一起开始吧！', 'n주차': '第{n}周', '참여 안내': '参与说明', '3주 연속 착륙하면 <em>항해 리포트</em>가 열려요': '连续 3 周登陆即可解锁<em>航行报告</em>', '이번 주 행성 3곳에 착륙하면\n항해 스탬프 완성!': '本周登陆 3 颗行星\n即可集齐印章！', '행성 3곳에 착륙하면 완성돼요': '登陆 3 颗行星即可完成', '이번 주 스탬프 완성!': '本周印章已集齐！', '스탬프와 기록은 이 기기에만 저장돼요.': '印章与记录只保存在本设备上。', '매주 월요일에 새 주차가 시작돼요. 그 주에 전시에 한 번 이상 입장하면 그 주의 책이 채워져요.': '每周一开始新的一周。当周进入任一展览，即可填满当周的书。', '내 프로필': '我的资料', '나의 기록': '我的记录', '항해 리포트': '航行报告', '다녀온 행성': '到访行星', '머문 시간': '停留时间', '최근 본 전시': '最近观看', '아직 다녀온 행성이 없어요.': '还没有到访的行星。', '언어': '语言', '체험 권한': '体验权限', '기울기·흔들기·마이크·카메라·위치는 전시 안에서 체험할 때만 쓰고, 기기 밖으로 저장하거나 보내지 않아요.': '倾斜、摇晃、麦克风、相机与位置仅在体验中使用，不会保存或发送。', '관람 기록 지우기': '清除记录', '버전': '版本', '닉네임을 바꿀까요?': '修改昵称？', '우주인': '宇航员', '분': '分钟', '시간': '小时', '착륙하는 중': '正在着陆', '대기권 진입': '进入大气层', '착륙 완료': '着陆完成', '신호가 약해요. 연결을 확인해 주세요.': '信号较弱，请检查网络。', '다시 시도': '重试', '전시를 불러오지 못했어요.': '无法加载展览。', '기록을 지웠어요.': '记录已清除。' },
-  ja: { '전시': '展示', '플레이': 'プレイ', '리워드': 'リワード', '마이': 'マイ', '일상은 작고,\n우주는 넓으니까': '日常は小さく、\n宇宙は広いから', '잠시 고개를 들어 더 큰 것을 바라보는 시간': '少し顔を上げて、もっと大きなものを見る時間', '전시 하나가\n행성 하나가 되는 곳': 'ひとつの展示が\nひとつの惑星になる場所', '매주 새로운 행성에 착륙해 보세요': '毎週、新しい惑星に着陸してみましょう', '다음': '次へ', '건너뛰기': 'スキップ', '매주 착륙하는\n온라인 인터랙티브 전시': '毎週着陸する\nオンライン・インタラクティブ展示', '생각과 마음의 폭을 넓히는 시간': '考えと心の幅を広げる時間', '카카오로 시작하기': 'Kakaoではじめる', 'Apple로 계속하기': 'Appleで続ける', '로그인 전 둘러보기': 'ログインせずに見る', '로그인은 곧 열려요. 지금은 둘러보기로 시작할게요.': 'ログインはまもなく公開します。まずは見てみましょう。', '마지막으로\n닉네임을 정해주세요': '最後に\nニックネームを決めてください', '닉네임': 'ニックネーム', '최대 8자까지 입력 가능해요': '8文字まで入力できます', '닉네임은 이 기기에만 저장돼요.': 'ニックネームはこの端末にのみ保存されます。', '시작하기': 'はじめる', '입장하기': '入場する', '이번 주 열린 행성': '今週ひらいた惑星', '지금 상영 중': '公開中', '곧 착륙할 행성': 'まもなく着陸', '기획전': '企画展', '단독전': '個展', '공개': '公開', '예정': '予定', '남음': '残り', '일': '日', '체험 방법': '体験方法', '휴대폰에서 더 많은 체험을 할 수 있어요.': 'スマートフォンではさらに体験できます。', 'n주차, 함께 시작해요!': '{n}週目、一緒に始めましょう！', 'n주차': '{n}週目', '참여 안내': '参加案内', '3주 연속 착륙하면 <em>항해 리포트</em>가 열려요': '3週連続で着陸すると<em>航海レポート</em>がひらきます', '이번 주 행성 3곳에 착륙하면\n항해 스탬프 완성!': '今週3つの惑星に着陸すると\nスタンプ完成！', '행성 3곳에 착륙하면 완성돼요': '3つの惑星に着陸すると完成します', '이번 주 스탬프 완성!': '今週のスタンプ完成！', '스탬프와 기록은 이 기기에만 저장돼요.': 'スタンプと記録はこの端末にのみ保存されます。', '매주 월요일에 새 주차가 시작돼요. 그 주에 전시에 한 번 이상 입장하면 그 주의 책이 채워져요.': '毎週月曜日に新しい週が始まります。その週に展示へ一度でも入場すると、その週の本が埋まります。', '내 프로필': 'マイプロフィール', '나의 기록': 'わたしの記録', '항해 리포트': '航海レポート', '다녀온 행성': '訪れた惑星', '머문 시간': '滞在時間', '최근 본 전시': '最近見た展示', '아직 다녀온 행성이 없어요.': 'まだ訪れた惑星はありません。', '언어': '言語', '체험 권한': '体験の権限', '기울기·흔들기·마이크·카메라·위치는 전시 안에서 체험할 때만 쓰고, 기기 밖으로 저장하거나 보내지 않아요.': '傾き・振る・マイク・カメラ・位置情報は体験中にのみ使い、保存・送信しません。', '관람 기록 지우기': '記録を消去', '버전': 'バージョン', '닉네임을 바꿀까요?': 'ニックネームを変更しますか？', '우주인': '宇宙飛行士', '분': '分', '시간': '時間', '착륙하는 중': '着陸中', '대기권 진입': '大気圏突入', '착륙 완료': '着陸完了', '신호가 약해요. 연결을 확인해 주세요.': '電波が弱いようです。接続を確認してください。', '다시 시도': '再試行', '전시를 불러오지 못했어요.': '展示を読み込めませんでした。', '기록을 지웠어요.': '記録を消去しました。' },
+  en: { '마지막으로\n이 우주에서 불릴\n이름을 정해주세요': 'Last step:\nchoose the name\nthis universe will call you', '항해명': 'Voyager name', '이름은 이 기기에만 저장돼요.': 'Your name stays on this device.', '탑승하기': 'Board', '먼저 우주 둘러보기': 'Explore first', '다른 이름 뽑기': 'Draw another name', '이름 바꾸기': 'Rename', '탑승': 'boarded', '곳 착륙': ' planets landed', '최대 12자까지 입력 가능해요': 'Up to 12 characters', '전시': 'Exhibits', '플레이': 'Play', '리워드': 'Rewards', '마이': 'My', '일상은 작고,\n우주는 넓으니까': 'Days feel small,\nthe universe is vast', '잠시 고개를 들어 더 큰 것을 바라보는 시간': 'Look up for a moment at something bigger', '전시 하나가\n행성 하나가 되는 곳': 'Where every exhibition\nbecomes a planet', '매주 새로운 행성에 착륙해 보세요': 'Land on a new planet every week', '다음': 'Next', '건너뛰기': 'Skip', '매주 착륙하는\n온라인 인터랙티브 전시': 'An interactive exhibition\nyou land on every week', '생각과 마음의 폭을 넓히는 시간': 'Widen your thoughts and heart', '카카오로 시작하기': 'Continue with Kakao', 'Apple로 계속하기': 'Continue with Apple', '로그인 전 둘러보기': 'Look around first', '로그인은 곧 열려요. 지금은 둘러보기로 시작할게요.': 'Sign-in is coming soon. Let’s start by looking around.', '마지막으로\n닉네임을 정해주세요': 'Last step:\nchoose a nickname', '닉네임': 'Nickname', '최대 8자까지 입력 가능해요': 'Up to 8 characters', '닉네임은 이 기기에만 저장돼요.': 'Your nickname stays on this device.', '시작하기': 'Start', '입장하기': 'Enter', '이번 주 열린 행성': 'Planets open this week', '지금 상영 중': 'Now showing', '곧 착륙할 행성': 'Landing soon', '기획전': 'Group show', '단독전': 'Solo', '공개': 'Open', '예정': 'Soon', '남음': 'left', '일': 'd', '체험 방법': 'How to play', '휴대폰에서 더 많은 체험을 할 수 있어요.': 'More to try on your phone.', 'n주차, 함께 시작해요!': 'Week {n}, let’s go!', 'n주차': 'Wk {n}', '참여 안내': 'How it works', '3주 연속 착륙하면 <em>항해 리포트</em>가 열려요': 'Land 3 weeks in a row to unlock your <em>voyage report</em>', '이번 주 행성 3곳에 착륙하면\n항해 스탬프 완성!': 'Land on 3 planets this week\nto complete your stamps!', '행성 3곳에 착륙하면 완성돼요': 'Land on 3 planets to complete', '이번 주 스탬프 완성!': 'Stamps complete this week!', '스탬프와 기록은 이 기기에만 저장돼요.': 'Stamps and records stay on this device.', '매주 월요일에 새 주차가 시작돼요. 그 주에 전시에 한 번 이상 입장하면 그 주의 책이 채워져요.': 'A new week starts every Monday. Enter any exhibition that week to fill its book.', '내 프로필': 'My profile', '나의 기록': 'My records', '항해 리포트': 'Voyage report', '다녀온 행성': 'Planets visited', '머문 시간': 'Time spent', '최근 본 전시': 'Recently viewed', '아직 다녀온 행성이 없어요.': 'No planets visited yet.', '언어': 'Language', '체험 권한': 'Sensor access', '기울기·흔들기·마이크·카메라·위치는 전시 안에서 체험할 때만 쓰고, 기기 밖으로 저장하거나 보내지 않아요.': 'Tilt, shake, mic, camera and location are only used during the experience and never stored or sent.', '관람 기록 지우기': 'Clear history', '버전': 'Version', '닉네임을 바꿀까요?': 'Change nickname?', '우주인': 'Astronaut', '분': 'min', '시간': 'h', '착륙하는 중': 'Landing', '대기권 진입': 'Entering atmosphere', '착륙 완료': 'Landed', '신호가 약해요. 연결을 확인해 주세요.': 'Weak signal. Check your connection.', '다시 시도': 'Try again', '전시를 불러오지 못했어요.': 'Could not load exhibitions.', '기록을 지웠어요.': 'History cleared.' },
+  zh: { '마지막으로\n이 우주에서 불릴\n이름을 정해주세요': '最后，\n请取一个\n在这片宇宙里的名字', '항해명': '航行名', '이름은 이 기기에만 저장돼요.': '名字只保存在本设备上。', '탑승하기': '登船', '먼저 우주 둘러보기': '先看看宇宙', '다른 이름 뽑기': '换一个名字', '이름 바꾸기': '改名', '탑승': '登船', '곳 착륙': ' 颗行星已登陆', '최대 12자까지 입력 가능해요': '最多 12 个字', '전시': '展览', '플레이': '互动', '리워드': '奖励', '마이': '我的', '일상은 작고,\n우주는 넓으니까': '日常很小，\n宇宙很大', '잠시 고개를 들어 더 큰 것을 바라보는 시간': '抬起头，看看更大的世界', '전시 하나가\n행성 하나가 되는 곳': '一个展览\n就是一颗行星', '매주 새로운 행성에 착륙해 보세요': '每周登陆一颗新行星', '다음': '下一步', '건너뛰기': '跳过', '매주 착륙하는\n온라인 인터랙티브 전시': '每周登陆的\n线上互动展览', '생각과 마음의 폭을 넓히는 시간': '拓宽思想与心灵', '카카오로 시작하기': '使用 Kakao 开始', 'Apple로 계속하기': '通过 Apple 继续', '로그인 전 둘러보기': '先逛逛', '로그인은 곧 열려요. 지금은 둘러보기로 시작할게요.': '登录功能即将开放，先随便看看吧。', '마지막으로\n닉네임을 정해주세요': '最后，\n请设置昵称', '닉네임': '昵称', '최대 8자까지 입력 가능해요': '最多 8 个字', '닉네임은 이 기기에만 저장돼요.': '昵称只保存在本设备上。', '시작하기': '开始', '입장하기': '进入', '이번 주 열린 행성': '本周开放的行星', '지금 상영 중': '正在展出', '곧 착륙할 행성': '即将登陆', '기획전': '策划展', '단독전': '个展', '공개': '开放', '예정': '即将', '남음': '后结束', '일': '天', '체험 방법': '体验方法', '휴대폰에서 더 많은 체험을 할 수 있어요.': '在手机上可以体验更多。', 'n주차, 함께 시작해요!': '第 {n} 周，一起开始吧！', 'n주차': '第{n}周', '참여 안내': '参与说明', '3주 연속 착륙하면 <em>항해 리포트</em>가 열려요': '连续 3 周登陆即可解锁<em>航行报告</em>', '이번 주 행성 3곳에 착륙하면\n항해 스탬프 완성!': '本周登陆 3 颗行星\n即可集齐印章！', '행성 3곳에 착륙하면 완성돼요': '登陆 3 颗行星即可完成', '이번 주 스탬프 완성!': '本周印章已集齐！', '스탬프와 기록은 이 기기에만 저장돼요.': '印章与记录只保存在本设备上。', '매주 월요일에 새 주차가 시작돼요. 그 주에 전시에 한 번 이상 입장하면 그 주의 책이 채워져요.': '每周一开始新的一周。当周进入任一展览，即可填满当周的书。', '내 프로필': '我的资料', '나의 기록': '我的记录', '항해 리포트': '航行报告', '다녀온 행성': '到访行星', '머문 시간': '停留时间', '최근 본 전시': '最近观看', '아직 다녀온 행성이 없어요.': '还没有到访的行星。', '언어': '语言', '체험 권한': '体验权限', '기울기·흔들기·마이크·카메라·위치는 전시 안에서 체험할 때만 쓰고, 기기 밖으로 저장하거나 보내지 않아요.': '倾斜、摇晃、麦克风、相机与位置仅在体验中使用，不会保存或发送。', '관람 기록 지우기': '清除记录', '버전': '版本', '닉네임을 바꿀까요?': '修改昵称？', '우주인': '宇航员', '분': '分钟', '시간': '小时', '착륙하는 중': '正在着陆', '대기권 진입': '进入大气层', '착륙 완료': '着陆完成', '신호가 약해요. 연결을 확인해 주세요.': '信号较弱，请检查网络。', '다시 시도': '重试', '전시를 불러오지 못했어요.': '无法加载展览。', '기록을 지웠어요.': '记录已清除。' },
+  ja: { '마지막으로\n이 우주에서 불릴\n이름을 정해주세요': '最後に\nこの宇宙で呼ばれる\n名前を決めてください', '항해명': '航海名', '이름은 이 기기에만 저장돼요.': '名前はこの端末にのみ保存されます。', '탑승하기': '搭乗する', '먼저 우주 둘러보기': 'まず宇宙を見てみる', '다른 이름 뽑기': '別の名前をひく', '이름 바꾸기': '名前を変える', '탑승': '搭乗', '곳 착륙': 'つの惑星に着陸', '최대 12자까지 입력 가능해요': '12文字まで入力できます', '전시': '展示', '플레이': 'プレイ', '리워드': 'リワード', '마이': 'マイ', '일상은 작고,\n우주는 넓으니까': '日常は小さく、\n宇宙は広いから', '잠시 고개를 들어 더 큰 것을 바라보는 시간': '少し顔を上げて、もっと大きなものを見る時間', '전시 하나가\n행성 하나가 되는 곳': 'ひとつの展示が\nひとつの惑星になる場所', '매주 새로운 행성에 착륙해 보세요': '毎週、新しい惑星に着陸してみましょう', '다음': '次へ', '건너뛰기': 'スキップ', '매주 착륙하는\n온라인 인터랙티브 전시': '毎週着陸する\nオンライン・インタラクティブ展示', '생각과 마음의 폭을 넓히는 시간': '考えと心の幅を広げる時間', '카카오로 시작하기': 'Kakaoではじめる', 'Apple로 계속하기': 'Appleで続ける', '로그인 전 둘러보기': 'ログインせずに見る', '로그인은 곧 열려요. 지금은 둘러보기로 시작할게요.': 'ログインはまもなく公開します。まずは見てみましょう。', '마지막으로\n닉네임을 정해주세요': '最後に\nニックネームを決めてください', '닉네임': 'ニックネーム', '최대 8자까지 입력 가능해요': '8文字まで入力できます', '닉네임은 이 기기에만 저장돼요.': 'ニックネームはこの端末にのみ保存されます。', '시작하기': 'はじめる', '입장하기': '入場する', '이번 주 열린 행성': '今週ひらいた惑星', '지금 상영 중': '公開中', '곧 착륙할 행성': 'まもなく着陸', '기획전': '企画展', '단독전': '個展', '공개': '公開', '예정': '予定', '남음': '残り', '일': '日', '체험 방법': '体験方法', '휴대폰에서 더 많은 체험을 할 수 있어요.': 'スマートフォンではさらに体験できます。', 'n주차, 함께 시작해요!': '{n}週目、一緒に始めましょう！', 'n주차': '{n}週目', '참여 안내': '参加案内', '3주 연속 착륙하면 <em>항해 리포트</em>가 열려요': '3週連続で着陸すると<em>航海レポート</em>がひらきます', '이번 주 행성 3곳에 착륙하면\n항해 스탬프 완성!': '今週3つの惑星に着陸すると\nスタンプ完成！', '행성 3곳에 착륙하면 완성돼요': '3つの惑星に着陸すると完成します', '이번 주 스탬프 완성!': '今週のスタンプ完成！', '스탬프와 기록은 이 기기에만 저장돼요.': 'スタンプと記録はこの端末にのみ保存されます。', '매주 월요일에 새 주차가 시작돼요. 그 주에 전시에 한 번 이상 입장하면 그 주의 책이 채워져요.': '毎週月曜日に新しい週が始まります。その週に展示へ一度でも入場すると、その週の本が埋まります。', '내 프로필': 'マイプロフィール', '나의 기록': 'わたしの記録', '항해 리포트': '航海レポート', '다녀온 행성': '訪れた惑星', '머문 시간': '滞在時間', '최근 본 전시': '最近見た展示', '아직 다녀온 행성이 없어요.': 'まだ訪れた惑星はありません。', '언어': '言語', '체험 권한': '体験の権限', '기울기·흔들기·마이크·카메라·위치는 전시 안에서 체험할 때만 쓰고, 기기 밖으로 저장하거나 보내지 않아요.': '傾き・振る・マイク・カメラ・位置情報は体験中にのみ使い、保存・送信しません。', '관람 기록 지우기': '記録を消去', '버전': 'バージョン', '닉네임을 바꿀까요?': 'ニックネームを変更しますか？', '우주인': '宇宙飛行士', '분': '分', '시간': '時間', '착륙하는 중': '着陸中', '대기권 진입': '大気圏突入', '착륙 완료': '着陸完了', '신호가 약해요. 연결을 확인해 주세요.': '電波が弱いようです。接続を確認してください。', '다시 시도': '再試行', '전시를 불러오지 못했어요.': '展示を読み込めませんでした。', '기록을 지웠어요.': '記録を消去しました。' },
 };
 const t = (k, n) => { let s = (T[lang] && T[lang][k]) ?? k; if (n != null) s = s.replace('{n}', n).replace(/^n/, n); return s; };
 const br = (s) => esc(s).replace(/\n/g, '<br>');
 document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
 
-const VERSION = '0.2.0';
+const VERSION = '0.3.0';
+
+/* ---------- 우주 방랑자 이름 ---------- */
+const NAMES = {
+  ko: [['떠도는', '고요한', '새벽의', '잠든', '푸른', '먼', '길 잃은', '느린', '반짝이는', '이름 없는', '마지막', '첫'], ['방랑자', '혜성', '성운', '항해자', '별지기', '위성', '유성', '관측자', '순례자', '등대지기', '여행자', '우주인']],
+  en: [['Drifting', 'Quiet', 'Dawn', 'Sleeping', 'Blue', 'Distant', 'Lost', 'Slow', 'Glimmering', 'Nameless', 'Last', 'First'], ['Wanderer', 'Comet', 'Nebula', 'Voyager', 'Stargazer', 'Moon', 'Meteor', 'Observer', 'Pilgrim', 'Keeper', 'Traveler', 'Astronaut']],
+  zh: [['流浪的', '安静的', '黎明的', '沉睡的', '蓝色的', '遥远的', '迷路的', '缓慢的', '闪烁的', '无名的'], ['旅人', '彗星', '星云', '航海者', '观星人', '卫星', '流星', '朝圣者', '守灯人', '宇航员']],
+  ja: [['さすらう', 'しずかな', '夜明けの', '眠る', '青い', '遠い', '迷子の', 'ゆっくりの', 'またたく', '名もなき'], ['旅人', '彗星', '星雲', '航海士', '星守り', '衛星', '流星', '観測者', '巡礼者', '灯台守']],
+};
+function wanderer() {
+  const [a, b] = NAMES[lang] || NAMES.ko, r = (x) => x[Math.floor(Math.random() * x.length)];
+  return `${r(a)} ${r(b)}`;
+}
 const LAUNCH = new Date('2026-10-05T00:00:00'); // XPACE 개관 주의 월요일 → Vol.1
 const $ = (s) => document.querySelector(s);
 const view = $('#view'), tabsEl = $('#tabs');
@@ -47,7 +60,7 @@ const name = (c) => String(c.title || '').replace(/^\s*X-\d+\s*·\s*/, '');
 const href = (c) => c.url || `cell.html?id=${encodeURIComponent(c.id)}`;
 const isOpen = (c) => c.status === 'open';
 const ringFx = (c) => ['prism', 'trio', 'stars'].includes(c.fx);
-const poster = (c, cls = '') => `<span class="poster${ringFx(c) ? ' ring' : ''} ${cls}" style="--c:${esc(c.color || '#9db8ff')}"><span class="pc">${esc(c.code || '')}</span><span class="pt">${esc(name(c))}</span></span>`;
+const poster = (c, cls = '') => `<span class="poster ${cls}" style="--c:${esc(c.color || '#9db8ff')}"><img class="pl" src="${planetURL(c, 384)}" alt="" draggable="false"><span class="pc">${esc(c.code || '')}</span><span class="pt">${esc(name(c))}</span></span>`;
 const kindTag = (c) => c.isGroup ? `<span class="tag t3">${t('기획전')}</span>` : c.url ? `<span class="tag t1">${t('단독전')}</span>` : `<span class="tag t2">${t('전시')}</span>`;
 const featured = () => { const o = cells.filter(isOpen); return o[o.length - 1] || cells[0]; };
 
@@ -77,28 +90,38 @@ const OB = {
     return `<div class="ob-center"><h1>${br(t('매주 착륙하는\n온라인 인터랙티브 전시'))}</h1><p>${esc(t('생각과 마음의 폭을 넓히는 시간'))}</p></div>
       <div class="ob-login">
         <button class="btn kakao" data-ob="soon"><svg viewBox="0 0 24 24"><path fill="#191600" d="M12 4C6.9 4 3 7.2 3 11.1c0 2.5 1.6 4.6 4 5.9l-.9 3.4 3.9-2.6c.6.1 1.3.1 2 .1 5.1 0 9-3.2 9-7.1S17.1 4 12 4z"/></svg>${t('카카오로 시작하기')}</button>
-        <button class="btn black" data-ob="soon"><svg viewBox="0 0 24 24"><path fill="#fff" d="M16.4 12.6c0-2 1.6-2.9 1.7-3-1-1.4-2.4-1.6-2.9-1.6-1.2-.1-2.4.7-3 .7s-1.6-.7-2.6-.7c-1.3 0-2.6.8-3.3 2-1.4 2.4-.4 6 1 8 .7 1 1.4 2 2.5 2 1 0 1.4-.6 2.6-.6s1.5.6 2.6.6c1.1 0 1.8-1 2.4-2 .8-1.1 1.1-2.2 1.1-2.3 0 0-2.1-.8-2.1-3.1zM14.5 6.6c.5-.7.9-1.6.8-2.6-.8 0-1.8.5-2.4 1.2-.5.6-1 1.6-.8 2.5.9.1 1.8-.4 2.4-1.1z"/></svg>${t('Apple로 계속하기')}</button>
-        <button class="link" data-ob="nick">${t('로그인 전 둘러보기')} ›</button>
+        <button class="btn black" data-ob="soon"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M16.4 12.6c0-2 1.6-2.9 1.7-3-1-1.4-2.4-1.6-2.9-1.6-1.2-.1-2.4.7-3 .7s-1.6-.7-2.6-.7c-1.3 0-2.6.8-3.3 2-1.4 2.4-.4 6 1 8 .7 1 1.4 2 2.5 2 1 0 1.4-.6 2.6-.6s1.5.6 2.6.6c1.1 0 1.8-1 2.4-2 .8-1.1 1.1-2.2 1.1-2.3 0 0-2.1-.8-2.1-3.1zM14.5 6.6c.5-.7.9-1.6.8-2.6-.8 0-1.8.5-2.4 1.2-.5.6-1 1.6-.8 2.5.9.1 1.8-.4 2.4-1.1z"/></svg>${t('Apple로 계속하기')}</button>
+        <button class="link" data-ob="nick">${t('먼저 우주 둘러보기')} ›</button>
       </div>`;
   },
   nick() {
     return `<button class="back" data-ob="login" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M20 12H4M10 6l-6 6 6 6"/></svg></button>
-      <h1 class="ob-h">${br(t('마지막으로\n닉네임을 정해주세요'))}</h1>
-      <div class="field"><label for="nick">${t('닉네임')}</label><input id="nick" maxlength="8" autocomplete="off" placeholder="${esc(t('최대 8자까지 입력 가능해요'))}" /><p class="hint">${t('닉네임은 이 기기에만 저장돼요.')}</p></div>
-      <div style="margin-top:auto"><button class="btn off" id="nick-go" data-ob="done">${t('시작하기')}</button></div>`;
+      <h1 class="ob-h">${br(t('마지막으로\n이 우주에서 불릴\n이름을 정해주세요'))}</h1>
+      <div class="field"><label for="nick">${t('항해명')}</label>
+        <div class="in"><input id="nick" maxlength="20" autocomplete="off" placeholder="${esc(t('최대 12자까지 입력 가능해요'))}" /><button class="btn dice" data-dice aria-label="${esc(t('다른 이름 뽑기'))}"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="15" cy="15" r="1.2" fill="currentColor"/><circle cx="15" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="15" r="1.2" fill="currentColor"/></svg></button></div>
+        <div class="names" id="names"></div>
+        <p class="hint">${t('이름은 이 기기에만 저장돼요.')}</p></div>
+      <div style="margin-top:auto"><button class="btn black" id="nick-go" data-ob="done">${t('탑승하기')}</button></div>`;
   },
 };
 function showOB(k) {
   ob.hidden = false; view.hidden = true; tabsEl.hidden = true;
   ob.innerHTML = k === 'intro0' ? OB.intro(0) : k === 'intro1' ? OB.intro(1) : OB[k]();
-  if (k === 'nick') { const i = $('#nick'), b = $('#nick-go'); i.addEventListener('input', () => b.className = 'btn ' + (i.value.trim() ? 'black' : 'off')); setTimeout(() => i.focus(), 200); }
+  if (k === 'nick') {
+    const i = $('#nick'), b = $('#nick-go'), p = me();
+    const fill = () => { const seen = new Set(); const list = []; while (list.length < 4) { const n = wanderer(); if (!seen.has(n)) { seen.add(n); list.push(n); } } $('#names').innerHTML = list.map((n) => `<button data-name="${esc(n)}">${esc(n)}</button>`).join(''); };
+    i.value = (p && p.nick) || wanderer(); fill();
+    i.addEventListener('input', () => b.className = 'btn ' + (i.value.trim() ? 'black' : 'off'));
+  }
 }
 ob.addEventListener('click', (e) => {
+  if (e.target.closest('[data-dice]')) { $('#nick').value = wanderer(); $('#nick-go').className = 'btn black'; return; }
+  const nm = e.target.closest('[data-name]'); if (nm) { $('#nick').value = nm.dataset.name; $('#nick-go').className = 'btn black'; return; }
   const b = e.target.closest('[data-ob]'); if (!b) return;
   const k = b.dataset.ob;
   if (k === 'soon') { toast(t('로그인은 곧 열려요. 지금은 둘러보기로 시작할게요.')); setTimeout(() => showOB('nick'), 900); return; }
   if (k === 'done') {
-    const nick = $('#nick').value.trim().slice(0, 8); if (!nick) return;
+    const nick = $('#nick').value.trim().slice(0, 20); if (!nick) return;
     const old = me();
     store.set('valix-me', { nick, since: (old && old.since) || Date.now() });
     store.set('valix-onboarded', true); ob.hidden = true; ob.innerHTML = ''; go(tab); return;
@@ -120,7 +143,7 @@ const screens = {
       <section class="hero" style="--c:${esc(f.color || '#9db8ff')}">
         <div class="top"><div><p class="eyebrow">WEEKLY PLANET</p><p class="vol">Vol. ${vol()}<i></i></p></div><div class="icons">${clock}${bell}</div></div>
         <p class="issue">${open.slice(-2).reverse().map((c) => esc(name(c))).join(' · ')}</p>
-        <div class="stage"><span class="orbit"></span><span class="big"></span><button class="enter" data-open="${esc(f.id)}">${t('입장하기')} →</button></div>
+        <div class="stage"><span class="orbit"></span><img class="big" src="${planetURL(f, 768)}" alt="" draggable="false"><button class="enter" data-open="${esc(f.id)}">${t('입장하기')} →</button></div>
       </section>
       <section class="sec"><div class="sec-h"><h2>NEW</h2><button data-tab-go="play" aria-label="더 보기">${plus}</button></div>
         <p class="sec-sub">${t('이번 주 열린 행성')}</p><div class="hscroll">${open.slice().reverse().map(card).join('')}</div></section>
@@ -135,7 +158,7 @@ const screens = {
     return `<header class="page-h"><h1>PLAY</h1><div class="icons">${bell}</div></header>
       <div class="plays">${open.map((c) => { const p = playOf(c); return `
         <div class="play" style="--c:${esc(c.color || '#9db8ff')}">
-          <div class="art"><svg class="glyph" viewBox="0 0 24 24"><path d="${p.glyph}"/></svg><span class="timer" data-left="${esc(c.id)}">${left(c)}</span></div>
+          <div class="art"><img class="pl" src="${planetURL(c, 640)}" alt="" draggable="false"><span class="timer" data-left="${esc(c.id)}">${left(c)}</span></div>
           <div class="body"><p class="who">${esc(c.code)} · ${esc(c.artist || '')}</p><h3>${br(p.q)}</h3><p class="how">${esc(p.how)}</p>
             <div class="bar"><i style="width:${Math.round(wk * 100)}%"></i></div>
             <div class="two"><span data-how="${esc(c.id)}">${t('체험 방법')}</span><span data-open="${esc(c.id)}" style="background:#fff;color:#111;border-color:#fff">${t('입장하기')}</span></div></div>
@@ -160,12 +183,12 @@ const screens = {
         <p>${t('스탬프와 기록은 이 기기에만 저장돼요.')}</p></div>`;
   },
   my() {
-    const p = me() || { nick: t('우주인') }, h = hist();
+    const p = me() || { nick: wanderer(), since: Date.now() }, h = hist();
     const seen = Object.entries(h).filter(([id]) => cells.some((c) => c.id === id)).sort((a, b) => b[1].last - a[1].last);
     const total = seen.reduce((s, [, x]) => s + (x.time || 0), 0);
-    const avatar = `<svg viewBox="0 0 60 60" fill="none" stroke="#111" stroke-width="1.6" stroke-linecap="round"><circle cx="30" cy="25" r="15"/><rect x="21" y="19" width="18" height="12" rx="6" fill="#1c2240" stroke="none"/><path d="M24 22c1.5-1 3-1 4 0" stroke="#ffd68c"/><path d="M10 58c2-9 10-14 20-14s18 5 20 14"/></svg>`;
+    const avatar = `<svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="30" cy="25" r="15"/><rect x="21" y="19" width="18" height="12" rx="6" fill="#1c2240" stroke="none"/><path d="M24 22c1.5-1 3-1 4 0" stroke="#ffd68c"/><path d="M10 58c2-9 10-14 20-14s18 5 20 14"/></svg>`;
     return `<header class="page-h"><h1>MY</h1><div class="icons">${clock}</div></header>
-      <div class="me"><span class="avatar">${avatar}</span><div><b>${esc(p.nick)}</b><button data-rename>${t('내 프로필')} ›</button></div></div>
+      <div class="me"><span class="avatar">${avatar}</span><div><b>${esc(p.nick)}</b><p style="font-size:14px;color:var(--tx2);margin-top:4px">${new Date(p.since).toLocaleDateString(lang)} ${t('탑승')} · ${seen.length}${t('곳 착륙')}</p><button data-rename>${t('이름 바꾸기')} ›</button></div></div>
       <section class="sec"><div class="sec-h"><h2 style="font-size:20px">${t('나의 기록')}</h2></div>
         <div class="lockcard v" style="margin:18px 0 0"><svg viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 0 1 10 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V8a3 3 0 0 0-6 0z"/></svg><div><small>${t('항해 리포트')}</small>${t('3주 연속 착륙하면 <em>항해 리포트</em>가 열려요')}</div></div>
         <div class="stat2"><div>${t('다녀온 행성')}<b>${seen.length || '-'}</b></div><div>${t('머문 시간')}<b>${total ? fmtTime(total) : '-'}</b></div></div></section>
@@ -182,7 +205,7 @@ function go(next) {
   view.className = 'vx-view' + (tab === 'reward' ? ' gray' : '');
   view.innerHTML = screens[tab]();
   tabsEl.querySelectorAll('[data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
-  document.querySelector('meta[name=theme-color]').content = tab === 'home' ? getComputedStyle(view.querySelector('.hero')).backgroundColor : tab === 'reward' ? '#f3f3f6' : '#ffffff';
+  document.querySelector('meta[name=theme-color]').content = '#05060c';
   scrollTo(0, 0);
   clearInterval(ticker);
   if (tab === 'play') ticker = setInterval(() => view.querySelectorAll('[data-left]').forEach((el) => { el.textContent = left(cells.find((c) => c.id === el.dataset.left)); }), 1000);
@@ -193,7 +216,7 @@ view.addEventListener('click', (e) => {
   const g = e.target.closest('[data-tab-go]'); if (g) { go(g.dataset.tabGo); return; }
   const hw = e.target.closest('[data-how]'); if (hw) { const c = cells.find((x) => x.id === hw.dataset.how); toast(playOf(c).how + ' · ' + t('휴대폰에서 더 많은 체험을 할 수 있어요.')); return; }
   if (e.target.closest('[data-guide]')) { toast(t('매주 월요일에 새 주차가 시작돼요. 그 주에 전시에 한 번 이상 입장하면 그 주의 책이 채워져요.')); return; }
-  if (e.target.closest('[data-rename]')) { showOB('nick'); const p = me(); if (p) { $('#nick').value = p.nick; $('#nick-go').className = 'btn black'; } return; }
+  if (e.target.closest('[data-rename]')) { showOB('nick'); return; }
   const l = e.target.closest('[data-lang]'); if (l && l.dataset.lang !== lang) { try { localStorage.setItem('xpace-lang', l.dataset.lang); } catch (er) {} location.reload(); return; }
   if (e.target.closest('[data-clear]')) { store.set('valix-history', {}); store.set('valix-visits', []); toast(t('기록을 지웠어요.')); go(tab); }
 });
@@ -247,21 +270,9 @@ const landing = (() => {
     x.fillStyle = 'rgba(255,214,140,.8)'; x.beginPath(); x.ellipse(-10, -52, 8, 5, -0.5, 0, Math.PI * 2); x.fill();
     x.restore();
   }
-  function surface(cx, cy, R, now) {
-    const col = c.color || '#9db8ff';
-    x.save(); x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2); x.clip();
-    const g = x.createRadialGradient(cx - R * .35, cy - R * .35, R * .1, cx, cy, R);
-    g.addColorStop(0, col); g.addColorStop(1, '#0b0c18'); x.fillStyle = g; x.fillRect(cx - R, cy - R, R * 2, R * 2);
-    const n = c.fx === 'rice' ? 90 : 50;
-    for (let i = 0; i < n; i++) {
-      const a = i * 2.399 + now / 9000, r = R * Math.sqrt((i + .5) / n), tw = .35 + .45 * Math.sin(now / 320 + i);
-      x.fillStyle = `rgba(255,255,255,${tw * .55})`; x.beginPath();
-      if (c.fx === 'rice') x.ellipse(cx + Math.cos(a) * r, cy + Math.sin(a) * r, R * .022 + 2, R * .012 + 1.2, a, 0, Math.PI * 2);
-      else if (c.fx === 'ripple') x.arc(cx, cy, r, a, a + .5);
-      else x.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, R * .008 + 1, 0, Math.PI * 2);
-      c.fx === 'ripple' ? (x.strokeStyle = x.fillStyle, x.lineWidth = 1.5, x.stroke()) : x.fill();
-    }
-    x.restore();
+  function surface(cx, cy, R) {
+    const pc = planetCanvas(c, 1024), ratio = hasRing(c) ? 0.30 : 0.38, w = (R / ratio);
+    x.drawImage(pc, cx - w / 2, cy - w / 2, w, w);
   }
   function frame(now) {
     const el2 = now - t0;
@@ -273,7 +284,7 @@ const landing = (() => {
     stars.forEach((s) => { const k = 1 + e * 1.6 * s.z; x.fillStyle = `rgba(255,255,255,${.3 + .35 * s.z / 2.3})`; x.fillRect(cx + (s.x - cx) * k, cy + (s.y - cy) * k, s.z * .9, s.z * .9); });
     const R = Math.min(W, H) * .16 + e * e * Math.max(W, H) * 1.1;
     x.save(); x.globalAlpha = .22; x.fillStyle = c.color || '#9db8ff'; x.beginPath(); x.arc(cx, cy, R * 1.12, 0, Math.PI * 2); x.fill(); x.restore();
-    surface(cx, cy, R, now);
+    surface(cx, cy, R);
     const wait = !isLoaded && p > .8;
     const orbit = wait ? (now / 1400) : 0;
     const ax = wait ? cx + Math.cos(orbit) * R * 1.35 : cx - W * .25 * (1 - e);
