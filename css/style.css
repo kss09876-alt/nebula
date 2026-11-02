@@ -518,3 +518,31 @@ html[data-lang="en"] .card p, html[data-lang="en"] p { word-break: normal; }
   .snd-gate .g-t { font-size: 30px; }
 }
 @media (max-width: 360px) { .nav-btn { padding: 6px 8px; } .logo { font-size: 12px; } }
+
+/* ---------- 홈 모바일 전용 ---------- */
+.m-sheet { position: fixed; z-index: 20; left: 12px; right: 12px; bottom: max(14px, env(safe-area-inset-bottom)); display: grid; grid-template-columns: 34px 1fr 34px; align-items: center; gap: 6px 4px; padding: 14px 10px 12px; border-radius: 18px; background: rgba(10,11,18,.86); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,.12); border-top: 2px solid var(--accent); }
+.m-sheet[hidden] { display: none; }
+.m-sheet.in-r { animation: msIn .35s var(--ease); } .m-sheet.in-l { animation: msInL .35s var(--ease); }
+@keyframes msIn { from { opacity: 0; transform: translateX(30px); } } @keyframes msInL { from { opacity: 0; transform: translateX(-30px); } }
+.ms-nav { background: none; border: 0; outline: none; height: 44px; font-size: 26px; color: rgba(255,255,255,.7); }
+.ms-body { display: grid; gap: 3px; text-align: center; }
+.ms-no { font-size: 10px; letter-spacing: .2em; font-weight: 700; color: var(--accent); }
+.ms-title { font-size: 21px; font-weight: 800; letter-spacing: -.02em; }
+.ms-sub { font-size: 12.5px; color: rgba(255,255,255,.7); line-height: 1.5; }
+.ms-meta { font-size: 10.5px; color: rgba(255,255,255,.45); }
+.ms-go { grid-column: 1 / -1; margin-top: 8px; padding: 13px; border-radius: 12px; background: var(--accent); color: #000; font-weight: 800; font-size: 15px; letter-spacing: .04em; }
+.m-hint { display: none; }
+body.is-mobile .m-hint { position: fixed; z-index: 11; left: 0; right: 0; top: calc(max(12px, env(safe-area-inset-top)) + 46px); display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; font-size: 11px; color: rgba(255,255,255,.55); letter-spacing: .04em; text-align: center; padding: 0 20px; }
+body.is-mobile .m-hint button { pointer-events: auto; padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35); font-size: 11px; color: #fff; }
+body.is-mobile .m-hint.sensing span::after { content: ' · ✓'; }
+body.is-mobile .hero-copy { bottom: max(22px, env(safe-area-inset-bottom)); transition: opacity .3s; }
+body.is-mobile:has(.m-sheet:not([hidden])) .hero-copy { opacity: 0; pointer-events: none; }
+.m-compass { position: fixed; z-index: 4; width: 58vw; height: 58vw; max-width: 340px; max-height: 340px; transform: translate(-50%, -50%); pointer-events: none; }
+.m-compass[hidden] { display: none; }
+.mc-rot { position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgba(255,255,255,.18); transition: transform .12s linear; }
+.mc-rot b { position: absolute; left: 50%; top: 50%; font-size: 11px; font-weight: 800; color: rgba(255,255,255,.7); transform: translate(-50%, -50%) rotate(calc(var(--k) * 90deg)) translateY(calc(-1 * min(29vw, 170px) + 16px)) rotate(calc(var(--k) * -90deg)); }
+.mc-rot b:first-child { color: #ff6b5e; }
+.mc-rot i { position: absolute; left: 50%; top: 0; width: 1px; height: 6px; background: rgba(255,255,255,.3); transform-origin: 50% min(29vw, 170px); transform: rotate(calc(var(--k) * 10deg)); }
+.mc-deg { position: absolute; left: 50%; bottom: -22px; transform: translateX(-50%); font-size: 10px; letter-spacing: .12em; color: rgba(255,255,255,.5); }
+body.shaken #stage { animation: shakeCam .45s ease; }
+@keyframes shakeCam { 20% { transform: translate(-5px, 3px); } 40% { transform: translate(4px, -4px); } 60% { transform: translate(-3px, 2px); } 80% { transform: translate(2px, -1px); } }

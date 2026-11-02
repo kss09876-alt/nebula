@@ -259,3 +259,11 @@ body[data-scene="hunger"], body[data-scene="erased"], body[data-scene="mine"] { 
   .snd-gate .g-t { font-size: 26px; }
 }
 @media (max-width: 380px) { .bs-logo { font-size: 12px; } .bs-menu-btn { font-size: 10px; padding: 7px 9px; } }
+
+/* ---------- 모바일 AR ---------- */
+.ar-video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+.ar-video[hidden] { display: none; }
+body.ar-on #stage { z-index: 1; }
+body.ar-on .card:not(.in) { visibility: hidden; }
+.ar-exit { position: fixed; z-index: 30; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); padding: 13px 24px; border-radius: 999px; background: rgba(255,248,230,.95); color: #050505; font-weight: 800; font-size: 14px; }
+.ar-exit[hidden] { display: none; }
