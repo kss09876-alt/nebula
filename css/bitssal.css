@@ -267,3 +267,13 @@ body.ar-on #stage { z-index: 1; }
 body.ar-on .card:not(.in) { visibility: hidden; }
 .ar-exit { position: fixed; z-index: 30; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); padding: 13px 24px; border-radius: 999px; background: rgba(255,248,230,.95); color: #050505; font-weight: 800; font-size: 14px; }
 .ar-exit[hidden] { display: none; }
+
+.geo-out { margin-top: 10px; color: var(--warm) !important; font-weight: 600; }
+.geo-out:empty { display: none; }
+.card .try.center { text-align: center; }
+.quiet-msg { position: fixed; z-index: 40; left: 50%; top: 42%; transform: translate(-50%, -50%); display: grid; gap: 8px; text-align: center; padding: 22px 26px; width: min(86vw, 360px); border-radius: 14px; background: rgba(8,8,7,.94); border: 1px solid rgba(255,248,230,.3); }
+.quiet-msg[hidden] { display: none; }
+.quiet-msg.on { animation: qIn 4.2s ease forwards; }
+.quiet-msg b { font-size: 18px; color: var(--rice); } .quiet-msg span { font-size: 13px; color: var(--muted); }
+@keyframes qIn { 0% { opacity: 0; } 12% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+.act-btn + .act-btn { margin-top: 0; }
