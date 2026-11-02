@@ -20,6 +20,7 @@ const SC = {
   archive:  { chord: [38, 45, 50, 57], bright: 1600, grains: 0.3, scale: [74, 81, 86], vol: 0.5 },
 };
 
+let resting = false, restDuck = 1;
 let ctx, master, filt, wet, dry, rev, bellBus, voices = [], windSrc, windGain, pulseGain, on = false, started = false, cur = '', nextGrain = 0, nextPulse = 0, freezeDuck = 1;
 
 function impulse(sec = 4.5) {
@@ -138,7 +139,8 @@ export const sound = {
     // 오후 7시의 멈춤: 음악이 숨을 멈춤
     const target = st.freeze ? 0.06 : 1;
     freezeDuck += (target - freezeDuck) * (st.freeze ? 0.08 : 0.02);
-    master.gain.setTargetAtTime(0.9 * s.vol * freezeDuck, t, 0.3);
+    restDuck += ((resting ? 0.03 : 1) - restDuck) * (resting ? 0.02 : 0.05);
+    master.gain.setTargetAtTime(0.9 * s.vol * freezeDuck * restDuck, t, 0.3);
     // 굶주림: 위쪽 화음이 하나씩 빠져나감
     if (s.thin) voices.forEach((v, k) => { if (k >= 2 && s.chord[k]) v.g.gain.setTargetAtTime(0.05 * Math.max(0, 1 - p * 1.4 + (k - 2) * -0.25), t, 0.8); });
     // 맑은 음
@@ -168,6 +170,7 @@ export const sound = {
     if (kind === 'slide') bell(pick([74, 76, 81]), 0.5);
   },
   // 영상 재생 중에는 줄이기
+  rest(r) { resting = !!r; },
   rattle(v) { if (ctx && on) rattle(v); },
   duck(v) { if (ctx && on) { dry.gain.setTargetAtTime(0.6 * v, ctx.currentTime, 0.5); wet.gain.setTargetAtTime(0.55 * v, ctx.currentTime, 0.5); } },
 };

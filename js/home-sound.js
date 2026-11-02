@@ -146,6 +146,13 @@ export const hsound = {
     [base - 24, base - 12, base - 5, base, base + 4].forEach((m, k) => star(m, 0.8, 0, k * 0.09, 3));
     master.gain.setTargetAtTime(0, ctx.currentTime + 0.9, 0.25);
   },
+  // 엎어 두기: 소리가 잦아들었다가(잠) 다시 깨어남
+  rest(r) {
+    if (!ctx || !on) return;
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setTargetAtTime(r ? 0.04 : 0.85, ctx.currentTime, r ? 1.2 : 0.6);
+    if (!r) [62, 69, 74, 81, 86].forEach((m, k) => star(m, 0.7, (k - 2) * 0.3, k * 0.12, 4));
+  },
   // 흔들기: 별빛이 쏟아지는 소리 (모바일)
   shake(v = 0.5) {
     if (!ctx || !on) return;

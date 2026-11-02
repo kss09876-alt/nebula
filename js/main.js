@@ -1,9 +1,9 @@
 // XPACE — 메인: 중앙의 X를 도는 전시 행성계
 import * as THREE from 'three';
-import { loadData, imageUrl, esc } from './data.js?v=16';
-import { hsound } from './home-sound.js?v=4';
-import { tr, lang, langSwitcher } from './i18n.js?v=2';
-import { IS_MOBILE } from './sensors.js?v=1';
+import { loadData, imageUrl, esc } from './data.js?v=17';
+import { hsound } from './home-sound.js?v=5';
+import { tr, lang, langSwitcher } from './i18n.js?v=3';
+import { IS_MOBILE } from './sensors.js?v=2';
 const M = {}; // 모바일 전용 기능 연결점 (home-mobile.js가 채움)
 
 const canvas = document.getElementById('stage');
@@ -315,7 +315,7 @@ function tick(now) {
   planets.forEach((p) => {
     p.intro = Math.min(1.6, p.intro + dt * 0.8);
     const e = 1 - Math.pow(1 - Math.max(0, Math.min(1, p.intro * 1.4 - p.i * 0.12)), 3);
-    p.angle += dt * p.speed * slow * (1 + (state.boost || 0));
+    p.angle += dt * p.speed * slow * (1 + (state.boost || 0)) * (state.sleep ? 0.08 : 1);
     const r = p.orbitR * (0.6 + 0.4 * e);
     p.group.position.set(Math.cos(p.angle) * r, Math.sin(p.angle * 2 + p.i) * 0.08, Math.sin(p.angle) * r);
     p.body.rotation.y += dt * p.spin;
@@ -457,7 +457,7 @@ document.querySelectorAll('.cell-list').forEach((l) => l.addEventListener('point
     </li>`).join('');
   resize();
   t0 = last = performance.now();
-  if (IS_MOBILE) { const { initHomeMobile } = await import('./home-mobile.js?v=1'); initHomeMobile(Object.assign(M, { state, planets, world, camera, THREE, enter, hsound, code, shortTitle, canvas })); }
+  if (IS_MOBILE) { const { initHomeMobile } = await import('./home-mobile.js?v=2'); initHomeMobile(Object.assign(M, { state, planets, world, camera, THREE, enter, hsound, code, shortTitle, canvas })); }
   loader.classList.add('done');
   autoSound();
   requestAnimationFrame(tick);

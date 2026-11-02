@@ -1,5 +1,5 @@
 import { CONFIG } from './config.js?v=14';
-import { lang, tr } from './i18n.js?v=2';
+import { lang, tr } from './i18n.js?v=3';
 
 // 공개 구글 시트를 gviz JSON 엔드포인트로 읽어 [{col: value}] 배열로 변환
 async function fetchSheet(id) {

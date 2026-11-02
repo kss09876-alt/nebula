@@ -1,6 +1,6 @@
-import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=16';
-import { tr, langSwitcher } from './i18n.js?v=2';
-import { IS_MOBILE, sensor } from './sensors.js?v=1';
+import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=17';
+import { tr, langSwitcher } from './i18n.js?v=3';
+import { IS_MOBILE, sensor, keepAwake } from './sensors.js?v=2';
 
 const story = document.getElementById('story');
 const wipe = document.getElementById('wipe');
@@ -230,7 +230,7 @@ langSwitcher(document.querySelector('.topbar'));
 // 모바일: 첫 탭에서 기울기 권한 · 흔들면 화면에 보이는 양자 실험을 관측
 if (IS_MOBILE) {
   document.body.classList.add('is-mobile');
-  addEventListener('click', function once() { removeEventListener('click', once, true); sensor.enable(); }, true);
+  addEventListener('click', function once() { removeEventListener('click', once, true); sensor.enable(); keepAwake(); }, true);
   sensor.onShake(() => {
     const q = [...document.querySelectorAll('.q-stage')].find((el) => { const r = el.getBoundingClientRect(); return r.top < innerHeight * 0.7 && r.bottom > innerHeight * 0.3; });
     if (!q) return;

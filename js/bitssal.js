@@ -1,9 +1,9 @@
 // X-003 · 빛쌀 — 한 톨의 쌀을 따라가는 연속 스크롤 이야기
 // 사실 서술 출처: 진실·화해를위한과거사정리위원회 「대구10월사건 관련 민간인 희생 사건」(jinsil.go.kr/KoreanWar/30.do),
 //                「경산 코발트광산 사건」(jinsil.go.kr/KoreanWar/36.do)
-import { sound } from './bitssal-sound.js?v=3';
-import { lang, tr, langSwitcher } from './i18n.js?v=2';
-import { IS_MOBILE, sensor, startCamera } from './sensors.js?v=1';
+import { sound } from './bitssal-sound.js?v=4';
+import { lang, tr, langSwitcher } from './i18n.js?v=3';
+import { IS_MOBILE, sensor, startCamera, startMic, getPosition, distanceKm, keepAwake } from './sensors.js?v=2';
 const BX = lang !== 'ko' ? (await import(`./bitssal-i18n-${lang}.js?v=1`)).default : null;
 const SRC1 = tr('진실·화해를위한과거사정리위원회, 「대구10월사건 관련 민간인 희생 사건」');
 const SRC2 = tr('진실·화해를위한과거사정리위원회, 「경산 코발트광산 사건」');
@@ -128,6 +128,11 @@ if (TOUCH) SCENES.forEach((sc) => sc.cards.forEach((c) => { if (c.html) (TOUCH_T
 if (IS_MOBILE) {
   const life = SCENES.find((s) => s.id === 'life'), light = SCENES.find((s) => s.id === 'light');
   if (life && life.cards[1]) life.cards[1].html += `<p class="try">${tr('폰을 기울이면 그릇의 쌀이 쏟아지고, 흔들면 쌀이 흔들립니다.')}</p>`;
+  const share = SCENES.find((s) => s.id === 'share'), mine = SCENES.find((s) => s.id === 'mine'), spread = SCENES.find((s) => s.id === 'spread');
+  if (share && share.cards[1]) share.cards[1].html += `<p class="try">${tr('폰을 핸들처럼 돌리면 주먹밥이 옆 사람에게 차례로 건네져요.')}</p>`;
+  if (mine && mine.cards[mine.cards.length - 1]) mine.cards[mine.cards.length - 1].html += `<p class="try center">${tr('잠시 폰을 엎어 두고 묵념해 보세요. 소리가 잦아듭니다.')}</p>`;
+  if (spread && spread.cards[0]) spread.cards[0].html += `<button class="act-btn geo-btn">${tr('내가 있는 곳에서 대구까지 거리 보기')}</button><p class="geo-out"></p><p class="note">${tr('위치는 거리 계산에만 쓰이고 저장·전송되지 않습니다.')}</p>`;
+  if (light && light.cards[0]) light.cards[0].html += `<button class="act-btn mic-btn">${tr('후 불어 빛 띄우기 (마이크)')}</button>`;
   if (light && light.cards[0]) light.cards[0].html += `<button class="act-btn ar-btn">${tr('카메라로 내 공간에 빛 남기기')}</button><p class="note">${tr('카메라 영상은 이 화면에서만 보이고 저장·전송되지 않습니다.')}</p>`;
 }
 const CREDITS = `<footer class="bs-credits"><div>
@@ -669,7 +674,7 @@ function frame(now) {
   }
   if (torch > 0) { const tg = g.createRadialGradient(tx, ty, 0, tx, ty, 170); tg.addColorStop(0, `rgba(255,236,200,${0.1 * torch})`); tg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = tg; g.fillRect(tx - 170, ty - 170, 340, 340); }
   const ax = state.ar ? -sensor.tiltX * W * 0.6 : 0, ay = state.ar ? -sensor.tiltY * H * 0.5 : 0;
-  if (id === 'light') state.lamps.forEach((l0) => { l0.y -= l0.v; l0.x += Math.sin(t + l0.ph) * 0.3; const l = { x: l0.x + (l0.ar ? ax : 0), y: l0.y + (l0.ar ? ay : 0) }; const r = 10 + Math.sin(t * 3 + l0.ph) * 2; const lg = g.createRadialGradient(l.x, l.y, 0, l.x, l.y, r * 2.4); lg.addColorStop(0, 'rgba(255,240,205,.95)'); lg.addColorStop(1, 'rgba(255,214,150,0)'); g.fillStyle = lg; g.beginPath(); g.arc(l.x, l.y, r * 2.4, 0, 6.283); g.fill(); if (l0.y < -40) l0.y = H + 40; });
+  if (id === 'light') state.lamps.forEach((l0) => { l0.y -= l0.v * (1 + sensor.blow * 7); l0.x += Math.sin(t + l0.ph) * 0.3; const l = { x: l0.x + (l0.ar ? ax : 0), y: l0.y + (l0.ar ? ay : 0) }; const r = 10 + Math.sin(t * 3 + l0.ph) * 2; const lg = g.createRadialGradient(l.x, l.y, 0, l.x, l.y, r * 2.4); lg.addColorStop(0, 'rgba(255,240,205,.95)'); lg.addColorStop(1, 'rgba(255,214,150,0)'); g.fillStyle = lg; g.beginPath(); g.arc(l.x, l.y, r * 2.4, 0, 6.283); g.fill(); if (l0.y < -40) l0.y = H + 40; });
   if (state.ar && id !== 'light') stopAR();
   if (id === 'hunger' && state.hold > 0.05) { g.strokeStyle = `rgba(255,248,230,${0.5 * state.hold})`; g.beginPath(); g.arc(ptr.x, ptr.y, 26 + state.hold * 10, -Math.PI / 2, -Math.PI / 2 + state.hold * 6.283); g.stroke(); }
   sound.update(id, p, { freeze: state.freeze, lamps: state.lamps.length });
@@ -733,6 +738,53 @@ if (IS_MOBILE) {
     if (id === 'boundary' || id === 'mine' || id === 'truth') return;
     sound.rattle(0.4 + v * 0.6); sensor.vibrate([25, 30, 25]);
   });
+  addEventListener('click', function aw() { removeEventListener('click', aw, true); keepAwake(); }, true);
+  // 후 불기: 빛 장면에서 빛이 떠오름 (빛이 없으면 아래에서 새로 생김)
+  document.querySelectorAll('.mic-btn').forEach((btn) => btn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    try { await startMic(); btn.textContent = tr('후~ 불면 빛이 떠올라요'); btn.disabled = true; } catch (err) { btn.textContent = tr('마이크를 쓸 수 없어요'); }
+  }));
+  sensor.onBlow((v) => {
+    if (SCENES[cur].id !== 'light') return;
+    const n = 1 + Math.round(v * 3);
+    for (let k = 0; k < n && state.lamps.length < 60; k++) state.lamps.push({ x: W * (0.15 + Math.random() * 0.7), y: H + 20, v: 0.5 + Math.random() * 0.6, ph: Math.random() * 6 });
+    document.querySelectorAll('.lamp-n').forEach((el) => (el.textContent = state.lamps.length)); sound.ping('lamp'); sensor.vibrate(12);
+  });
+  // 여러 손가락: 빛 장면에서 손가락마다 빛 하나
+  addEventListener('touchstart', (e) => {
+    if (SCENES[cur].id !== 'light' || e.touches.length < 2 || e.target.closest('.card, .bs-top, .lb')) return;
+    [...e.touches].forEach((tt) => { if (state.lamps.length < 60) state.lamps.push({ x: tt.clientX, y: tt.clientY, v: 0.25 + Math.random() * 0.35, ph: Math.random() * 6 }); });
+    document.querySelectorAll('.lamp-n').forEach((el) => (el.textContent = state.lamps.length)); sound.ping('lamp'); sensor.vibrate(20);
+  }, { passive: true });
+  // 돌리기: 나눔 장면에서 주먹밥이 한 자리씩 옆으로
+  sensor.onSpin((dir) => {
+    if (SCENES[cur].id !== 'share') return;
+    state.balls.forEach((bl) => { bl.ta += dir * Math.PI * 2 / 10; });
+    state.share++; document.querySelectorAll('.share-n').forEach((el) => (el.textContent = state.share)); sound.ping('share'); sensor.vibrate([15, 30, 15]);
+  });
+  // 엎어 두기: 소리가 잦아듦. 1950·광산·진실규명 장에서는 묵념으로 받아들이고, 다시 들면 머문 시간을 알려줌
+  const quiet = document.createElement('div'); quiet.className = 'quiet-msg'; quiet.hidden = true; document.body.appendChild(quiet);
+  let downAt = 0, downScene = '';
+  sensor.onFaceDown((down) => {
+    sound.rest(down);
+    if (down) { downAt = performance.now(); downScene = SCENES[cur].id; return; }
+    const sec = Math.round((performance.now() - downAt) / 1000);
+    if (['boundary', 'mine', 'truth'].includes(downScene) && sec >= 3) {
+      quiet.innerHTML = `<b>${tr('함께 기억해 주셔서 고맙습니다')}</b><span>${tr('{n}초 동안 함께 머물렀습니다', { n: sec })}</span>`;
+      quiet.hidden = false; quiet.classList.remove('on'); void quiet.offsetWidth; quiet.classList.add('on'); sensor.vibrate(30);
+      setTimeout(() => { quiet.hidden = true; }, 4200);
+    }
+  });
+  // 위치: 지금 있는 곳에서 대구까지
+  const DAEGU = { lat: 35.8714, lon: 128.6014 };
+  document.querySelectorAll('.geo-btn').forEach((btn) => btn.addEventListener('click', async (e) => {
+    e.stopPropagation(); const out = btn.parentElement.querySelector('.geo-out');
+    try {
+      const c = await getPosition(); const km = Math.round(distanceKm({ lat: c.latitude, lon: c.longitude }, DAEGU));
+      out.textContent = km < 30 ? tr('지금 당신은 이 이야기가 시작된 대구 가까이(약 {n}km)에 있습니다.', { n: km }) : tr('지금 당신은 1946년 10월의 대구에서 약 {n}km 떨어진 곳에서 이 이야기를 보고 있습니다.', { n: km.toLocaleString() });
+      btn.remove(); sensor.vibrate(15);
+    } catch (err) { out.textContent = tr('위치를 알 수 없어요 (권한을 확인해 주세요)'); }
+  }));
   const vid = document.createElement('video'); vid.className = 'ar-video'; vid.setAttribute('playsinline', ''); vid.muted = true; vid.hidden = true; document.body.prepend(vid);
   const exit = document.createElement('button'); exit.className = 'ar-exit'; exit.hidden = true; exit.textContent = tr('AR 끝내기'); document.body.appendChild(exit);
   let stopCam = null;
