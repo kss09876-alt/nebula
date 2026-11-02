@@ -1,0 +1,112 @@
+/* VALIX 앱 껍데기 (app.html) — 전시 페이지 스타일과는 분리 */
+:root {
+  --bg: #05060c; --bg2: #0d0f1a; --line: rgba(255,255,255,.1); --line2: rgba(255,255,255,.2);
+  --tx: #f2f3f8; --tx2: #9aa1bd; --tx3: #646a85; --warn: #f5c96a; --ok: #8fd6b4; --acc: #9db8ff;
+  --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px);
+  --tabh: 58px;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--tx); }
+body.vx { font-family: Pretendard, 'Noto Sans SC', 'Noto Sans JP', system-ui, sans-serif; overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+h1, h2, h3, p { margin: 0; }
+
+.vx-top { position: fixed; inset: 0 0 auto; z-index: 5; display: flex; align-items: center; gap: 12px; padding: calc(var(--sat) + 14px) 20px 12px; background: linear-gradient(var(--bg) 70%, transparent); }
+.vx-logo { font-weight: 800; letter-spacing: .18em; font-size: 15px; }
+.vx-top-title { font-size: 13px; color: var(--tx2); }
+
+.vx-view { min-height: 100%; padding: calc(var(--sat) + 60px) 20px calc(var(--sab) + var(--tabh) + 28px); }
+.vx-sec { margin-top: 26px; }
+.vx-sec > h3 { font-size: 13px; font-weight: 500; color: var(--tx2); margin-bottom: 10px; }
+.vx-h1 { font-size: 24px; font-weight: 700; line-height: 1.35; margin-top: 4px; }
+.vx-muted { color: var(--tx2); font-size: 13px; line-height: 1.6; }
+
+/* 행성 썸네일 */
+.planet { --c: #9db8ff; flex-shrink: 0; border-radius: 50%; position: relative; overflow: hidden;
+  background: radial-gradient(circle at 32% 30%, color-mix(in srgb, var(--c) 100%, #fff 35%), var(--c) 38%, color-mix(in srgb, var(--c) 45%, #000) 100%); }
+.planet::after { content: ''; position: absolute; inset: 0; border-radius: 50%; box-shadow: inset -8px -10px 18px rgba(0,0,0,.45); }
+.planet.ring { overflow: visible; }
+.planet.ring::before { content: ''; position: absolute; left: -22%; right: -22%; top: 42%; height: 16%; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--c) 70%, #fff); transform: rotate(-16deg); z-index: 1; }
+
+/* 큰 카드 (홈) */
+.hero { display: block; width: 100%; text-align: left; border: 1px solid var(--line); border-radius: 22px; padding: 18px; background: var(--bg2); position: relative; overflow: hidden; }
+.hero .stage { height: 170px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; position: relative; }
+.hero .stage::before { content: ''; position: absolute; inset: -20px; background: radial-gradient(circle at 50% 55%, color-mix(in srgb, var(--c) 22%, transparent), transparent 62%); }
+.hero .planet { width: 118px; height: 118px; animation: spin 40s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.hero .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.hero h2 { font-size: 19px; font-weight: 700; }
+.hero .sub { color: var(--tx2); font-size: 13px; margin-top: 4px; line-height: 1.5; }
+.hero .go { margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; border-radius: 14px; background: var(--tx); color: var(--bg); font-weight: 700; font-size: 15px; }
+
+/* 목록 줄 */
+.item { display: flex; gap: 14px; align-items: center; width: 100%; text-align: left; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.item .planet { width: 62px; height: 62px; }
+.item .meta { flex: 1; min-width: 0; }
+.item .code { font-size: 11px; color: var(--tx3); letter-spacing: .04em; }
+.item .t { font-size: 16px; font-weight: 600; margin: 3px 0 2px; }
+.item .a { font-size: 12px; color: var(--tx2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item.off { opacity: .45; }
+.badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
+.badge { font-size: 11px; padding: 3px 7px; border-radius: 7px; background: rgba(255,255,255,.08); color: var(--tx2); }
+.badge.warn { background: rgba(245,201,106,.14); color: var(--warn); }
+.badge.ok { background: rgba(143,214,180,.14); color: var(--ok); }
+.badge.acc { background: rgba(157,184,255,.14); color: var(--acc); }
+
+.chips { display: flex; gap: 6px; margin-bottom: 6px; }
+.chip { font-size: 13px; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line2); color: var(--tx2); }
+.chip.on { background: var(--tx); color: var(--bg); border-color: var(--tx); font-weight: 600; }
+
+/* 내 서재 */
+.cont { display: flex; gap: 12px; align-items: center; width: 100%; text-align: left; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg2); }
+.cont .planet { width: 46px; height: 46px; }
+.bar { height: 4px; border-radius: 2px; background: var(--line); margin-top: 8px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--acc); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--bg2); border-radius: 14px; padding: 14px 8px; text-align: center; }
+.stat b { display: block; font-size: 20px; font-weight: 700; }
+.stat span { font-size: 11px; color: var(--tx2); }
+.empty { border: 1px dashed var(--line2); border-radius: 16px; padding: 22px 16px; text-align: center; color: var(--tx2); font-size: 13px; line-height: 1.6; }
+
+/* MY */
+.me { display: flex; align-items: center; gap: 14px; }
+.me .planet { width: 52px; height: 52px; --c: #b9a6ff; }
+.me b { font-size: 17px; }
+.card { border: 1px solid var(--line); border-radius: 16px; padding: 16px; background: var(--bg2); }
+.menu { border-top: 1px solid var(--line); }
+.menu > * { display: flex; align-items: center; gap: 12px; width: 100%; padding: 15px 2px; border-bottom: 1px solid var(--line); font-size: 15px; text-align: left; }
+.menu .v { margin-left: auto; color: var(--tx2); font-size: 13px; }
+.langs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+.langs button { padding: 12px; border-radius: 12px; border: 1px solid var(--line2); font-size: 14px; }
+.langs button.on { background: var(--tx); color: var(--bg); font-weight: 600; }
+
+/* 탭바 */
+.vx-tabs { position: fixed; inset: auto 0 0; z-index: 6; display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px 8px calc(var(--sab) + 6px); background: rgba(5,6,12,.92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--line); }
+.vx-tabs button { display: flex; flex-direction: column; align-items: center; gap: 3px; height: calc(var(--tabh) - 12px); justify-content: center; color: var(--tx3); font-size: 11px; }
+.vx-tabs svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
+.vx-tabs button.on { color: var(--tx); }
+
+/* 전시 보기 */
+.vx-viewer { position: fixed; inset: 0; z-index: 20; background: #000; }
+.vx-viewer iframe { width: 100%; height: 100%; border: 0; display: block; }
+.vx-close { position: absolute; z-index: 2; right: 12px; bottom: calc(var(--sab) + 14px); width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.25); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.vx-close svg { width: 18px; height: 18px; stroke: #fff; stroke-width: 2; stroke-linecap: round; }
+
+/* 착륙 로딩 */
+.vx-landing { position: fixed; inset: 0; z-index: 30; background: var(--bg); transition: opacity .6s ease; }
+.vx-landing.out { opacity: 0; pointer-events: none; }
+.vx-landing canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.vx-land-text { position: absolute; left: 0; right: 0; bottom: calc(var(--sab) + 70px); text-align: center; padding: 0 24px; transition: color .4s; }
+#land-code { font-size: 12px; letter-spacing: .2em; color: var(--tx2); }
+#land-title { font-size: 19px; font-weight: 700; margin: 8px 0 6px; }
+#land-state { font-size: 12px; color: var(--tx2); }
+#land-retry { margin-top: 14px; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--line2); font-size: 13px; }
+.vx-landing.bright .vx-land-text, .vx-landing.bright #land-code, .vx-landing.bright #land-state { color: #2a2440; }
+
+/* 첫 실행 */
+.vx-boot { position: fixed; inset: 0; z-index: 40; background: var(--bg); display: flex; align-items: center; justify-content: center; transition: opacity .5s; }
+.vx-boot span { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--line2); border-top-color: var(--tx); animation: spin 1s linear infinite; }
+.vx-boot.out { opacity: 0; pointer-events: none; }
+
+@media (min-width: 700px) { .vx-view { max-width: 560px; margin: 0 auto; } .vx-tabs { max-width: 560px; margin: 0 auto; border-left: 1px solid var(--line); border-right: 1px solid var(--line); } }
+@media (prefers-reduced-motion: reduce) { .hero .planet { animation: none; } }
