@@ -14,7 +14,7 @@ VALIX의 X(Value X) = 무한한 우주. 전시 하나가 행성 하나. 미시�
 | `js/home-mobile.js` | 홈 모바일 전용: 나침반 고리(행성계가 방위에 맞춰 회전), 기울이기, 흔들기, 좌우 스와이프, 하단 행성 시트 |
 | `cell.html` + `js/cell.js` | 전시 페이지. 블록 렌더러(cover, text, quote, sticky, timeline, quantum, prism, shadow, soundmap, listen, piano, wave, video …). `?id=g001`이면 기획전(방 여러 개를 한 페이지로) |
 | `bitssal.html` + `js/bitssal.js` | X-003 빛쌀 단독 스크롤 스토리 (캔버스 쌀알 1,900개, 14장면). 끝부분에 모바일 전용 블록(흔들기·AR) |
-| `js/sensors.js` | 모바일 센서 공용: `IS_MOBILE`, `sensor`(tiltX/tiltY/heading/shake, onShake, vibrate, enable), `startCamera` |
+| `js/sensors.js` | 모바일 센서 공용: `IS_MOBILE`, `sensor`(tiltX/tiltY/heading/shake/spin/faceDown/blow, onShake/onSpin/onFaceDown/onBlow, vibrate, enable), `startCamera`, `startMic`, `getPosition`/`distanceKm`, `keepAwake`(화면 꺼짐 방지), `onPinch` |
 | `js/data.js` | 데이터 로드: 구글 시트(gviz) → 실패 시 `data/cells.json`. 기획전 묶기, 번호 재부여(X-001…), 다국어 적용 |
 | `js/config.js` | 시트 ID, `groups`(기획전: g001 최초의 행성 = c001·c002·c003) |
 | `js/i18n.js`, `js/i18n-dict.js` | 다국어(ko/en/zh/ja). `tr(한국어문장)`으로 화면 문구 번역, 언어 선택 버튼 |
@@ -28,7 +28,9 @@ VALIX의 X(Value X) = 무한한 우주. 전시 하나가 행성 하나. 미시�
 - 같은 주소, 같은 데이터. `IS_MOBILE`(터치 기기)일 때만 모바일 전용 모듈과 효과가 켜짐. PC 화면은 건드리지 않는 게 원칙.
 - iPhone 기울기 권한은 탭(click) 안에서만 요청 가능 → 첫 탭·입장 버튼에서 `sensor.enable()`.
 - 진동은 안드로이드만 (iPhone 미지원).
-- 빛쌀: 기울이기/흔들기 효과는 boundary·mine·truth 장(민간인 희생)에서는 끔.
+- 빛쌀: 기울이기/흔들기 효과는 boundary·mine·truth 장(민간인 희생)에서는 끔. 그 장에서 폰을 엎으면 '묵념'으로 받아 소리를 낮추고, 다시 들면 머문 시간을 알려줌.
+- 모바일 센서 체험 목록: 홈(나침반·기울이기·흔들기·돌리기=행성 넘김·스와이프·핀치·후 불기·엎어두기), 빛쌀(기울이면 쌀 쏟아짐·흔들기·후 불어 빛·여러 손가락 빛·돌려서 주먹밥 건네기·엎어 묵념·위치→대구 거리·카메라 AR), 최초의 행성(기울여 프리즘/그림자 빛·흔들어 양자 관측). 모든 페이지 화면 꺼짐 방지.
+- 센서·마이크·카메라·위치 데이터는 기기 안에서만 쓰고 저장·전송하지 않음 (문구로도 안내).
 
 ## 콘텐츠(CMS)
 - 구글 시트 2개 (링크가 있는 모든 사용자 보기 권한):
