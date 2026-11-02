@@ -3,6 +3,7 @@
 // 데이터는 기존 data.js(구글 시트 → 백업 JSON)를 그대로 씁니다. 개인 기록은 기기 안(localStorage)에만 저장합니다.
 import { loadData, esc } from './data.js?v=17';
 import { lang, LANGS } from './i18n.js?v=3';
+import { planetURL, planetCanvas, planetType, hasRing } from './planets.js?v=3';
 
 /* ---------- 문구 ---------- */
 const T = {
@@ -59,7 +60,7 @@ const name = (c) => String(c.title || '').replace(/^\s*X-\d+\s*·\s*/, '');
 const href = (c) => c.url || `cell.html?id=${encodeURIComponent(c.id)}`;
 const isOpen = (c) => c.status === 'open';
 const ringFx = (c) => ['prism', 'trio', 'stars'].includes(c.fx);
-const poster = (c, cls = '') => `<span class="poster${ringFx(c) ? ' ring' : ''} ${cls}" style="--c:${esc(c.color || '#9db8ff')}"><span class="pc">${esc(c.code || '')}</span><span class="pt">${esc(name(c))}</span></span>`;
+const poster = (c, cls = '') => `<span class="poster ${cls}" style="--c:${esc(c.color || '#9db8ff')}"><img class="pl" src="${planetURL(c, 384)}" alt="" draggable="false"><span class="pc">${esc(c.code || '')}</span><span class="pt">${esc(name(c))}</span></span>`;
 const kindTag = (c) => c.isGroup ? `<span class="tag t3">${t('기획전')}</span>` : c.url ? `<span class="tag t1">${t('단독전')}</span>` : `<span class="tag t2">${t('전시')}</span>`;
 const featured = () => { const o = cells.filter(isOpen); return o[o.length - 1] || cells[0]; };
 
@@ -142,7 +143,7 @@ const screens = {
       <section class="hero" style="--c:${esc(f.color || '#9db8ff')}">
         <div class="top"><div><p class="eyebrow">WEEKLY PLANET</p><p class="vol">Vol. ${vol()}<i></i></p></div><div class="icons">${clock}${bell}</div></div>
         <p class="issue">${open.slice(-2).reverse().map((c) => esc(name(c))).join(' · ')}</p>
-        <div class="stage"><span class="orbit"></span><span class="big"></span><button class="enter" data-open="${esc(f.id)}">${t('입장하기')} →</button></div>
+        <div class="stage"><span class="orbit"></span><img class="big" src="${planetURL(f, 768)}" alt="" draggable="false"><button class="enter" data-open="${esc(f.id)}">${t('입장하기')} →</button></div>
       </section>
       <section class="sec"><div class="sec-h"><h2>NEW</h2><button data-tab-go="play" aria-label="더 보기">${plus}</button></div>
         <p class="sec-sub">${t('이번 주 열린 행성')}</p><div class="hscroll">${open.slice().reverse().map(card).join('')}</div></section>
@@ -157,7 +158,7 @@ const screens = {
     return `<header class="page-h"><h1>PLAY</h1><div class="icons">${bell}</div></header>
       <div class="plays">${open.map((c) => { const p = playOf(c); return `
         <div class="play" style="--c:${esc(c.color || '#9db8ff')}">
-          <div class="art"><svg class="glyph" viewBox="0 0 24 24"><path d="${p.glyph}"/></svg><span class="timer" data-left="${esc(c.id)}">${left(c)}</span></div>
+          <div class="art"><img class="pl" src="${planetURL(c, 640)}" alt="" draggable="false"><span class="timer" data-left="${esc(c.id)}">${left(c)}</span></div>
           <div class="body"><p class="who">${esc(c.code)} · ${esc(c.artist || '')}</p><h3>${br(p.q)}</h3><p class="how">${esc(p.how)}</p>
             <div class="bar"><i style="width:${Math.round(wk * 100)}%"></i></div>
             <div class="two"><span data-how="${esc(c.id)}">${t('체험 방법')}</span><span data-open="${esc(c.id)}" style="background:#fff;color:#111;border-color:#fff">${t('입장하기')}</span></div></div>
@@ -269,21 +270,9 @@ const landing = (() => {
     x.fillStyle = 'rgba(255,214,140,.8)'; x.beginPath(); x.ellipse(-10, -52, 8, 5, -0.5, 0, Math.PI * 2); x.fill();
     x.restore();
   }
-  function surface(cx, cy, R, now) {
-    const col = c.color || '#9db8ff';
-    x.save(); x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2); x.clip();
-    const g = x.createRadialGradient(cx - R * .35, cy - R * .35, R * .1, cx, cy, R);
-    g.addColorStop(0, col); g.addColorStop(1, '#0b0c18'); x.fillStyle = g; x.fillRect(cx - R, cy - R, R * 2, R * 2);
-    const n = c.fx === 'rice' ? 90 : 50;
-    for (let i = 0; i < n; i++) {
-      const a = i * 2.399 + now / 9000, r = R * Math.sqrt((i + .5) / n), tw = .35 + .45 * Math.sin(now / 320 + i);
-      x.fillStyle = `rgba(255,255,255,${tw * .55})`; x.beginPath();
-      if (c.fx === 'rice') x.ellipse(cx + Math.cos(a) * r, cy + Math.sin(a) * r, R * .022 + 2, R * .012 + 1.2, a, 0, Math.PI * 2);
-      else if (c.fx === 'ripple') x.arc(cx, cy, r, a, a + .5);
-      else x.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, R * .008 + 1, 0, Math.PI * 2);
-      c.fx === 'ripple' ? (x.strokeStyle = x.fillStyle, x.lineWidth = 1.5, x.stroke()) : x.fill();
-    }
-    x.restore();
+  function surface(cx, cy, R) {
+    const pc = planetCanvas(c, 1024), ratio = hasRing(c) ? 0.30 : 0.38, w = (R / ratio);
+    x.drawImage(pc, cx - w / 2, cy - w / 2, w, w);
   }
   function frame(now) {
     const el2 = now - t0;
@@ -295,7 +284,7 @@ const landing = (() => {
     stars.forEach((s) => { const k = 1 + e * 1.6 * s.z; x.fillStyle = `rgba(255,255,255,${.3 + .35 * s.z / 2.3})`; x.fillRect(cx + (s.x - cx) * k, cy + (s.y - cy) * k, s.z * .9, s.z * .9); });
     const R = Math.min(W, H) * .16 + e * e * Math.max(W, H) * 1.1;
     x.save(); x.globalAlpha = .22; x.fillStyle = c.color || '#9db8ff'; x.beginPath(); x.arc(cx, cy, R * 1.12, 0, Math.PI * 2); x.fill(); x.restore();
-    surface(cx, cy, R, now);
+    surface(cx, cy, R);
     const wait = !isLoaded && p > .8;
     const orbit = wait ? (now / 1400) : 0;
     const ax = wait ? cx + Math.cos(orbit) * R * 1.35 : cx - W * .25 * (1 - e);
