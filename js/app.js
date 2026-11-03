@@ -4,6 +4,7 @@
 import { loadData, esc } from './data.js?v=17';
 import { lang, LANGS } from './i18n.js?v=3';
 import { planetURL, planetCanvas, planetType, hasRing } from './planets.js?v=3';
+import { IS_MOBILE, sensor } from './sensors.js?v=2';
 
 /* ---------- 문구 ---------- */
 const T = {
@@ -15,7 +16,7 @@ const t = (k, n) => { let s = (T[lang] && T[lang][k]) ?? k; if (n != null) s = s
 const br = (s) => esc(s).replace(/\n/g, '<br>');
 document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
 
-const VERSION = '0.4.0';
+const VERSION = '0.5.0';
 
 /* ---------- 우주 방랑자 이름 ---------- */
 const NAMES = {
@@ -141,18 +142,24 @@ Object.keys(T2).forEach((l) => Object.assign(T[l], T2[l]));
 const sky = (() => {
   const cv = document.createElement('canvas'); cv.id = 'sky'; document.body.prepend(cv);
   const x = cv.getContext('2d'), calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let W, H, dpr, stars = [], meteor = null, raf = 0, on = true, last = 0, scrollY0 = 0;
+  let W, H, dpr, stars = [], meteor = null, raf = 0, on = true, last = 0, scrollY0 = 0, hd = 0;
   const size = () => { dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0);
-    stars = Array.from({ length: Math.round(W * H / 2600) }, () => ({ x: Math.random() * W, y: Math.random() * H, z: Math.random() ** 2, p: Math.random() * 6.28, c: Math.random() < 0.15 ? '255,226,180' : Math.random() < 0.3 ? '190,205,255' : '255,255,255' })); };
+    const D = Math.hypot(W, H); stars = Array.from({ length: Math.round(D * D / 2600) }, () => ({ x: W / 2 + (Math.random() - 0.5) * D, y: H / 2 + (Math.random() - 0.5) * D, z: Math.random() ** 2, p: Math.random() * 6.28, c: Math.random() < 0.15 ? '255,226,180' : Math.random() < 0.3 ? '190,205,255' : '255,255,255' })); };
   function frame(now) {
     const dt = Math.min(50, now - (last || now)); last = now;
     x.clearRect(0, 0, W, H);
     const sy = scrollY * 0.15, dsy = sy - scrollY0; scrollY0 = sy;
+    const tl = window.__vxTilt || { x: 0, y: 0 };
+    if (sensor.on && sensor.heading != null) { let d = sensor.heading * Math.PI / 180 - hd; d = Math.atan2(Math.sin(d), Math.cos(d)); hd += d * 0.05; }
+    const ch = Math.cos(-hd), sh = Math.sin(-hd), cxs = W / 2, cys = H / 2;
     for (const s of stars) {
       if (!calm) { s.x -= (0.004 + s.z * 0.02) * dt; s.y -= dsy * (0.3 + s.z); }
-      if (s.x < -2) s.x += W + 4; if (s.y < -2) s.y += H + 4; if (s.y > H + 2) s.y -= H + 4;
+      const D = Math.hypot(W, H), L0 = W / 2 - D / 2, T0 = H / 2 - D / 2;
+      if (s.x < L0) s.x += D; if (s.y < T0) s.y += D; if (s.y > T0 + D) s.y -= D;
       const tw = 0.45 + 0.55 * Math.sin(now / (900 + s.z * 600) + s.p);
-      x.fillStyle = `rgba(${s.c},${(0.15 + s.z * 0.75) * tw})`; const r = 0.4 + s.z * 1.3; x.fillRect(s.x, s.y, r, r);
+      x.fillStyle = `rgba(${s.c},${(0.15 + s.z * 0.75) * tw})`; const r = 0.4 + s.z * 1.3;
+      const dx = s.x - cxs, dy = s.y - cys, qx = cxs + dx * ch - dy * sh - tl.x * (4 + s.z * 26), qy = cys + dx * sh + dy * ch - tl.y * (4 + s.z * 22);
+      x.fillRect(qx, qy, r, r);
     }
     if (!calm && !meteor && Math.random() < dt / 7000) meteor = { x: W * (0.3 + Math.random() * 0.7), y: Math.random() * H * 0.4, t: 0 };
     if (meteor) {
@@ -250,20 +257,79 @@ function streakInfo() {
 
 const screens = {
   home() {
-    const n = viewVol || vol(), open = viewVol ? openAt(viewVol) : cells.filter(isOpen), f = open[open.length - 1] || featured(), soon = cells.filter((c) => c.status === 'coming');
-    const card = (c) => `<button class="card" data-detail="${esc(c.id)}">${poster(c)}<p class="ct">${esc(name(c))}</p><p class="cm">${kindTag(c)}${esc(c.period || '')}</p></button>`;
+    const n = viewVol || vol(), open = (viewVol ? openAt(viewVol) : cells.filter(isOpen)).slice().reverse();
+    if (coverIdx >= open.length) coverIdx = 0;
+    const f = open[coverIdx] || featured(), rest = open.filter((c) => c !== f), issue = [f, ...rest];
+    const soon = cells.filter((c) => c.status === 'coming');
+    const KICK = ['COVER STORY', 'FEATURE', 'ESSAY', 'REPORT', 'ARCHIVE'];
+    const date = (d) => d.toLocaleDateString(lang, { year: 'numeric', month: 'long', day: 'numeric' });
+    const pub = volStart(n), nextPub = volStart(n + 1);
+    const quote = pullQuote(f);
     return `
-      <section class="hero" style="--c:${esc(f.color || '#9db8ff')}">
-        <div class="top"><button class="vol-btn" data-vols><p class="eyebrow">WEEKLY PLANET</p><p class="vol">Vol. ${n}<i></i></p></button><div class="icons">${clock}${bell()}</div></div>
-        <p class="issue">${open.slice(-2).reverse().map((c) => esc(name(c))).join(' · ')}</p>
-        <div class="stage"><span class="orbit"><i class="sat"></i></span><img class="big" data-parallax src="${planetURL(f, 768)}" alt="" draggable="false"><button class="enter" data-open="${esc(f.id)}">${t('착륙하기')} →</button></div>
+      <section class="mag-cover" style="--c:${esc(f.color || '#9db8ff')}" data-tiltzone>
+        <div class="mc-top">
+          <button class="mc-mast" data-vols><b>VALIX</b><span>WEEKLY PLANET · Vol. ${n} <i></i></span></button>
+          <div class="icons">${clock}${bell()}</div>
+        </div>
+        <div class="mc-stage">
+          <span class="mc-layer mc-far" data-depth="-14"></span>
+          <span class="mc-orbit" data-depth="6"><i></i></span>
+          <img class="mc-planet" data-depth="22" src="${planetURL(f, 768)}" alt="" draggable="false">
+          <span class="mc-gloss" data-gloss></span>
+        </div>
+        <div class="mc-lines">
+          <p class="mc-kick">COVER STORY · ${esc(f.code)}</p>
+          <h1 class="mc-title">${esc(name(f))}</h1>
+          <p class="mc-dek">${esc(f.subtitle || '')}</p>
+          <p class="mc-by">${esc(f.artist || '')}</p>
+          ${rest.length ? `<p class="mc-more">+ ${rest.map((c) => esc(name(c))).join(' · ')}</p>` : ''}
+        </div>
+        <div class="mc-foot">
+          <button class="mc-read" data-jump="mag-toc">${t('읽기 시작')} ↓</button>
+          <button class="mc-land" data-open="${esc(f.id)}">${t('착륙하기')} →</button>
+        </div>
+        <p class="mc-hint" data-sensor-hint><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2" transform="rotate(-12 12 12)"/></svg><span>${t(IS_MOBILE ? '기울이면 표지가 빛나요 · 흔들면 다음 표지' : '마우스를 움직이면 표지가 빛나요')}</span></p>
       </section>
-      <section class="sec"><div class="sec-h"><h2>NEW</h2><button data-all aria-label="${t('전체 행성')}">${plus}</button></div>
-        <p class="sec-sub">${t('이번 주 열린 행성')}</p><div class="hscroll">${open.slice().reverse().map(card).join('')}</div></section>
-      <section class="sec"><div class="sec-h"><h2>NOW SHOWING</h2></div>
-        <p class="sec-sub">${t('지금 상영 중')}</p><div class="grid2">${cells.filter(isOpen).map((c) => `<button class="gcard" data-detail="${esc(c.id)}">${poster(c)}<p class="ct">${esc(name(c))}</p><p class="ga">${esc(c.artist || '')}</p></button>`).join('')}</div></section>
-      ${soon.length ? `<section class="sec"><div class="sec-h"><h2>COMING SOON</h2></div><p class="sec-sub">${t('곧 착륙할 행성')}</p><div class="hscroll">${soon.map(card).join('')}</div></section>` : ''}
-      <section class="sec"><p class="about">VALIX · XPACE — ${esc(t('생각과 마음의 폭을 넓히는 시간'))}</p></section>`;
+
+      <section class="mag-sec" id="mag-toc">
+        <p class="mag-label">${t('이번 호')} · ${esc(date(pub))}</p>
+        <ol class="toc">${issue.map((c, i) => `<li><button data-jump="art-${esc(c.id)}"><em>${String(i + 1).padStart(2, '0')}</em><span><small>${KICK[Math.min(i, KICK.length - 1)]}</small><b>${esc(name(c))}</b><i>${esc(c.artist || '')} · ${readMin(c)}${t('분')}</i></span></button></li>`).join('')}
+          <li><button data-jump="mag-quote"><em>${String(issue.length + 1).padStart(2, '0')}</em><span><small>QUOTE</small><b>${t('이번 주의 문장')}</b></span></button></li>
+          <li><button data-jump="mag-letter"><em>${String(issue.length + 2).padStart(2, '0')}</em><span><small>LETTER</small><b>${t('에디터의 편지')}</b></span></button></li></ol>
+      </section>
+
+      ${issue.map((c, i) => { const q = pullQuote(c), p = playOf(c); return `
+      <article class="mag-art" id="art-${esc(c.id)}" style="--c:${esc(c.color || '#9db8ff')}">
+        <p class="mag-label">${String(i + 1).padStart(2, '0')} · ${KICK[Math.min(i, KICK.length - 1)]}</p>
+        <button class="art-visual" data-detail="${esc(c.id)}" data-tiltcard><img src="${planetURL(c, 640)}" alt="" data-depth="16"><span class="art-code">${esc(c.code)}</span><span class="art-gloss" data-gloss></span></button>
+        <h2 class="art-title">${esc(name(c))}</h2>
+        <p class="art-dek">${esc(c.subtitle || '')}</p>
+        <p class="art-by">${esc(c.artist || '')}${c.period ? ' · ' + esc(c.period) : ''} · ${readMin(c)}${t('분')}</p>
+        ${q ? `<blockquote class="art-quote">${esc(q.body)}${q.caption ? `<cite>${esc(q.caption)}</cite>` : ''}</blockquote>` : ''}
+        ${c.summary ? `<p class="art-body">${esc(c.summary)}</p>` : ''}
+        <p class="art-play"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M4 9c-1 2-1 4 0 6M20 9c1 2 1 4 0 6"/></svg>${esc(p.how)}</p>
+        <div class="art-cta"><button class="like${isLiked(c.id) ? ' on' : ''}" data-like="${esc(c.id)}" aria-label="${t('좋아요')}">${heart(isLiked(c.id))}</button><button class="btn black" data-open="${esc(c.id)}">${t('이 행성에 착륙하기')} →</button></div>
+      </article>`; }).join('')}
+
+      <section class="mag-sec mag-quote" id="mag-quote" style="--c:${esc(f.color || '#9db8ff')}">
+        <p class="mag-label">${t('이번 주의 문장')}</p>
+        ${quote ? `<blockquote>${esc(quote.body)}</blockquote><p class="q-src">${esc(quote.caption || name(f))}</p>` : `<blockquote>${esc(f.summary || f.subtitle || '')}</blockquote>`}
+      </section>
+
+      <section class="mag-sec mag-letter" id="mag-letter">
+        <p class="mag-label">${t('에디터의 편지')}</p>
+        <p>${esc(t('이번 주에도 행성 {n}곳이 궤도에 올랐습니다.').replace('{n}', issue.length))}</p>
+        <p>${esc(t('하루의 작은 고민에서 잠시 고개를 들어, 더 큰 것을 바라보는 시간. 한 행성에 머무는 몇 분이 생각과 마음의 폭을 조금 넓혀 주기를 바랍니다.'))}</p>
+        <p class="sign">— VALIX ${t('편집실')}</p>
+      </section>
+
+      <section class="mag-sec mag-next">
+        <p class="mag-label">${t('다음 호')} · Vol. ${n + 1}</p>
+        <p class="next-date">${esc(date(nextPub))}</p>
+        ${soon.length ? `<div class="hscroll">${soon.map((c) => `<button class="card" data-detail="${esc(c.id)}">${poster(c)}<p class="ct">${esc(name(c))}</p></button>`).join('')}</div>` : `<p class="small">${t('다음 호에서 새로운 행성을 만나요.')}</p>`}
+        <button class="btn line" data-all style="margin-top:22px">${t('전체 행성')}</button>
+        <p class="colophon">VALIX LAB · WEEKLY PLANET Vol. ${n} · ${esc(date(pub))}</p>
+      </section>`;
   },
   play() {
     const open = cells.filter(isOpen).slice().reverse();
@@ -319,7 +385,8 @@ function go(next, keepScroll) {
   view.className = 'vx-view';
   view.innerHTML = screens[tab]();
   // 순서대로 떠오르는 등장 효과
-  let i = 0; view.querySelectorAll('.hero, .page-h, .rw-h, .sec-h, .sec-sub, .card, .gcard, .play, .shelf, .lockcard, .mission, .me, .stat2, .row, .chips, .about, .hscroll.mini, .empty').forEach((el) => { el.classList.add('rv'); el.style.animationDelay = `${Math.min(i++, 14) * 45}ms`; });
+  let i = 0; view.querySelectorAll('.mc-top, .mc-lines, .mc-foot, .hero, .page-h, .rw-h, .sec-h, .sec-sub, .card, .gcard, .play, .shelf, .lockcard, .mission, .me, .stat2, .row, .chips, .about, .hscroll.mini, .empty').forEach((el) => { el.classList.add('rv'); el.style.animationDelay = `${Math.min(i++, 14) * 45}ms`; });
+  if (tab === 'home') { const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.12 }); view.querySelectorAll('.mag-art > *, .mag-sec > *').forEach((el) => { el.classList.add('rs'); io.observe(el); }); }
   tabsEl.querySelectorAll('[data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
   tabsEl.querySelector('.ind').style.transform = `translateX(${TAB_I[tab] * 100}%)`;
   if (!keepScroll || prev !== next) scrollTo(0, 0);
@@ -339,6 +406,7 @@ function onAction(e) {
   if ((b = q('[data-open]'))) { const c = byId(b.dataset.open); if (c && isOpen(c)) { if (sheet.isOpen) sheet.close(); openExhibit(c); } return true; }
   if ((b = q('[data-detail]'))) { const c = byId(b.dataset.detail); if (c) detailSheet(c); return true; }
   if ((b = q('[data-like]'))) { const on = toggleLike(b.dataset.like); b.classList.toggle('on', on); b.innerHTML = heart(on); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); if (tab === 'my') go('my', true); return true; }
+  if ((b = q('[data-jump]'))) { const el = document.getElementById(b.dataset.jump); if (el) scrollTo({ top: el.getBoundingClientRect().top + scrollY - 20, behavior: 'smooth' }); return true; }
   if (q('[data-noti]')) { notiSheet(); return true; }
   if (q('[data-read]')) { store.set('valix-noti', vol()); sheet.close(); go(tab, true); return true; }
   if (q('[data-recent]')) {
@@ -404,6 +472,51 @@ frame.addEventListener('load', () => {
 const CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
 if (CapApp) CapApp.addListener('backButton', () => { if (sheet.isOpen) sheet.close(); else if (!viewer.hidden) closeExhibit(); else if (!ob.hidden) showOB('login'); else if (tab !== 'home') go('home'); else CapApp.exitApp(); });
 
+
+/* ---------- 매거진 도우미 ---------- */
+let blocks = [], coverIdx = 0;
+const blocksOf = (c) => { const ids = c.rooms ? c.rooms.map((r) => r.id) : [c.id]; return blocks.filter((b) => ids.includes(b.cell_id)); };
+const pullQuote = (c) => blocksOf(c).find((b) => b.type === 'quote' && b.body);
+const readMin = (c) => Math.max(3, Math.round(blocksOf(c).reduce((s, b) => s + String(b.body || '').length + String(b.title || '').length, 0) / 380) + 2);
+
+/* ---------- 센서로 움직이는 홈 (PC는 마우스로 흉내) ---------- */
+const T3 = {
+  en: { '읽기 시작': 'Start reading', '이번 호': 'In this issue', '분': 'min', '이번 주의 문장': 'Line of the week', '에디터의 편지': 'Editor’s letter', '이번 주에도 행성 {n}곳이 궤도에 올랐습니다.': 'This week, {n} planets entered orbit.', '하루의 작은 고민에서 잠시 고개를 들어, 더 큰 것을 바라보는 시간. 한 행성에 머무는 몇 분이 생각과 마음의 폭을 조금 넓혀 주기를 바랍니다.': 'Look up from the small worries of the day toward something larger. We hope a few minutes on one planet widen your thoughts and heart a little.', '편집실': 'Editors', '다음 호': 'Next issue', '다음 호에서 새로운 행성을 만나요.': 'New planets arrive in the next issue.', '이 행성에 착륙하기': 'Land on this planet', '기울이면 표지가 빛나요 · 흔들면 다음 표지': 'Tilt to light the cover · shake for the next cover', '마우스를 움직이면 표지가 빛나요': 'Move the mouse to light the cover', '다음 표지': 'Next cover' },
+  zh: { '읽기 시작': '开始阅读', '이번 호': '本期内容', '분': '分钟', '이번 주의 문장': '本周一句', '에디터의 편지': '编辑来信', '이번 주에도 행성 {n}곳이 궤도에 올랐습니다.': '本周又有 {n} 颗行星进入轨道。', '하루의 작은 고민에서 잠시 고개를 들어, 더 큰 것을 바라보는 시간. 한 행성에 머무는 몇 분이 생각과 마음의 폭을 조금 넓혀 주기를 바랍니다.': '从一天的小烦恼中抬起头，看向更大的事物。愿在一颗行星停留的几分钟，让你的思想与心灵更开阔一些。', '편집실': '编辑部', '다음 호': '下一期', '다음 호에서 새로운 행성을 만나요.': '下一期将迎来新的行星。', '이 행성에 착륙하기': '登陆这颗行星', '기울이면 표지가 빛나요 · 흔들면 다음 표지': '倾斜让封面发光 · 摇晃换下一张封面', '마우스를 움직이면 표지가 빛나요': '移动鼠标让封面发光', '다음 표지': '下一张封面' },
+  ja: { '읽기 시작': '読みはじめる', '이번 호': '今号の目次', '분': '分', '이번 주의 문장': '今週の言葉', '에디터의 편지': '編集後記', '이번 주에도 행성 {n}곳이 궤도에 올랐습니다.': '今週も {n} つの惑星が軌道に乗りました。', '하루의 작은 고민에서 잠시 고개를 들어, 더 큰 것을 바라보는 시간. 한 행성에 머무는 몇 분이 생각과 마음의 폭을 조금 넓혀 주기를 바랍니다.': '一日の小さな悩みから少し顔を上げて、もっと大きなものを見る時間。ひとつの惑星で過ごす数分が、考えと心の幅を少し広げてくれますように。', '편집실': '編集部', '다음 호': '次号', '다음 호에서 새로운 행성을 만나요.': '次号で新しい惑星に出会えます。', '이 행성에 착륙하기': 'この惑星に着陸する', '기울이면 표지가 빛나요 · 흔들면 다음 표지': '傾けると表紙が光る · 振ると次の表紙', '마우스를 움직이면 표지가 빛나요': 'マウスを動かすと表紙が光る', '다음 표지': '次の表紙' },
+};
+Object.keys(T3).forEach((l) => Object.assign(T[l], T3[l]));
+
+const tilt = { x: 0, y: 0, px: 0, py: 0 }; window.__vxTilt = tilt;
+addEventListener('pointermove', (e) => { if (!IS_MOBILE) { tilt.px = (e.clientX / innerWidth - 0.5) * 2; tilt.py = (e.clientY / innerHeight - 0.5) * 2; } }, { passive: true });
+// iPhone은 탭 안에서만 센서 권한을 물을 수 있음 → 첫 탭에서 켬
+addEventListener('click', function once() { if (!IS_MOBILE) return; removeEventListener('click', once, true); sensor.enable().then((ok) => { if (ok) document.body.classList.add('sensing'); }); }, true);
+// 흔들면 다음 표지 (홈 표지가 보일 때)
+sensor.onShake(() => {
+  if (tab !== 'home' || !viewer.hidden || sheet.isOpen) return;
+  const cov = view.querySelector('.mag-cover'); if (!cov || cov.getBoundingClientRect().bottom < innerHeight * 0.4) return;
+  const n = (viewVol ? openAt(viewVol) : cells.filter(isOpen)).length; if (n < 2) return;
+  coverIdx = (coverIdx + 1) % n; sensor.vibrate([15, 40, 25]);
+  cov.classList.add('flip-out');
+  setTimeout(() => { go('home', true); const c2 = view.querySelector('.mag-cover'); c2 && c2.classList.add('flip-in'); }, 260);
+});
+(function tiltLoop() {
+  const on = IS_MOBILE && sensor.on;
+  const tx = on ? sensor.tiltX : tilt.px, ty = on ? sensor.tiltY : tilt.py;
+  tilt.x += (tx - tilt.x) * 0.12; tilt.y += (ty - tilt.y) * 0.12;
+  if (tab === 'home' && !view.hidden && viewer.hidden) {
+    const H = innerHeight;
+    view.querySelectorAll('[data-tiltzone], [data-tiltcard]').forEach((z) => {
+      const r = z.getBoundingClientRect(); if (r.bottom < 0 || r.top > H) return;
+      const k = z.hasAttribute('data-tiltcard') ? 0.6 : 1;
+      z.querySelectorAll('[data-depth]').forEach((el) => { const d = +el.dataset.depth * k; el.style.translate = `${(tilt.x * d).toFixed(1)}px ${(tilt.y * d).toFixed(1)}px`; });
+      const gl = z.querySelector('[data-gloss]'); if (gl) { gl.style.setProperty('--gx', `${50 + tilt.x * 45}%`); gl.style.setProperty('--gy', `${40 + tilt.y * 40}%`); }
+      if (z.hasAttribute('data-tiltcard')) z.style.transform = `perspective(900px) rotateY(${(tilt.x * 7).toFixed(2)}deg) rotateX(${(-tilt.y * 6).toFixed(2)}deg)`;
+    });
+  }
+  requestAnimationFrame(tiltLoop);
+})();
+
 /* ---------- 착륙 로딩 화면 ---------- */
 const landing = (() => {
   const el = $('#landing'), cv = $('#land-cv'), x = cv.getContext('2d');
@@ -467,7 +580,7 @@ const landing = (() => {
 /* ---------- 시작 ---------- */
 (async () => {
   const t0 = Date.now();
-  try { cells = (await loadData()).cells; } catch (e) { cells = []; }
+  try { const d = await loadData(); cells = d.cells; blocks = d.blocks || []; } catch (e) { cells = []; }
   await new Promise((r) => setTimeout(r, Math.max(0, 1200 - (Date.now() - t0)))); // 시작 화면 최소 1.2초
   $('#splash').classList.add('out'); setTimeout(() => $('#splash').remove(), 600);
   if (!cells.length) { view.hidden = false; view.innerHTML = `<p class="empty" style="padding-top:40vh">${t('전시를 불러오지 못했어요.')}<br><br><button class="btn line" style="width:auto;padding:0 24px;margin:0 auto" onclick="location.reload()">${t('다시 시도')}</button></p>`; return; }
