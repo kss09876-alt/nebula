@@ -3,7 +3,8 @@
 // 데이터는 기존 data.js(구글 시트 → 백업 JSON)를 그대로 씁니다. 개인 기록은 기기 안(localStorage)에만 저장합니다.
 import { loadData, esc } from './data.js?v=17';
 import { lang, LANGS } from './i18n.js?v=3';
-import { planetURL, planetCanvas, planetType, hasRing } from './planets.js?v=3';
+import { hasRing } from './planets.js?v=4';
+import { planetSrc, planetKey, onPlanet, planetBitmap, warm } from './planet-store.js?v=1';
 import { IS_MOBILE, sensor } from './sensors.js?v=2';
 
 /* ---------- 문구 ---------- */
@@ -61,7 +62,7 @@ const name = (c) => String(c.title || '').replace(/^\s*X-\d+\s*·\s*/, '');
 const href = (c) => c.url || `cell.html?id=${encodeURIComponent(c.id)}`;
 const isOpen = (c) => c.status === 'open';
 const ringFx = (c) => ['prism', 'trio', 'stars'].includes(c.fx);
-const poster = (c, cls = '') => `<span class="poster ${cls}" style="--c:${esc(c.color || '#9db8ff')}"><img class="pl" src="${planetURL(c, 384)}" alt="" draggable="false"><span class="pc">${esc(c.code || '')}</span><span class="pt">${esc(name(c))}</span></span>`;
+const poster = (c, cls = '') => `<span class="poster ${cls}" style="--c:${esc(c.color || '#9db8ff')}"><img class="pl" data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt="" draggable="false"><span class="pc">${esc(c.code || '')}</span><span class="pt">${esc(name(c))}</span></span>`;
 const kindTag = (c) => c.isGroup ? `<span class="tag t3">${t('기획전')}</span>` : c.url ? `<span class="tag t1">${t('단독전')}</span>` : `<span class="tag t2">${t('전시')}</span>`;
 const featured = () => { const o = cells.filter(isOpen); return o[o.length - 1] || cells[0]; };
 
@@ -133,9 +134,9 @@ ob.addEventListener('click', (e) => {
 
 /* ---------- 추가 문구 ---------- */
 const T2 = {
-  en: { '알림': 'Notifications', '모두 읽음': 'Mark all read', '행성이 열렸어요': 'planet is open', '이번 주 행성이 도착했어요': 'This week’s planets have arrived', '플레이 마감까지': 'Play closes in', '새 알림이 없어요.': 'No new notifications.', '지난 호': 'Past issues', '진행 중': 'Now', '전체 행성': 'All planets', '착륙하기': 'Land', '좋아요': 'Like', '좋아요한 행성': 'Liked planets', '아직 좋아요한 행성이 없어요.': 'No liked planets yet.', '좋아요에 담았어요.': 'Added to likes.', '좋아요를 뺐어요.': 'Removed from likes.', '방': 'Rooms', '이렇게 체험해요': 'How to experience', '휴대폰을 기울이고, 흔들고, 엎어 보세요. 권한은 입장할 때 한 번 물어봐요.': 'Tilt, shake and lay your phone down. Permission is asked once when you enter.', '참여 방법': 'How rewards work', '매주 월요일 새 Vol.이 열려요.': 'A new Vol. opens every Monday.', '그 주에 행성 한 곳 이상 착륙하면 그 주의 책이 채워져요.': 'Land on at least one planet that week to fill its book.', '한 주에 서로 다른 행성 3곳에 착륙하면 스탬프가 완성돼요.': 'Land on 3 different planets in a week to complete the stamps.', '3주 연속으로 책을 채우면 항해 리포트가 열려요.': 'Fill books 3 weeks in a row to unlock your voyage report.', '연속': 'streak', '주': 'wk', '닫기': 'Close', '지난 호는 이번 주와 같은 행성으로 보여줘요. (프로토타입)': 'Past issues show the planets open at that time. (prototype)', '항해 리포트가 열렸어요': 'Your voyage report is open', '가장 오래 머문 행성': 'Longest stay', '처음 착륙한 날': 'First landing' },
-  zh: { '알림': '通知', '모두 읽음': '全部已读', '행성이 열렸어요': '行星已开放', '이번 주 행성이 도착했어요': '本周的行星已抵达', '플레이 마감까지': '互动截止还有', '새 알림이 없어요.': '没有新通知。', '지난 호': '往期', '진행 중': '进行中', '전체 행성': '全部行星', '착륙하기': '着陆', '좋아요': '喜欢', '좋아요한 행성': '喜欢的行星', '아직 좋아요한 행성이 없어요.': '还没有喜欢的行星。', '좋아요에 담았어요.': '已加入喜欢。', '좋아요를 뺐어요.': '已取消喜欢。', '방': '展厅', '이렇게 체험해요': '体验方法', '휴대폰을 기울이고, 흔들고, 엎어 보세요. 권한은 입장할 때 한 번 물어봐요.': '倾斜、摇晃、把手机朝下放。进入时会询问一次权限。', '참여 방법': '参与方法', '매주 월요일 새 Vol.이 열려요.': '每周一开启新的 Vol.。', '그 주에 행성 한 곳 이상 착륙하면 그 주의 책이 채워져요.': '当周登陆任一行星，即可填满当周的书。', '한 주에 서로 다른 행성 3곳에 착륙하면 스탬프가 완성돼요.': '一周内登陆 3 颗不同行星即可集齐印章。', '3주 연속으로 책을 채우면 항해 리포트가 열려요.': '连续 3 周填满书即可解锁航行报告。', '연속': '连续', '주': '周', '닫기': '关闭', '지난 호는 이번 주와 같은 행성으로 보여줘요. (프로토타입)': '往期显示当时开放的行星。（原型）', '항해 리포트가 열렸어요': '航行报告已开启', '가장 오래 머문 행성': '停留最久的行星', '처음 착륙한 날': '首次着陆' },
-  ja: { '알림': 'お知らせ', '모두 읽음': 'すべて既読', '행성이 열렸어요': 'の惑星がひらきました', '이번 주 행성이 도착했어요': '今週の惑星が届きました', '플레이 마감까지': 'プレイ締切まで', '새 알림이 없어요.': '新しいお知らせはありません。', '지난 호': 'バックナンバー', '진행 중': '公開中', '전체 행성': 'すべての惑星', '착륙하기': '着陸する', '좋아요': 'いいね', '좋아요한 행성': 'いいねした惑星', '아직 좋아요한 행성이 없어요.': 'まだいいねした惑星はありません。', '좋아요에 담았어요.': 'いいねに追加しました。', '좋아요를 뺐어요.': 'いいねを外しました。', '방': '部屋', '이렇게 체험해요': '体験のしかた', '휴대폰을 기울이고, 흔들고, 엎어 보세요. 권한은 입장할 때 한 번 물어봐요.': 'スマホを傾けたり、振ったり、伏せたりしてみましょう。権限は入場時に一度だけ聞きます。', '참여 방법': '参加方法', '매주 월요일 새 Vol.이 열려요.': '毎週月曜日に新しいVol.がひらきます。', '그 주에 행성 한 곳 이상 착륙하면 그 주의 책이 채워져요.': 'その週に惑星へ一度でも着陸すると、その週の本が埋まります。', '한 주에 서로 다른 행성 3곳에 착륙하면 스탬프가 완성돼요.': '1週間で異なる惑星3つに着陸するとスタンプ完成です。', '3주 연속으로 책을 채우면 항해 리포트가 열려요.': '3週連続で本を埋めると航海レポートがひらきます。', '연속': '連続', '주': '週', '닫기': '閉じる', '지난 호는 이번 주와 같은 행성으로 보여줘요. (프로토타입)': 'バックナンバーは当時公開中の惑星を表示します。（プロトタイプ）', '항해 리포트가 열렸어요': '航海レポートがひらきました', '가장 오래 머문 행성': '最も長く滞在した惑星', '처음 착륙한 날': '初めて着陸した日' },
+  en: { '알림': 'Notifications', '모두 읽음': 'Mark all read', '행성이 열렸어요': 'planet is open', '이번 달 행성이 도착했어요': 'This month’s planets have arrived', '이번 주 행성이 도착했어요': 'This week’s planets have arrived', '플레이 마감까지': 'Play closes in', '새 알림이 없어요.': 'No new notifications.', '지난 호': 'Past issues', '진행 중': 'Now', '전체 행성': 'All planets', '착륙하기': 'Land', '좋아요': 'Like', '좋아요한 행성': 'Liked planets', '아직 좋아요한 행성이 없어요.': 'No liked planets yet.', '좋아요에 담았어요.': 'Added to likes.', '좋아요를 뺐어요.': 'Removed from likes.', '방': 'Rooms', '이렇게 체험해요': 'How to experience', '휴대폰을 기울이고, 흔들고, 엎어 보세요. 권한은 입장할 때 한 번 물어봐요.': 'Tilt, shake and lay your phone down. Permission is asked once when you enter.', '참여 방법': 'How rewards work', '매주 월요일 새 Vol.이 열려요.': 'A new Vol. opens every Monday.', '그 주에 행성 한 곳 이상 착륙하면 그 주의 책이 채워져요.': 'Land on at least one planet that week to fill its book.', '한 주에 서로 다른 행성 3곳에 착륙하면 스탬프가 완성돼요.': 'Land on 3 different planets in a week to complete the stamps.', '3주 연속으로 책을 채우면 항해 리포트가 열려요.': 'Fill books 3 weeks in a row to unlock your voyage report.', '연속': 'streak', '주': 'wk', '닫기': 'Close', '지난 호는 이번 주와 같은 행성으로 보여줘요. (프로토타입)': 'Past issues show the planets open at that time. (prototype)', '항해 리포트가 열렸어요': 'Your voyage report is open', '가장 오래 머문 행성': 'Longest stay', '처음 착륙한 날': 'First landing' },
+  zh: { '알림': '通知', '모두 읽음': '全部已读', '행성이 열렸어요': '行星已开放', '이번 달 행성이 도착했어요': '本月的行星已抵达', '이번 주 행성이 도착했어요': '本周的行星已抵达', '플레이 마감까지': '互动截止还有', '새 알림이 없어요.': '没有新通知。', '지난 호': '往期', '진행 중': '进行中', '전체 행성': '全部行星', '착륙하기': '着陆', '좋아요': '喜欢', '좋아요한 행성': '喜欢的行星', '아직 좋아요한 행성이 없어요.': '还没有喜欢的行星。', '좋아요에 담았어요.': '已加入喜欢。', '좋아요를 뺐어요.': '已取消喜欢。', '방': '展厅', '이렇게 체험해요': '体验方法', '휴대폰을 기울이고, 흔들고, 엎어 보세요. 권한은 입장할 때 한 번 물어봐요.': '倾斜、摇晃、把手机朝下放。进入时会询问一次权限。', '참여 방법': '参与方法', '매주 월요일 새 Vol.이 열려요.': '每周一开启新的 Vol.。', '그 주에 행성 한 곳 이상 착륙하면 그 주의 책이 채워져요.': '当周登陆任一行星，即可填满当周的书。', '한 주에 서로 다른 행성 3곳에 착륙하면 스탬프가 완성돼요.': '一周内登陆 3 颗不同行星即可集齐印章。', '3주 연속으로 책을 채우면 항해 리포트가 열려요.': '连续 3 周填满书即可解锁航行报告。', '연속': '连续', '주': '周', '닫기': '关闭', '지난 호는 이번 주와 같은 행성으로 보여줘요. (프로토타입)': '往期显示当时开放的行星。（原型）', '항해 리포트가 열렸어요': '航行报告已开启', '가장 오래 머문 행성': '停留最久的行星', '처음 착륙한 날': '首次着陆' },
+  ja: { '알림': 'お知らせ', '모두 읽음': 'すべて既読', '행성이 열렸어요': 'の惑星がひらきました', '이번 달 행성이 도착했어요': '今月の惑星が届きました', '이번 주 행성이 도착했어요': '今週の惑星が届きました', '플레이 마감까지': 'プレイ締切まで', '새 알림이 없어요.': '新しいお知らせはありません。', '지난 호': 'バックナンバー', '진행 중': '公開中', '전체 행성': 'すべての惑星', '착륙하기': '着陸する', '좋아요': 'いいね', '좋아요한 행성': 'いいねした惑星', '아직 좋아요한 행성이 없어요.': 'まだいいねした惑星はありません。', '좋아요에 담았어요.': 'いいねに追加しました。', '좋아요를 뺐어요.': 'いいねを外しました。', '방': '部屋', '이렇게 체험해요': '体験のしかた', '휴대폰을 기울이고, 흔들고, 엎어 보세요. 권한은 입장할 때 한 번 물어봐요.': 'スマホを傾けたり、振ったり、伏せたりしてみましょう。権限は入場時に一度だけ聞きます。', '참여 방법': '参加方法', '매주 월요일 새 Vol.이 열려요.': '毎週月曜日に新しいVol.がひらきます。', '그 주에 행성 한 곳 이상 착륙하면 그 주의 책이 채워져요.': 'その週に惑星へ一度でも着陸すると、その週の本が埋まります。', '한 주에 서로 다른 행성 3곳에 착륙하면 스탬프가 완성돼요.': '1週間で異なる惑星3つに着陸するとスタンプ完成です。', '3주 연속으로 책을 채우면 항해 리포트가 열려요.': '3週連続で本を埋めると航海レポートがひらきます。', '연속': '連続', '주': '週', '닫기': '閉じる', '지난 호는 이번 주와 같은 행성으로 보여줘요. (프로토타입)': 'バックナンバーは当時公開中の惑星を表示します。（プロトタイプ）', '항해 리포트가 열렸어요': '航海レポートがひらきました', '가장 오래 머문 행성': '最も長く滞在した惑星', '처음 착륙한 날': '初めて着陸した日' },
 };
 Object.keys(T2).forEach((l) => Object.assign(T[l], T2[l]));
 
@@ -169,9 +170,10 @@ const sky = (() => {
       x.strokeStyle = g; x.lineWidth = 1.4; x.beginPath(); x.moveTo(mx, my); x.lineTo(mx + 90, my - 45); x.stroke();
       if (k >= 1) meteor = null;
     }
-    raf = on ? requestAnimationFrame(frame) : 0;
+    raf = on && !document.hidden ? requestAnimationFrame(frame) : 0;
   }
   addEventListener('resize', size); size();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && on && !raf) { last = 0; raf = requestAnimationFrame(frame); } });
   return { start() { if (!raf) { on = true; last = 0; raf = requestAnimationFrame(frame); } }, stop() { on = false; cancelAnimationFrame(raf); raf = 0; } };
 })();
 sky.start();
@@ -204,31 +206,22 @@ function notiSheet() {
   const open = cells.filter(isOpen).slice().reverse(), mon = monday(Date.now());
   const d = Math.ceil((weekEnd() - Date.now()) / DAY);
   const items = [
-    { c: featured(), h: `Vol. ${vol()} · ${t('이번 주 행성이 도착했어요')}`, s: open.map(name).join(' · '), at: mon },
+    { c: picksFor(thisMonth())[0] || featured(), h: `No.${issueNo(thisMonth())} · ${t('이번 달 행성이 도착했어요')}`, s: picksFor(thisMonth()).map(name).join(' · '), at: monthDate(thisMonth()).getTime() },
     { c: featured(), h: `${t('플레이 마감까지')} ${d}${t('일')}`, s: playOf(featured()).how, at: Date.now() - 3600e3 },
     ...open.map((c, i) => ({ c, h: `${name(c)} ${t('행성이 열렸어요')}`, s: c.artist || '', at: mon - (i + 1) * DAY })),
   ];
   const isNew = unread();
   sheet.open(`<div class="sh-h"><h3>${t('알림')}</h3><button data-read>${t('모두 읽음')}</button></div>
-    <div class="noti">${items.map((n, i) => `<button class="nrow${isNew && i < 2 ? ' new' : ''}" data-detail="${esc(n.c.id)}"><img src="${planetURL(n.c, 192)}" alt=""><span><b>${esc(n.h)}</b><small>${esc(n.s)}</small></span><em>${new Date(n.at).toLocaleDateString(lang, { month: 'numeric', day: 'numeric' })}</em></button>`).join('')}</div>`);
+    <div class="noti">${items.map((n, i) => `<button class="nrow${isNew && i < 2 ? ' new' : ''}" data-detail="${esc(n.c.id)}"><img data-pl="${esc(planetKey(n.c))}" src="${planetSrc(n.c)}" decoding="async" alt=""><span><b>${esc(n.h)}</b><small>${esc(n.s)}</small></span><em>${new Date(n.at).toLocaleDateString(lang, { month: 'numeric', day: 'numeric' })}</em></button>`).join('')}</div>`);
 }
 
-/* ---------- 지난 호 (Vol 목록) ---------- */
-let viewVol = 0; // 0 = 이번 주
-const volStart = (n) => new Date(LAUNCH.getTime() + (n - 1) * 7 * DAY);
 const startOf = (c) => { const m = String(c.period || '').match(/(\d{4})\.(\d{1,2})/); return m ? new Date(+m[1], +m[2] - 1, 1) : new Date(0); };
-const openAt = (n) => cells.filter((c) => isOpen(c) && startOf(c) <= new Date(volStart(n).getTime() + 7 * DAY));
-function volSheet() {
-  const now = vol(), fmt = (d) => d.toLocaleDateString(lang, { month: 'numeric', day: 'numeric' });
-  sheet.open(`<div class="sh-h"><h3>${t('지난 호')}</h3></div><div class="vols">${Array.from({ length: now }, (_, i) => now - i).map((n) => { const list = openAt(n), f = list[list.length - 1];
-    return `<button class="vrow${(viewVol || now) === n ? ' on' : ''}" data-vol="${n}">${f ? `<img src="${planetURL(f, 192)}" alt="">` : '<span class="ph"></span>'}<span><b>Vol. ${n}</b><small>${fmt(volStart(n))} – ${fmt(new Date(volStart(n).getTime() + 6 * DAY))} · ${list.map(name).join(' · ') || '—'}</small></span>${n === now ? `<em>${t('진행 중')}</em>` : ''}</button>`; }).join('')}</div>`);
-}
 
 /* ---------- 전시 상세 ---------- */
 function detailSheet(c) {
   const p = playOf(c), liked = isLiked(c.id);
   const el = sheet.open(`
-    <div class="dt-stage" style="--c:${esc(c.color || '#9db8ff')}"><span class="dt-orbit"><i></i></span><img class="dt-pl" src="${planetURL(c, 768)}" alt=""></div>
+    <div class="dt-stage" style="--c:${esc(c.color || '#9db8ff')}"><span class="dt-orbit"><i></i></span><img class="dt-pl" data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt=""></div>
     <div class="dt-body">
       <p class="dt-code">${esc(c.code)} ${kindTag(c)}</p>
       <h2>${esc(name(c))}</h2>
@@ -241,6 +234,8 @@ function detailSheet(c) {
     <div class="dt-cta"><button class="like${liked ? ' on' : ''}" data-like="${esc(c.id)}" aria-label="${t('좋아요')}">${heart(liked)}</button><button class="btn black" data-land="${esc(c.id)}">${t('착륙하기')}</button></div>`, 'detail');
   return el;
 }
+
+onPlanet((k, u) => { document.querySelectorAll('img[data-pl]').forEach((im) => { if (im.dataset.pl === k) im.src = u; }); });
 
 /* ---------- 탭 화면 ---------- */
 let tab = 'home', ticker = 0;
@@ -275,7 +270,7 @@ const screens = {
         <div class="mc-stage">
           <span class="mc-layer mc-far" data-depth="-14"></span>
           <span class="mc-orbit" data-depth="6"><i></i></span>
-          <img class="mc-planet" data-depth="22" src="${planetURL(f, 768)}" alt="" draggable="false">
+          <img class="mc-planet" data-depth="22" data-pl="${esc(planetKey(f))}" src="${planetSrc(f)}" decoding="async" alt="" draggable="false">
           <span class="mc-gloss" data-gloss></span>
         </div>
         <div class="mc-lines">
@@ -303,7 +298,7 @@ const screens = {
       ${issue.map((c, i) => { const q = pullQuote(c), p = playOf(c); return `
       <article class="mag-art" id="art-${esc(c.id)}" style="--c:${esc(c.color || '#9db8ff')}">
         <p class="mag-label">${String(i + 1).padStart(2, '0')} · ${KICK[Math.min(i, KICK.length - 1)]}</p>
-        <button class="art-visual" data-detail="${esc(c.id)}" data-tiltcard><img src="${planetURL(c, 640)}" alt="" data-depth="16"><span class="art-code">${esc(c.code)}</span><span class="art-gloss" data-gloss></span></button>
+        <button class="art-visual" data-detail="${esc(c.id)}" data-tiltcard><img data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt="" data-depth="16"><span class="art-code">${esc(c.code)}</span><span class="art-gloss" data-gloss></span></button>
         <h2 class="art-title">${esc(name(c))}</h2>
         <p class="art-dek">${esc(c.subtitle || '')}</p>
         <p class="art-by">${esc(c.artist || '')}${c.period ? ' · ' + esc(c.period) : ''} · ${readMin(c)}${t('분')}</p>
@@ -340,7 +335,7 @@ const screens = {
     return `<header class="page-h"><h1>PLAY</h1><div class="icons">${bell()}</div></header>
       <div class="plays">${open.map((c) => { const p = playOf(c); return `
         <div class="play" style="--c:${esc(c.color || '#9db8ff')}">
-          <div class="art" data-detail="${esc(c.id)}"><img class="pl" src="${planetURL(c, 640)}" alt="" draggable="false"><span class="timer" data-left="${esc(c.id)}">${left(c)}</span></div>
+          <div class="art" data-detail="${esc(c.id)}"><img class="pl" data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt="" draggable="false"><span class="timer" data-left="${esc(c.id)}">${left(c)}</span></div>
           <div class="body"><p class="who">${esc(c.code)} · ${esc(c.artist || '')}</p><h3>${br(p.q)}</h3><p class="how">${esc(p.how)}</p>
             <div class="bar"><i style="--w:${Math.round(wk * 100)}%"></i></div>
             <div class="two"><button data-how="${esc(c.id)}">${t('체험 방법')}</button><button class="w" data-open="${esc(c.id)}">${t('입장하기')}</button></div></div>
@@ -357,7 +352,7 @@ const screens = {
       <div class="shelf">${books}<div class="book sp" style="--i:6"><i><b>SPECIAL</b></i><span>Special</span></div></div>
       <button class="lockcard${streak >= 3 ? ' open' : ''}" data-report>${lock}<div>${streak >= 3 ? `<em>${t('항해 리포트가 열렸어요')}</em>` : t('3주 연속 착륙하면 <em>항해 리포트</em>가 열려요')}<small class="prog"><i style="--w:${Math.min(100, streak / 3 * 100)}%"></i></small><small>${t('연속')} ${streak}/3${t('주')}</small></div></button>
       <div class="mission"><h3>${br(t('이번 주 행성 3곳에 착륙하면\n항해 스탬프 완성!'))}</h3>
-        <div class="stamps">${[0, 1, 2].map((i) => { const c = cells.find((x) => x.id === thisWeek[i]); return c ? `<i class="on" style="--d:${i * 0.15}s"><img src="${planetURL(c, 128)}" alt=""></i>` : `<i>${i + 1}</i>`; }).join('')}</div>
+        <div class="stamps">${[0, 1, 2].map((i) => { const c = cells.find((x) => x.id === thisWeek[i]); return c ? `<i class="on" style="--d:${i * 0.15}s"><img data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt=""></i>` : `<i>${i + 1}</i>`; }).join('')}</div>
         <div class="note${thisWeek.length >= 3 ? ' ready' : ''}">${thisWeek.length >= 3 ? t('이번 주 스탬프 완성!') : t('행성 3곳에 착륙하면 완성돼요')}</div>
         <p>${t('스탬프와 기록은 이 기기에만 저장돼요.')}</p></div>`;
   },
@@ -373,7 +368,7 @@ const screens = {
         <button class="lockcard v${streak >= 3 ? ' open' : ''}" data-report style="margin:18px 0 0">${lock}<div><small>${t('항해 리포트')}</small>${streak >= 3 ? `<em>${t('항해 리포트가 열렸어요')}</em>` : t('3주 연속 착륙하면 <em>항해 리포트</em>가 열려요')}</div></button>
         <div class="stat2"><div>${t('다녀온 행성')}<b>${seen.length || '-'}</b></div><div>${t('머문 시간')}<b>${total ? fmtTime(total) : '-'}</b></div></div></section>
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('좋아요한 행성')}</h2></div>
-        ${lk.length ? `<div class="hscroll mini">${lk.map((c) => `<button data-detail="${esc(c.id)}"><img src="${planetURL(c, 192)}" alt=""><span>${esc(name(c))}</span></button>`).join('')}</div>` : `<p class="empty">${t('아직 좋아요한 행성이 없어요.')}</p>`}</section>
+        ${lk.length ? `<div class="hscroll mini">${lk.map((c) => `<button data-detail="${esc(c.id)}"><img data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt=""><span>${esc(name(c))}</span></button>`).join('')}</div>` : `<p class="empty">${t('아직 좋아요한 행성이 없어요.')}</p>`}</section>
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('최근 본 전시')}</h2></div>
         ${seen.length ? `<div class="list">${seen.map(([id, x]) => { const c = cells.find((y) => y.id === id); return `<button class="row" data-detail="${esc(id)}">${poster(c)}<div><b>${esc(name(c))}</b><span>${new Date(x.last).toLocaleDateString(lang)}</span></div><span class="v">${fmtTime(x.time || 0)}</span></button>`; }).join('')}</div>` : `<p class="empty">${t('아직 다녀온 행성이 없어요.')}</p>`}</section>
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('언어')}</h2></div><div class="chips">${LANGS.map((l) => `<button data-lang="${l.id}" class="${l.id === lang ? 'on' : ''}">${l.name}</button>`).join('')}</div></section>
@@ -394,12 +389,11 @@ function go(next, keepScroll) {
   tabsEl.querySelector('.ind').style.transform = `translateX(${TAB_I[tab] * 100}%)`;
   if (!keepScroll || prev !== next) scrollTo(0, 0);
   clearInterval(ticker);
+  tlx = tly = 9; bindTilt();
   if (tab === 'play') ticker = setInterval(() => view.querySelectorAll('[data-left]').forEach((el) => { const c = cells.find((x) => x.id === el.dataset.left); el.textContent = left(c); el.classList.toggle('urgent', Math.floor((weekEnd() - Date.now()) / DAY) < 1); }), 1000);
 }
-// 홈 큰 행성 패럴랙스
-addEventListener('scroll', () => { const p = view.querySelector('[data-parallax]'); if (p) p.style.transform = `translateY(${scrollY * 0.35}px) scale(${1 - Math.min(scrollY, 400) / 2000})`; }, { passive: true });
 
-tabsEl.addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) { if (b.dataset.tab === 'home') { viewVol = 0; viewMonth = ''; coverIdx = 0; } go(b.dataset.tab); } else if (e.target.closest('[data-orb]')) openExhibit(featured()); });
+tabsEl.addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) { if (b.dataset.tab === 'home') { viewMonth = ''; coverIdx = 0; } go(b.dataset.tab); } else if (e.target.closest('[data-orb]')) openExhibit(featured()); });
 
 // 화면·시트 공통 버튼
 function onAction(e) {
@@ -414,7 +408,7 @@ function onAction(e) {
   if (q('[data-read]')) { store.set('valix-noti', vol()); sheet.close(); go(tab, true); return true; }
   if (q('[data-recent]')) {
     const seen = Object.entries(hist()).filter(([id]) => byId(id)).sort((a, b2) => b2[1].last - a[1].last);
-    sheet.open(`<div class="sh-h"><h3>${t('최근 본 전시')}</h3></div>${seen.length ? `<div class="noti">${seen.map(([id, x]) => { const c = byId(id); return `<button class="nrow" data-detail="${esc(id)}"><img src="${planetURL(c, 192)}" alt=""><span><b>${esc(name(c))}</b><small>${fmtTime(x.time || 0)} · ${new Date(x.last).toLocaleDateString(lang)}</small></span></button>`; }).join('')}</div>` : `<p class="empty">${t('아직 다녀온 행성이 없어요.')}</p>`}`);
+    sheet.open(`<div class="sh-h"><h3>${t('최근 본 전시')}</h3></div>${seen.length ? `<div class="noti">${seen.map(([id, x]) => { const c = byId(id); return `<button class="nrow" data-detail="${esc(id)}"><img data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt=""><span><b>${esc(name(c))}</b><small>${fmtTime(x.time || 0)} · ${new Date(x.last).toLocaleDateString(lang)}</small></span></button>`; }).join('')}</div>` : `<p class="empty">${t('아직 다녀온 행성이 없어요.')}</p>`}`);
     return true;
   }
   if (q('[data-vols]')) { issueSheet(); return true; }
@@ -424,7 +418,6 @@ function onAction(e) {
     sheet.open(`<div class="yt-player"><iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0" title="${esc(b.dataset.ytt)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div><p class="yt-title">${esc(b.dataset.ytt)}</p><div style="padding:16px 24px 0"><a class="btn line" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">${t('YouTube에서 보기')} ↗</a></div>`, 'video');
     return true;
   }
-  if ((b = q('[data-vol]'))) { const n = +b.dataset.vol; viewVol = n === vol() ? 0 : n; sheet.close(); if (viewVol) toast(t('지난 호는 이번 주와 같은 행성으로 보여줘요. (프로토타입)')); go('home'); return true; }
   if (q('[data-all]')) {
     sheet.open(`<div class="sh-h"><h3>${t('전체 행성')}</h3></div><div class="grid2">${cells.map((c) => `<button class="gcard" data-detail="${esc(c.id)}">${poster(c)}<p class="ct">${esc(name(c))}</p><p class="ga">${esc(c.artist || '')}</p></button>`).join('')}</div>`);
     return true;
@@ -438,7 +431,7 @@ function onAction(e) {
     const { streak } = streakInfo(), h = Object.entries(hist()).filter(([id]) => byId(id)).sort((a, b2) => (b2[1].time || 0) - (a[1].time || 0)), v = visits();
     if (streak < 3) { toast(`${t('연속')} ${streak}/3${t('주')} — ${t('3주 연속으로 책을 채우면 항해 리포트가 열려요.')}`); return true; }
     const top = h[0] && byId(h[0][0]);
-    sheet.open(`<div class="sh-h"><h3>${t('항해 리포트')}</h3></div><div class="report">${top ? `<img src="${planetURL(top, 384)}" alt="">` : ''}<p>${t('가장 오래 머문 행성')}<b>${top ? esc(name(top)) : '-'}</b></p><p>${t('처음 착륙한 날')}<b>${v[0] ? new Date(v[0].at).toLocaleDateString(lang) : '-'}</b></p><p>${t('다녀온 행성')}<b>${h.length}</b></p></div>`);
+    sheet.open(`<div class="sh-h"><h3>${t('항해 리포트')}</h3></div><div class="report">${top ? `<img data-pl="${esc(planetKey(top))}" src="${planetSrc(top)}" decoding="async" alt="">` : ''}<p>${t('가장 오래 머문 행성')}<b>${top ? esc(name(top)) : '-'}</b></p><p>${t('처음 착륙한 날')}<b>${v[0] ? new Date(v[0].at).toLocaleDateString(lang) : '-'}</b></p><p>${t('다녀온 행성')}<b>${h.length}</b></p></div>`);
     return true;
   }
   if (q('[data-rename]')) { showOB('nick'); return true; }
@@ -513,14 +506,14 @@ function linksFor(c, k) {
 }
 function linksHTML(c, k) {
   const L = linksFor(c, k), yt = L.filter((l) => l.type === 'youtube' && ytId(l.url)), ar = L.filter((l) => !(l.type === 'youtube' && ytId(l.url)));
-  return (yt.length ? `<div class="art-links"><h4>${t('함께 보기')} <span>${yt.length}</span></h4><div class="yt-row">${yt.map((l) => { const id = ytId(l.url); return `<button class="yt" data-yt="${id}" data-ytt="${esc(l.title)}"><span class="yt-th"><img loading="lazy" src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt=""><i></i></span><b>${esc(l.title)}</b><small>${esc(l.source || '')}</small></button>`; }).join('')}</div></div>` : '')
+  return (yt.length ? `<div class="art-links"><h4>${t('함께 보기')} <span>${yt.length}</span></h4><div class="yt-row">${yt.map((l) => { const id = ytId(l.url); return `<button class="yt" data-yt="${id}" data-ytt="${esc(l.title)}"><span class="yt-th"><img loading="lazy" src="https://i.ytimg.com/vi/${id}/mqdefault.jpg" alt="" decoding="async"><i></i></span><b>${esc(l.title)}</b><small>${esc(l.source || '')}</small></button>`; }).join('')}</div></div>` : '')
     + (ar.length ? `<div class="art-links"><h4>${t('함께 읽기')} <span>${ar.length}</span></h4>${ar.map((l) => `<a class="rd" href="${esc(l.url)}" target="_blank" rel="noopener"><span><b>${esc(l.title)}</b><small>${esc(l.source || '')}</small></span><i>↗</i></a>`).join('')}</div>` : '');
 }
 function issueSheet() {
   const keys = []; for (let k = thisMonth(); issueNo(k) >= 1; k = prevKey(k)) keys.push(k);
   const cur = viewMonth || thisMonth();
   sheet.open(`<div class="sh-h"><h3>${t('지난 호')}</h3></div><div class="vols">${keys.map((k) => { const P = picksFor(k), f = P[0];
-    return `<button class="vrow${cur === k ? ' on' : ''}" data-month="${k}">${f ? `<img src="${planetURL(f, 192)}" alt="">` : '<span class="ph"></span>'}<span><b>No.${issueNo(k)} · ${esc(monthName(k))}</b><small>${ISSUES[k] && ISSUES[k].title ? esc(ISSUES[k].title) + ' · ' : ''}${P.map(name).join(' · ') || '—'}</small></span>${k === thisMonth() ? `<em>${t('진행 중')}</em>` : ''}</button>`; }).join('')}</div>`);
+    return `<button class="vrow${cur === k ? ' on' : ''}" data-month="${k}">${f ? `<img data-pl="${esc(planetKey(f))}" src="${planetSrc(f)}" decoding="async" alt="">` : '<span class="ph"></span>'}<span><b>No.${issueNo(k)} · ${esc(monthName(k))}</b><small>${ISSUES[k] && ISSUES[k].title ? esc(ISSUES[k].title) + ' · ' : ''}${P.map(name).join(' · ') || '—'}</small></span>${k === thisMonth() ? `<em>${t('진행 중')}</em>` : ''}</button>`; }).join('')}</div>`);
 }
 const blocksOf = (c) => { const ids = c.rooms ? c.rooms.map((r) => r.id) : [c.id]; return blocks.filter((b) => ids.includes(b.cell_id)); };
 const pullQuote = (c) => blocksOf(c).find((b) => b.type === 'quote' && b.body);
@@ -553,21 +546,33 @@ sensor.onShake(() => {
   cov.classList.add('flip-out');
   setTimeout(() => { go('home', true); const c2 = view.querySelector('.mag-cover'); c2 && c2.classList.add('flip-in'); }, 260);
 });
+// 홈 화면을 그릴 때 움직일 요소를 한 번만 찾아 두고, 화면에 보이는 것만 움직임
+let tiltZones = [], tiltIO = null;
+function bindTilt() {
+  if (tiltIO) tiltIO.disconnect(); tiltZones = [];
+  if (tab !== 'home') return;
+  tiltIO = new IntersectionObserver((es) => es.forEach((e) => { const z = tiltZones.find((q) => q.el === e.target); if (z) z.vis = e.isIntersecting; }));
+  view.querySelectorAll('[data-tiltzone], [data-tiltcard]').forEach((el) => {
+    const card = el.hasAttribute('data-tiltcard');
+    tiltZones.push({ el, card, vis: false, depth: [...el.querySelectorAll('[data-depth]')].map((d) => [d, +d.dataset.depth * (card ? 0.6 : 1)]), gloss: el.querySelector('[data-gloss]') });
+    tiltIO.observe(el);
+  });
+}
+let tlx = 9, tly = 9;
 (function tiltLoop() {
+  requestAnimationFrame(tiltLoop);
+  if (tab !== 'home' || view.hidden || !viewer.hidden || document.hidden || !tiltZones.length) return;
   const on = IS_MOBILE && sensor.on;
   const tx = on ? sensor.tiltX : tilt.px, ty = on ? sensor.tiltY : tilt.py;
   tilt.x += (tx - tilt.x) * 0.12; tilt.y += (ty - tilt.y) * 0.12;
-  if (tab === 'home' && !view.hidden && viewer.hidden) {
-    const H = innerHeight;
-    view.querySelectorAll('[data-tiltzone], [data-tiltcard]').forEach((z) => {
-      const r = z.getBoundingClientRect(); if (r.bottom < 0 || r.top > H) return;
-      const k = z.hasAttribute('data-tiltcard') ? 0.6 : 1;
-      z.querySelectorAll('[data-depth]').forEach((el) => { const d = +el.dataset.depth * k; el.style.translate = `${(tilt.x * d).toFixed(1)}px ${(tilt.y * d).toFixed(1)}px`; });
-      const gl = z.querySelector('[data-gloss]'); if (gl) { gl.style.setProperty('--gx', `${50 + tilt.x * 45}%`); gl.style.setProperty('--gy', `${40 + tilt.y * 40}%`); }
-      if (z.hasAttribute('data-tiltcard')) z.style.transform = `perspective(900px) rotateY(${(tilt.x * 7).toFixed(2)}deg) rotateX(${(-tilt.y * 6).toFixed(2)}deg)`;
-    });
+  if (Math.abs(tilt.x - tlx) < 0.002 && Math.abs(tilt.y - tly) < 0.002) return; // 거의 안 움직이면 쉼
+  tlx = tilt.x; tly = tilt.y;
+  for (const z of tiltZones) {
+    if (!z.vis) continue;
+    for (const [el, d] of z.depth) el.style.translate = `${(tilt.x * d).toFixed(1)}px ${(tilt.y * d).toFixed(1)}px`;
+    if (z.gloss) { z.gloss.style.setProperty('--gx', `${(50 + tilt.x * 45).toFixed(1)}%`); z.gloss.style.setProperty('--gy', `${(40 + tilt.y * 40).toFixed(1)}%`); }
+    if (z.card) z.el.style.transform = `perspective(900px) rotateY(${(tilt.x * 7).toFixed(2)}deg) rotateX(${(-tilt.y * 6).toFixed(2)}deg)`;
   }
-  requestAnimationFrame(tiltLoop);
 })();
 
 /* ---------- 착륙 로딩 화면 ---------- */
@@ -588,8 +593,10 @@ const landing = (() => {
     x.restore();
   }
   function surface(cx, cy, R) {
-    const pc = planetCanvas(c, 1024), ratio = hasRing(c) ? 0.30 : 0.38, w = (R / ratio);
-    x.drawImage(pc, cx - w / 2, cy - w / 2, w, w);
+    const bm = planetBitmap(c), ratio = hasRing(c) ? 0.30 : 0.38, w = (R / ratio);
+    if (bm) { x.drawImage(bm, cx - w / 2, cy - w / 2, w, w); return; }
+    const g = x.createRadialGradient(cx - R * 0.35, cy - R * 0.35, R * 0.1, cx, cy, R); g.addColorStop(0, c.color || '#9db8ff'); g.addColorStop(1, '#0b0c18');
+    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2); x.fill();
   }
   function frame(now) {
     const el2 = now - t0;
@@ -631,14 +638,40 @@ const landing = (() => {
 })();
 
 /* ---------- 시작 ---------- */
+// 지난번 데이터를 기기에 저장해 두었다가 바로 보여주고, 새 데이터는 뒤에서 받아 바뀐 게 있으면 조용히 갱신
+const DKEY = `valix-data-${lang}`;
+const pack = () => JSON.stringify({ cells, blocks, ISSUES }, (k, v) => (k === 'group' ? undefined : v));
+function unpack(o) { cells = o.cells || []; blocks = o.blocks || []; ISSUES = o.ISSUES || {}; }
+async function fetchFresh() {
+  const [d, iss] = await Promise.all([
+    loadData().catch(() => null),
+    fetch('data/issues.json', { cache: 'no-cache' }).then((r) => r.json()).catch(() => null),
+  ]);
+  return d ? { cells: d.cells, blocks: d.blocks || [], ISSUES: iss || ISSUES || {} } : null;
+}
+function firstPlanets() { const k = thisMonth(); const p = picksFor(k); return [...p, ...cells.filter((c) => !p.includes(c))]; }
 (async () => {
   const t0 = Date.now();
-  try { const d = await loadData(); cells = d.cells; blocks = d.blocks || []; } catch (e) { cells = []; }
-  try { ISSUES = await (await fetch('data/issues.json', { cache: 'no-cache' })).json(); } catch (e) { ISSUES = {}; }
-  await new Promise((r) => setTimeout(r, Math.max(0, 1200 - (Date.now() - t0)))); // 시작 화면 최소 1.2초
+  let saved = null; try { saved = JSON.parse(localStorage.getItem(DKEY)); } catch (e) {}
+  const fresh = fetchFresh();
+  if (saved && saved.cells && saved.cells.length) unpack(saved);
+  else { const f = await fresh; if (f) unpack(f); }
+  warm(firstPlanets()); // 표지 행성부터 그림 준비
+  await new Promise((r) => setTimeout(r, Math.max(0, (saved ? 500 : 900) - (Date.now() - t0)))); // 시작 화면은 짧게
   $('#splash').classList.add('out'); setTimeout(() => $('#splash').remove(), 600);
   if (!cells.length) { view.hidden = false; view.innerHTML = `<p class="empty" style="padding-top:40vh">${t('전시를 불러오지 못했어요.')}<br><br><button class="btn line" style="width:auto;padding:0 24px;margin:0 auto" onclick="location.reload()">${t('다시 시도')}</button></p>`; return; }
   if (!store.get('valix-onboarded', false)) showOB('intro0'); else go('home');
   const m = location.hash.match(/open=([\w-]+)/); // #open=전시id → 바로 입장 (푸시·공유 링크)
   if (m) { const c = cells.find((x) => x.id === m[1]); if (c && isOpen(c)) openExhibit(c); }
+  // 뒤에서 받은 새 데이터 반영
+  const f = await fresh;
+  if (f) {
+    const before = saved ? JSON.stringify(saved) : '';
+    const prev = { cells, blocks, ISSUES }; unpack(f);
+    const now = pack();
+    try { localStorage.setItem(DKEY, now); } catch (e) {}
+    if (saved && now !== before) { warm(firstPlanets()); if (viewer.hidden && !sheet.isOpen && ob.hidden && !view.hidden) go(tab, true); }
+    else if (!saved) { /* 처음 받은 데이터 그대로 */ }
+    void prev;
+  }
 })();
