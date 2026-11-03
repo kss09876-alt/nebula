@@ -1,5 +1,5 @@
 // VALIX 행성 그림 생성기 — 전시마다 다른 행성을 캔버스로 그림 (이미지 파일 없음)
-// planetCanvas(cell, size) → 캔버스 (같은 전시는 항상 같은 모양), planetURL(cell, size) → 이미지 주소
+// 화면에서는 planet-store.js(워커·저장)를 거쳐 씀. planetCanvas(cell, size) → 캔버스 (같은 전시는 항상 같은 모양), planetURL(cell, size) → 이미지 주소
 // 종류: gas(띠 가스행성) · rocky(크레이터) · ice(얼음 균열) · ocean(바다·구름) · lava(용암 균열) · crystal(수정 면) · rice(쌀알 행성)
 // 전시의 fx로 종류를 정하고, 없으면 id로 고름. 시트에 planet 칸(gas, rocky …)이 있으면 그게 우선.
 
@@ -60,7 +60,7 @@ export function planetCanvas(c, size = 512) {
     rice: [hsl(36, 0.30, 0.58), hsl(40, 0.45, 0.80), hsl(44, 0.6, 0.93)],
   }[type];
 
-  const cv = document.createElement('canvas'); cv.width = cv.height = size;
+  const cv = typeof document !== 'undefined' ? document.createElement('canvas') : new OffscreenCanvas(size, size); cv.width = cv.height = size; // 워커에서는 OffscreenCanvas
   const x = cv.getContext('2d');
   const cx = size / 2, cy = size / 2, pr = size * (hasRing(c) ? 0.30 : 0.38);
   const tilt = (R() - 0.5) * 0.7 - 0.25;

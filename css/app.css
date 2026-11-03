@@ -1,6 +1,6 @@
 /* VALIX 앱 화면 (app.html) — 밝은 테마. 전시 페이지 스타일과는 분리 */
 :root {
-  --bg: #05060c; --bg2: #11131e; --bg3: #1b1e2c; --line: rgba(255,255,255,.12); --tx: #f2f3f8; --tx2: #9aa1bd; --tx3: #5f6582;
+  --bg: #05060c; --bg2: #11131e; --bg3: #1b1e2c; --line: rgba(255,255,255,.12); --tx: #f2f3f8; --tx2: #9aa1bd; --tx3: #7d84a3;
   --red: #ef4a4a; --violet: #5b55e0; --violet-bg: rgba(124,118,255,.14); --space: #05060c;
   --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px);
 }
