@@ -1,0 +1,26 @@
+{
+  "_설명": "월간 호 기본값. 키 = YYYY-MM. picks = 그 달에 실을 전시 id(첫 번째가 표지), links = 함께 보기(youtube)·함께 읽기(article). 시트에서도 넣을 수 있음: cells의 month 칸(예: 2026-11), blocks의 type=watch(유튜브)·read(기사), media=주소, title=제목, caption=출처. 시트 값이 여기와 합쳐짐.",
+  "2026-10": {
+    "title": "첫 행성들",
+    "picks": ["g001", "c004"]
+  },
+  "2026-11": {
+    "title": "기억하는 빛",
+    "picks": ["c005", "c004", "g001"],
+    "links": [
+      { "cell": "c005", "type": "youtube", "url": "https://www.youtube.com/watch?v=60JwCGCUP1g", "title": "경산코발트광산 민간인 희생자, 14년 만에 발굴 유해 수습 재개", "source": "연합뉴스TV · 1950 경산" },
+      { "cell": "c005", "type": "youtube", "url": "https://www.youtube.com/watch?v=IBXgYTW2Sw4", "title": "'민간인 집단희생' 경산 코발트광산, 유해발굴 재개", "source": "KBS · 2025.05.19 · 1950 경산" },
+      { "cell": "c005", "type": "youtube", "url": "https://www.youtube.com/watch?v=UOtDK0zRTYc", "title": "1만 2천 장 미국 비밀문서로 본 10월항쟁 '첫 계엄령'", "source": "대구MBC 뉴스데스크 · 2026.10.02 · 1946 대구" },
+      { "cell": "c005", "type": "article", "url": "https://dgmbc.com/NewsArticle/864901", "title": "\"시월이 온다, 항쟁은 계속된다\" — 10월항쟁 80주년", "source": "대구MBC · 2026.10.01" },
+      { "cell": "c005", "type": "article", "url": "https://pressian.com/pages/articles/2026100116431997772", "title": "10월항쟁 80주년의 의미와 과제", "source": "프레시안 · 2026.10.01" },
+      { "cell": "c005", "type": "article", "url": "https://www.ohmynews.com/NWS_Web/View/at_pg.aspx?CNTN_CD=A0003272434", "title": "10월 항쟁 80주년, 80년 만의 출상 '시월 꽃 피다'", "source": "오마이뉴스" },
+      { "cell": "c005", "type": "article", "url": "https://www.jinsil.go.kr/KoreanWar/36.do", "title": "진실화해위원회 — 한국전쟁 전후 민간인 희생 자료", "source": "진실·화해를위한과거사정리위원회" },
+      { "cell": "c004", "type": "youtube", "url": "https://www.youtube.com/watch?v=pygwK0sBUdM", "title": "Ryuichi Sakamoto — \"andata\" (from async)", "source": "Milan Records" },
+      { "cell": "c004", "type": "youtube", "url": "https://www.youtube.com/watch?v=emSold2PCvw", "title": "坂本龍一 — async (album trailer)", "source": "commmons" },
+      { "cell": "c004", "type": "article", "url": "https://ra.co/reviews/20955", "title": "Ryuichi Sakamoto — async (review)", "source": "Resident Advisor" },
+      { "cell": "c004", "type": "article", "url": "https://en.wikipedia.org/wiki/Async_(album)", "title": "async (album)", "source": "Wikipedia" },
+      { "cell": "g001", "type": "youtube", "url": "https://www.youtube.com/watch?v=IeySvmt5ELk", "title": "The legacy of Planck — 우주의 첫 빛을 지도로", "source": "ESA" },
+      { "cell": "g001", "type": "youtube", "url": "https://www.youtube.com/watch?v=5QvQp5j1hjs", "title": "Revealing the Cosmic Microwave Background with Planck", "source": "ESA" }
+    ]
+  }
+}

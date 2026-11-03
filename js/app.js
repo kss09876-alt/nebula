@@ -16,7 +16,7 @@ const t = (k, n) => { let s = (T[lang] && T[lang][k]) ?? k; if (n != null) s = s
 const br = (s) => esc(s).replace(/\n/g, '<br>');
 document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
 
-const VERSION = '0.5.0';
+const VERSION = '0.6.0';
 
 /* ---------- 우주 방랑자 이름 ---------- */
 const NAMES = {
@@ -257,18 +257,18 @@ function streakInfo() {
 
 const screens = {
   home() {
-    const n = viewVol || vol(), open = (viewVol ? openAt(viewVol) : cells.filter(isOpen)).slice().reverse();
+    const k = viewMonth || thisMonth(), n = issueNo(k), open = picksFor(k), iss = ISSUES[k] || {};
     if (coverIdx >= open.length) coverIdx = 0;
     const f = open[coverIdx] || featured(), rest = open.filter((c) => c !== f), issue = [f, ...rest];
     const soon = cells.filter((c) => c.status === 'coming');
     const KICK = ['COVER STORY', 'FEATURE', 'ESSAY', 'REPORT', 'ARCHIVE'];
     const date = (d) => d.toLocaleDateString(lang, { year: 'numeric', month: 'long', day: 'numeric' });
-    const pub = volStart(n), nextPub = volStart(n + 1);
+    const pub = monthDate(k);
     const quote = pullQuote(f);
     return `
       <section class="mag-cover" style="--c:${esc(f.color || '#9db8ff')}" data-tiltzone>
         <div class="mc-top">
-          <button class="mc-mast" data-vols><b>VALIX</b><span>WEEKLY PLANET · Vol. ${n} <i></i></span></button>
+          <button class="mc-mast" data-vols><b>VALIX</b><span>MONTHLY PLANET · No.${n} · ${esc(monthDate(k).toLocaleDateString(lang, { month: 'long' }) + t('호'))} <i></i></span></button>
           <div class="icons">${clock}${bell()}</div>
         </div>
         <div class="mc-stage">
@@ -278,6 +278,7 @@ const screens = {
           <span class="mc-gloss" data-gloss></span>
         </div>
         <div class="mc-lines">
+          ${iss.title ? `<p class="mc-issue">${esc(iss.title)}</p>` : ''}
           <p class="mc-kick">COVER STORY · ${esc(f.code)}</p>
           <h1 class="mc-title">${esc(name(f))}</h1>
           <p class="mc-dek">${esc(f.subtitle || '')}</p>
@@ -292,8 +293,8 @@ const screens = {
       </section>
 
       <section class="mag-sec" id="mag-toc">
-        <p class="mag-label">${t('이번 호')} · ${esc(date(pub))}</p>
-        <ol class="toc">${issue.map((c, i) => `<li><button data-jump="art-${esc(c.id)}"><em>${String(i + 1).padStart(2, '0')}</em><span><small>${KICK[Math.min(i, KICK.length - 1)]}</small><b>${esc(name(c))}</b><i>${esc(c.artist || '')} · ${readMin(c)}${t('분')}</i></span></button></li>`).join('')}
+        <p class="mag-label">${t('이번 호')} · ${esc(monthName(k))}${iss.title ? ' · ' + esc(iss.title) : ''}</p>
+        <ol class="toc">${issue.map((c, i) => `<li><button data-jump="art-${esc(c.id)}"><em>${String(i + 1).padStart(2, '0')}</em><span><small>${KICK[Math.min(i, KICK.length - 1)]}</small><b>${esc(name(c))}</b><i>${esc(c.artist || '')} · ${readMin(c)}${t('분')}${linksFor(c, k).length ? ' · ' + t('영상·기사') + ' ' + linksFor(c, k).length : ''}</i></span></button></li>`).join('')}
           <li><button data-jump="mag-quote"><em>${String(issue.length + 1).padStart(2, '0')}</em><span><small>QUOTE</small><b>${t('이번 주의 문장')}</b></span></button></li>
           <li><button data-jump="mag-letter"><em>${String(issue.length + 2).padStart(2, '0')}</em><span><small>LETTER</small><b>${t('에디터의 편지')}</b></span></button></li></ol>
       </section>
@@ -307,6 +308,7 @@ const screens = {
         <p class="art-by">${esc(c.artist || '')}${c.period ? ' · ' + esc(c.period) : ''} · ${readMin(c)}${t('분')}</p>
         ${q ? `<blockquote class="art-quote">${esc(q.body)}${q.caption ? `<cite>${esc(q.caption)}</cite>` : ''}</blockquote>` : ''}
         ${c.summary ? `<p class="art-body">${esc(c.summary)}</p>` : ''}
+        ${linksHTML(c, k)}
         <p class="art-play"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M4 9c-1 2-1 4 0 6M20 9c1 2 1 4 0 6"/></svg>${esc(p.how)}</p>
         <div class="art-cta"><button class="like${isLiked(c.id) ? ' on' : ''}" data-like="${esc(c.id)}" aria-label="${t('좋아요')}">${heart(isLiked(c.id))}</button><button class="btn black" data-open="${esc(c.id)}">${t('이 행성에 착륙하기')} →</button></div>
       </article>`; }).join('')}
@@ -318,17 +320,17 @@ const screens = {
 
       <section class="mag-sec mag-letter" id="mag-letter">
         <p class="mag-label">${t('에디터의 편지')}</p>
-        <p>${esc(t('이번 주에도 행성 {n}곳이 궤도에 올랐습니다.').replace('{n}', issue.length))}</p>
-        <p>${esc(t('하루의 작은 고민에서 잠시 고개를 들어, 더 큰 것을 바라보는 시간. 한 행성에 머무는 몇 분이 생각과 마음의 폭을 조금 넓혀 주기를 바랍니다.'))}</p>
+        ${iss.letter ? String(iss.letter).split(/\n+/).map((x) => `<p>${esc(x)}</p>`).join('') : `<p>${esc(t('이번 달에도 행성 {n}곳이 궤도에 올랐습니다.').replace('{n}', issue.length))}</p>
+        <p>${esc(t('하루의 작은 고민에서 잠시 고개를 들어, 더 큰 것을 바라보는 시간. 한 행성에 머무는 몇 분이 생각과 마음의 폭을 조금 넓혀 주기를 바랍니다.'))}</p>`}
         <p class="sign">— VALIX ${t('편집실')}</p>
       </section>
 
       <section class="mag-sec mag-next">
-        <p class="mag-label">${t('다음 호')} · Vol. ${n + 1}</p>
-        <p class="next-date">${esc(date(nextPub))}</p>
+        <p class="mag-label">${t('다음 호')} · No.${n + 1}</p>
+        <p class="next-date">${esc(monthName(nextKey(k)))}</p>
         ${soon.length ? `<div class="hscroll">${soon.map((c) => `<button class="card" data-detail="${esc(c.id)}">${poster(c)}<p class="ct">${esc(name(c))}</p></button>`).join('')}</div>` : `<p class="small">${t('다음 호에서 새로운 행성을 만나요.')}</p>`}
         <button class="btn line" data-all style="margin-top:22px">${t('전체 행성')}</button>
-        <p class="colophon">VALIX LAB · WEEKLY PLANET Vol. ${n} · ${esc(date(pub))}</p>
+        <p class="colophon">VALIX LAB · MONTHLY PLANET No.${n} · ${esc(monthName(k))}</p>
       </section>`;
   },
   play() {
@@ -396,7 +398,7 @@ function go(next, keepScroll) {
 // 홈 큰 행성 패럴랙스
 addEventListener('scroll', () => { const p = view.querySelector('[data-parallax]'); if (p) p.style.transform = `translateY(${scrollY * 0.35}px) scale(${1 - Math.min(scrollY, 400) / 2000})`; }, { passive: true });
 
-tabsEl.addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) { if (b.dataset.tab === 'home') viewVol = 0; go(b.dataset.tab); } else if (e.target.closest('[data-orb]')) openExhibit(featured()); });
+tabsEl.addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) { if (b.dataset.tab === 'home') { viewVol = 0; viewMonth = ''; coverIdx = 0; } go(b.dataset.tab); } else if (e.target.closest('[data-orb]')) openExhibit(featured()); });
 
 // 화면·시트 공통 버튼
 function onAction(e) {
@@ -414,7 +416,13 @@ function onAction(e) {
     sheet.open(`<div class="sh-h"><h3>${t('최근 본 전시')}</h3></div>${seen.length ? `<div class="noti">${seen.map(([id, x]) => { const c = byId(id); return `<button class="nrow" data-detail="${esc(id)}"><img src="${planetURL(c, 192)}" alt=""><span><b>${esc(name(c))}</b><small>${fmtTime(x.time || 0)} · ${new Date(x.last).toLocaleDateString(lang)}</small></span></button>`; }).join('')}</div>` : `<p class="empty">${t('아직 다녀온 행성이 없어요.')}</p>`}`);
     return true;
   }
-  if (q('[data-vols]')) { volSheet(); return true; }
+  if (q('[data-vols]')) { issueSheet(); return true; }
+  if ((b = q('[data-month]'))) { viewMonth = b.dataset.month === thisMonth() ? '' : b.dataset.month; coverIdx = 0; sheet.close(); go('home'); return true; }
+  if ((b = q('[data-yt]'))) {
+    const id = b.dataset.yt;
+    sheet.open(`<div class="yt-player"><iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0" title="${esc(b.dataset.ytt)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div><p class="yt-title">${esc(b.dataset.ytt)}</p><div style="padding:16px 24px 0"><a class="btn line" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">${t('YouTube에서 보기')} ↗</a></div>`, 'video');
+    return true;
+  }
   if ((b = q('[data-vol]'))) { const n = +b.dataset.vol; viewVol = n === vol() ? 0 : n; sheet.close(); if (viewVol) toast(t('지난 호는 이번 주와 같은 행성으로 보여줘요. (프로토타입)')); go('home'); return true; }
   if (q('[data-all]')) {
     sheet.open(`<div class="sh-h"><h3>${t('전체 행성')}</h3></div><div class="grid2">${cells.map((c) => `<button class="gcard" data-detail="${esc(c.id)}">${poster(c)}<p class="ct">${esc(name(c))}</p><p class="ga">${esc(c.artist || '')}</p></button>`).join('')}</div>`);
@@ -475,6 +483,44 @@ if (CapApp) CapApp.addListener('backButton', () => { if (sheet.isOpen) sheet.clo
 
 /* ---------- 매거진 도우미 ---------- */
 let blocks = [], coverIdx = 0;
+
+/* ---------- 월간 호 (data/issues.json + 시트의 month 칸 · watch/read 블록) ---------- */
+let ISSUES = {}, viewMonth = '';
+const mkey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+const thisMonth = () => mkey(new Date());
+const LAUNCH_M = '2026-10'; // No.1
+const monthDate = (k) => { const [y, m] = k.split('-').map(Number); return new Date(y, m - 1, 1); };
+const issueNo = (k) => { const [y, m] = k.split('-').map(Number), [y0, m0] = LAUNCH_M.split('-').map(Number); return (y - y0) * 12 + (m - m0) + 1; };
+const nextKey = (k) => { const d = monthDate(k); d.setMonth(d.getMonth() + 1); return mkey(d); };
+const prevKey = (k) => { const d = monthDate(k); d.setMonth(d.getMonth() - 1); return mkey(d); };
+const monthName = (k) => monthDate(k).toLocaleDateString(lang, { year: 'numeric', month: 'long' }) + t('호');
+const byAnyId = (id) => cells.find((c) => c.id === id) || cells.find((c) => c.rooms && c.rooms.some((r) => r.id === id));
+const monthsOf = (c) => [c.month, ...(c.rooms || []).map((r) => r.month)].join(',').split(/[,\s]+/).filter(Boolean);
+function picksFor(k) {
+  const fromJson = ((ISSUES[k] && ISSUES[k].picks) || []).map(byAnyId);
+  const fromSheet = cells.filter((c) => monthsOf(c).includes(k));
+  let list = [...fromJson, ...fromSheet].filter((c, i, a) => c && isOpen(c) && a.indexOf(c) === i);
+  if (!list.length) { const end = monthDate(nextKey(k)); list = cells.filter((c) => isOpen(c) && startOf(c) < end).reverse(); }
+  return list;
+}
+const ytId = (u) => (String(u).match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/) || [])[1];
+function linksFor(c, k) {
+  const ids = [c.id, ...(c.rooms || []).map((r) => r.id)];
+  const j = ((ISSUES[k] && ISSUES[k].links) || []).filter((l) => ids.includes(l.cell));
+  const sh = blocksOf(c).filter((b) => (b.type === 'watch' || b.type === 'read') && b.media).map((b) => ({ type: b.type === 'watch' ? 'youtube' : 'article', url: b.media, title: b.title || b.media, source: b.caption || '' }));
+  const seen = new Set(); return [...j, ...sh].filter((l) => !seen.has(l.url) && seen.add(l.url));
+}
+function linksHTML(c, k) {
+  const L = linksFor(c, k), yt = L.filter((l) => l.type === 'youtube' && ytId(l.url)), ar = L.filter((l) => !(l.type === 'youtube' && ytId(l.url)));
+  return (yt.length ? `<div class="art-links"><h4>${t('함께 보기')} <span>${yt.length}</span></h4><div class="yt-row">${yt.map((l) => { const id = ytId(l.url); return `<button class="yt" data-yt="${id}" data-ytt="${esc(l.title)}"><span class="yt-th"><img loading="lazy" src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt=""><i></i></span><b>${esc(l.title)}</b><small>${esc(l.source || '')}</small></button>`; }).join('')}</div></div>` : '')
+    + (ar.length ? `<div class="art-links"><h4>${t('함께 읽기')} <span>${ar.length}</span></h4>${ar.map((l) => `<a class="rd" href="${esc(l.url)}" target="_blank" rel="noopener"><span><b>${esc(l.title)}</b><small>${esc(l.source || '')}</small></span><i>↗</i></a>`).join('')}</div>` : '');
+}
+function issueSheet() {
+  const keys = []; for (let k = thisMonth(); issueNo(k) >= 1; k = prevKey(k)) keys.push(k);
+  const cur = viewMonth || thisMonth();
+  sheet.open(`<div class="sh-h"><h3>${t('지난 호')}</h3></div><div class="vols">${keys.map((k) => { const P = picksFor(k), f = P[0];
+    return `<button class="vrow${cur === k ? ' on' : ''}" data-month="${k}">${f ? `<img src="${planetURL(f, 192)}" alt="">` : '<span class="ph"></span>'}<span><b>No.${issueNo(k)} · ${esc(monthName(k))}</b><small>${ISSUES[k] && ISSUES[k].title ? esc(ISSUES[k].title) + ' · ' : ''}${P.map(name).join(' · ') || '—'}</small></span>${k === thisMonth() ? `<em>${t('진행 중')}</em>` : ''}</button>`; }).join('')}</div>`);
+}
 const blocksOf = (c) => { const ids = c.rooms ? c.rooms.map((r) => r.id) : [c.id]; return blocks.filter((b) => ids.includes(b.cell_id)); };
 const pullQuote = (c) => blocksOf(c).find((b) => b.type === 'quote' && b.body);
 const readMin = (c) => Math.max(3, Math.round(blocksOf(c).reduce((s, b) => s + String(b.body || '').length + String(b.title || '').length, 0) / 380) + 2);
@@ -486,6 +532,12 @@ const T3 = {
   ja: { '읽기 시작': '読みはじめる', '이번 호': '今号の目次', '분': '分', '이번 주의 문장': '今週の言葉', '에디터의 편지': '編集後記', '이번 주에도 행성 {n}곳이 궤도에 올랐습니다.': '今週も {n} つの惑星が軌道に乗りました。', '하루의 작은 고민에서 잠시 고개를 들어, 더 큰 것을 바라보는 시간. 한 행성에 머무는 몇 분이 생각과 마음의 폭을 조금 넓혀 주기를 바랍니다.': '一日の小さな悩みから少し顔を上げて、もっと大きなものを見る時間。ひとつの惑星で過ごす数分が、考えと心の幅を少し広げてくれますように。', '편집실': '編集部', '다음 호': '次号', '다음 호에서 새로운 행성을 만나요.': '次号で新しい惑星に出会えます。', '이 행성에 착륙하기': 'この惑星に着陸する', '기울이면 표지가 빛나요 · 흔들면 다음 표지': '傾けると表紙が光る · 振ると次の表紙', '마우스를 움직이면 표지가 빛나요': 'マウスを動かすと表紙が光る', '다음 표지': '次の表紙' },
 };
 Object.keys(T3).forEach((l) => Object.assign(T[l], T3[l]));
+const T4 = {
+  en: { '함께 보기': 'Watch', '함께 읽기': 'Read', '호': ' issue', 'YouTube에서 보기': 'Open in YouTube', '영상·기사': 'links', '이번 달에도 행성 {n}곳이 궤도에 올랐습니다.': 'This month, {n} planets entered orbit.' },
+  zh: { '함께 보기': '一起看', '함께 읽기': '一起读', '호': '刊', 'YouTube에서 보기': '在 YouTube 观看', '영상·기사': '视频·文章', '이번 달에도 행성 {n}곳이 궤도에 올랐습니다.': '本月又有 {n} 颗行星进入轨道。' },
+  ja: { '함께 보기': '一緒に見る', '함께 읽기': '一緒に読む', '호': '号', 'YouTube에서 보기': 'YouTubeで見る', '영상·기사': '動画・記事', '이번 달에도 행성 {n}곳이 궤도에 올랐습니다.': '今月も {n} つの惑星が軌道に乗りました。' },
+};
+Object.keys(T4).forEach((l) => Object.assign(T[l], T4[l]));
 
 const tilt = { x: 0, y: 0, px: 0, py: 0 }; window.__vxTilt = tilt;
 addEventListener('pointermove', (e) => { if (!IS_MOBILE) { tilt.px = (e.clientX / innerWidth - 0.5) * 2; tilt.py = (e.clientY / innerHeight - 0.5) * 2; } }, { passive: true });
@@ -495,7 +547,7 @@ addEventListener('click', function once() { if (!IS_MOBILE) return; removeEventL
 sensor.onShake(() => {
   if (tab !== 'home' || !viewer.hidden || sheet.isOpen) return;
   const cov = view.querySelector('.mag-cover'); if (!cov || cov.getBoundingClientRect().bottom < innerHeight * 0.4) return;
-  const n = (viewVol ? openAt(viewVol) : cells.filter(isOpen)).length; if (n < 2) return;
+  const n = picksFor(viewMonth || thisMonth()).length; if (n < 2) return;
   coverIdx = (coverIdx + 1) % n; sensor.vibrate([15, 40, 25]);
   cov.classList.add('flip-out');
   setTimeout(() => { go('home', true); const c2 = view.querySelector('.mag-cover'); c2 && c2.classList.add('flip-in'); }, 260);
@@ -581,6 +633,7 @@ const landing = (() => {
 (async () => {
   const t0 = Date.now();
   try { const d = await loadData(); cells = d.cells; blocks = d.blocks || []; } catch (e) { cells = []; }
+  try { ISSUES = await (await fetch('data/issues.json', { cache: 'no-cache' })).json(); } catch (e) { ISSUES = {}; }
   await new Promise((r) => setTimeout(r, Math.max(0, 1200 - (Date.now() - t0)))); // 시작 화면 최소 1.2초
   $('#splash').classList.add('out'); setTimeout(() => $('#splash').remove(), 600);
   if (!cells.length) { view.hidden = false; view.innerHTML = `<p class="empty" style="padding-top:40vh">${t('전시를 불러오지 못했어요.')}<br><br><button class="btn line" style="width:auto;padding:0 24px;margin:0 auto" onclick="location.reload()">${t('다시 시도')}</button></p>`; return; }
