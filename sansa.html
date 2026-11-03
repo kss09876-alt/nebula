@@ -2,111 +2,72 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#dfe5dd" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#1b1712" />
   <title>산사, 잠시 머물다 — XPACE</title>
-  <meta name="description" content="말없이 함께 앉아 있는 온라인 산사. 숨 고르기, 풍경, 범종, 목탁, 절, 연등, 좌선을 휴대폰으로 체험하는 힐링 전시 (기획 제안 프로토타입)." />
+  <meta name="description" content="말없이 걸어 들어가 앉는 온라인 산사. 휴대폰을 기울여 걷고, 몸을 돌려 둘러보고, 엎어 두며 좌선하는 3D 힐링 전시 (기획 제안 프로토타입)." />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-  <link rel="stylesheet" href="css/sansa.css?v=2" />
+  <link rel="stylesheet" href="css/sansa.css?v=3" />
+  <script type="importmap">{ "imports": { "three": "./js/vendor/three.module.js" } }</script>
 </head>
 <body class="sansa">
-  <canvas id="mtn" aria-hidden="true"></canvas>
-  <canvas id="fx" aria-hidden="true"></canvas>
+  <canvas id="world" aria-label="산사 3D 공간"></canvas>
+  <div id="tags" aria-hidden="true"></div>
 
-  <header class="ss-top">
-    <a class="ss-logo" href="./" data-t="XPACE">XPACE</a>
-    <span class="ss-title" data-t="산사, 잠시 머물다">산사, 잠시 머물다</span>
-    <button class="ss-snd" aria-pressed="false"><i></i><i></i><i></i><span data-t="산의 소리">산의 소리</span></button>
+  <!-- 들어가기 -->
+  <section class="gate" id="gate">
+    <p class="g-eye" data-t="ONLINE TEMPLE STAY · 기획 제안 프로토타입">ONLINE TEMPLE STAY · 기획 제안 프로토타입</p>
+    <h1 data-t="산사, 잠시 머물다">산사, 잠시 머물다</h1>
+    <p class="g-lead" data-t="말없이 걸어 들어가 함께 앉는 온라인 절.">말없이 걸어 들어가 함께 앉는 온라인 절.</p>
+    <p class="g-state" data-t="법당 문을 여는 중">법당 문을 여는 중</p>
+    <button class="g-btn" id="enter" disabled data-t="산문 들어서기">산문 들어서기</button>
+    <ul class="g-how">
+      <li data-mobile data-t="휴대폰을 앞으로 기울이면 걸어요">휴대폰을 앞으로 기울이면 걸어요</li>
+      <li data-mobile data-t="몸을 돌리면 바라보는 방향이 바뀌어요">몸을 돌리면 바라보는 방향이 바뀌어요</li>
+      <li data-desktop data-t="W A S D 또는 방향키로 걸어요 · 끌어서 둘러보기">W A S D 또는 방향키로 걸어요 · 끌어서 둘러보기</li>
+      <li data-t="화면을 끌어도 걸을 수 있어요">화면을 끌어도 걸을 수 있어요</li>
+    </ul>
+    <p class="g-credit" data-t="VALIX가 대한불교조계종과의 협력을 가정해 만든 기획 제안 프로토타입입니다. 실제 주최·후원이 아니며 협의 전입니다.">VALIX가 대한불교조계종과의 협력을 가정해 만든 기획 제안 프로토타입입니다. 실제 주최·후원이 아니며 협의 전입니다.</p>
+  </section>
+
+  <!-- 위 -->
+  <header class="hud-top" hidden>
+    <div class="pill left"><a href="./" class="ic" aria-label="나가기" data-exit><svg viewBox="0 0 24 24"><path d="M10 5H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h4M15 8l-4 4 4 4M11 12h9"/></svg></a><b data-t="산사">산사</b><span class="place" data-t="산문">산문</span></div>
+    <div class="pill right"><button class="ic" data-sound aria-label="소리"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="w" d="M16 9c1 1.5 1 4.5 0 6M18.5 7c2 3 2 7 0 10"/></svg></button><button class="ic" data-settings aria-label="설정"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button></div>
   </header>
-  <nav class="ss-dots" aria-label="장면"></nav>
+  <button class="chant" data-chant hidden><span data-t="염불 듣기">염불 듣기</span></button>
+  <p class="toast" hidden></p>
+  <p class="hint" hidden></p>
 
-  <main id="ss">
-    <!-- 0. 일주문 -->
-    <section class="sc gate" data-sc="gate">
-      <p class="eye" data-t="ONLINE TEMPLE STAY · 기획 제안 프로토타입">ONLINE TEMPLE STAY · 기획 제안 프로토타입</p>
-      <h1 data-t="산사, 잠시 머물다">산사, 잠시 머물다</h1>
-      <p class="lead" data-t="말없이 함께 앉아 있는 온라인 절.">말없이 함께 앉아 있는 온라인 절.</p>
-      <p class="lead dim" data-t="이곳에서는 아무것도 하지 않아도 괜찮습니다.">이곳에서는 아무것도 하지 않아도 괜찮습니다.</p>
-      <button class="ss-btn enter" data-enter><span data-t="일주문 들어서기">일주문 들어서기</span></button>
-      <p class="tiny" data-t="소리를 켜면 바람과 새, 물소리가 들려요. 휴대폰은 기울이고, 흔들고, 엎어 두며 체험합니다.">소리를 켜면 바람과 새, 물소리가 들려요. 휴대폰은 기울이고, 흔들고, 엎어 두며 체험합니다.</p>
-      <p class="scroll-cue" aria-hidden="true">↓</p>
-    </section>
+  <!-- 아래 -->
+  <nav class="hud-bot" hidden>
+    <button data-act="hap"><svg viewBox="0 0 24 24"><path d="M12 3c-2 4-4 9-4 13 0 2 1.5 4 4 5 2.5-1 4-3 4-5 0-4-2-9-4-13zM12 3v18"/></svg><span data-t="합장">합장</span></button>
+    <button data-act="bow"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M5 20c0-4 3-7 7-7s7 3 7 7M8 20l4-3 4 3"/></svg><span data-t="절하기">절하기</span></button>
+    <button data-act="mok"><svg viewBox="0 0 24 24"><ellipse cx="11" cy="15" rx="7" ry="5"/><path d="M5 15c3 1.5 9 1.5 12 0M15 6l4-3M17 9l3-1"/></svg><span data-t="목탁">목탁</span></button>
+    <button data-act="beads"><svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="1.8"/><circle cx="17.5" cy="6.5" r="1.8"/><circle cx="20" cy="12" r="1.8"/><circle cx="17.5" cy="17.5" r="1.8"/><circle cx="6.5" cy="6.5" r="1.8"/><circle cx="4" cy="12" r="1.8"/><circle cx="6.5" cy="17.5" r="1.8"/><path d="M12 19v3"/></svg><span data-t="염주">염주</span></button>
+    <button data-act="sit" class="sit" hidden><svg viewBox="0 0 24 24"><rect x="4" y="16" width="16" height="4" rx="1.5"/><circle cx="12" cy="7" r="2.6"/><path d="M8 16c0-3 1.8-5 4-5s4 2 4 5"/></svg><span data-t="앉기">앉기</span></button>
+  </nav>
+  <div class="beads" hidden><p class="b-n">0</p><p class="b-s" data-t="/ 108">/ 108</p></div>
 
-    <!-- 1. 숨 고르기 -->
-    <section class="sc breath" data-sc="breath">
-      <p class="eye">01 · <span data-t="숨 고르기">숨 고르기</span></p>
-      <div class="br-wrap"><div class="br-ring"><div class="br-core"></div></div><p class="br-say" data-t="원을 누르면 시작해요">원을 누르면 시작해요</p></div>
-      <p class="lead" data-t="원이 커지면 들이쉬고, 작아지면 내쉬어요.">원이 커지면 들이쉬고, 작아지면 내쉬어요.</p>
-      <div class="row"><button class="ss-chip" data-mic><span data-t="후~ 불어 촛불 흔들기">후~ 불어 촛불 흔들기</span></button><span class="br-count"></span></div>
-      <canvas class="candle" width="120" height="180" aria-hidden="true"></canvas>
-      <p class="tiny" data-t="마이크 소리는 이 기기 안에서만 쓰이고 녹음·전송되지 않아요.">마이크 소리는 이 기기 안에서만 쓰이고 녹음·전송되지 않아요.</p>
-    </section>
+  <!-- 좌선 -->
+  <div class="zen" hidden><p class="z-t">0:00</p><p class="z-s" data-t="숨을 따라가요">숨을 따라가요</p><button class="z-out" data-t="일어나기">일어나기</button></div>
 
-    <!-- 2. 풍경 -->
-    <section class="sc chime" data-sc="chime">
-      <p class="eye">02 · <span data-t="풍경">풍경</span></p>
-      <canvas class="chime-cv" aria-hidden="true"></canvas>
-      <p class="lead" data-t="처마 끝 물고기가 바람에 흔들리면 맑은 소리가 납니다.">처마 끝 물고기가 바람에 흔들리면 맑은 소리가 납니다.</p>
-      <p class="hint" data-hint-m="휴대폰을 천천히 기울여 바람을 보내 보세요" data-hint-d="풍경을 누르거나 마우스로 쓸어 보세요"></p>
-    </section>
+  <!-- 설정 -->
+  <div class="sheet-bg" hidden></div>
+  <section class="sheet" hidden>
+    <h3 data-t="설정">설정</h3>
+    <label class="opt"><span data-t="휴대폰 기울여 걷기">휴대폰 기울여 걷기</span><input type="checkbox" data-opt="tiltwalk" checked /></label>
+    <label class="opt"><span data-t="몸을 돌려 방향 바꾸기 (나침반)">몸을 돌려 방향 바꾸기 (나침반)</span><input type="checkbox" data-opt="compass" checked /></label>
+    <button class="opt btn" data-recal data-t="지금 자세를 기준으로 다시 맞추기">지금 자세를 기준으로 다시 맞추기</button>
+    <div class="how">
+      <p data-t="앉기: 방석 가까이 가면 '앉기'가 나타나요. 앉은 뒤 휴대폰을 엎어 두면 좌선이 시작되고, 들면 종이 울려요.">앉기: 방석 가까이 가면 '앉기'가 나타나요. 앉은 뒤 휴대폰을 엎어 두면 좌선이 시작되고, 들면 종이 울려요.</p>
+      <p data-t="절하기: 버튼을 누르거나, 휴대폰을 엎었다가 들어요. 목탁: 버튼 또는 흔들기. 염주: 버튼 또는 화면을 보며 휴대폰을 살짝 돌리기.">절하기: 버튼을 누르거나, 휴대폰을 엎었다가 들어요. 목탁: 버튼 또는 흔들기. 염주: 버튼 또는 화면을 보며 휴대폰을 살짝 돌리기.</p>
+      <p data-t="센서·마이크 정보는 이 기기 안에서만 쓰이고 저장·전송되지 않아요.">센서·마이크 정보는 이 기기 안에서만 쓰이고 저장·전송되지 않아요.</p>
+      <p class="cr" data-t="VALIX가 대한불교조계종과의 협력을 가정해 만든 기획 제안 프로토타입입니다. 실제 주최·후원이 아니며 협의 전입니다.">VALIX가 대한불교조계종과의 협력을 가정해 만든 기획 제안 프로토타입입니다. 실제 주최·후원이 아니며 협의 전입니다.</p>
+    </div>
+    <button class="opt btn close" data-close data-t="닫기">닫기</button>
+  </section>
 
-    <!-- 3. 범종 -->
-    <section class="sc bell" data-sc="bell">
-      <p class="eye">03 · <span data-t="범종">범종</span></p>
-      <button class="bell-btn" data-bell aria-label="종 치기"><svg viewBox="0 0 200 220" aria-hidden="true"><path class="bell-body" d="M100 18c-10 0-14 6-14 12v8c-34 8-50 40-52 78-1 28-6 52-18 70h168c-12-18-17-42-18-70-2-38-18-70-52-78v-8c0-6-4-12-14-12z"/><path class="bell-band" d="M30 150h140M38 120h124"/><circle class="bell-boss" cx="100" cy="168" r="10"/><path class="bell-lip" d="M16 186h168"/></svg><span class="bell-ripple"></span></button>
-      <p class="bell-n"><b>0</b> <span data-t="번 울렸어요">번 울렸어요</span></p>
-      <p class="lead" data-t="종소리가 멀리 퍼지는 동안, 마음속 소리 하나를 내려놓아요.">종소리가 멀리 퍼지는 동안, 마음속 소리 하나를 내려놓아요.</p>
-      <p class="hint" data-hint-m="종을 누르거나, 휴대폰을 한 번 크게 흔들어 종을 쳐요" data-hint-d="종을 눌러 쳐 보세요"></p>
-      <p class="tiny" data-t="산사에서는 새벽 예불에 28번, 저녁 예불에 33번 종을 칩니다.">산사에서는 새벽 예불에 28번, 저녁 예불에 33번 종을 칩니다.</p>
-    </section>
-
-    <!-- 4. 목탁 -->
-    <section class="sc moktak" data-sc="moktak">
-      <p class="eye">04 · <span data-t="목탁">목탁</span></p>
-      <button class="mok-btn" data-mok aria-label="목탁 두드리기"><svg viewBox="0 0 220 180" aria-hidden="true"><ellipse cx="110" cy="100" rx="92" ry="70" class="mok-body"/><path d="M40 100c20 10 120 10 140 0" class="mok-slit"/><ellipse cx="110" cy="40" rx="18" ry="10" class="mok-handle"/></svg></button>
-      <div class="mok-beats" aria-hidden="true"></div>
-      <p class="lead" data-t="물고기는 눈을 감지 않는다고 합니다. 깨어 있으라는 뜻으로 목탁은 물고기 모양을 닮았어요.">물고기는 눈을 감지 않는다고 합니다. 깨어 있으라는 뜻으로 목탁은 물고기 모양을 닮았어요.</p>
-      <p class="hint" data-hint-m="화면을 두드려요 · 일정하게 치면 박자가 고와져요" data-hint-d="목탁을 누르거나 스페이스 키로 두드려요"></p>
-    </section>
-
-    <!-- 5. 절 -->
-    <section class="sc bow" data-sc="bow">
-      <p class="eye">05 · <span data-t="세 번의 절">세 번의 절</span></p>
-      <div class="bow-dots"><i></i><i></i><i></i></div>
-      <p class="bow-say" data-t="몸을 낮추면 마음도 낮아집니다.">몸을 낮추면 마음도 낮아집니다.</p>
-      <p class="hint" data-hint-m="휴대폰을 바닥에 엎었다가 다시 들면 절 한 번" data-hint-d="버튼을 눌러 절을 올려요"></p>
-      <button class="ss-btn ghost" data-bow><span data-t="절 올리기">절 올리기</span></button>
-    </section>
-
-    <!-- 6. 연등 -->
-    <section class="sc lotus" data-sc="lotus">
-      <p class="eye">06 · <span data-t="연등">연등</span></p>
-      <p class="lead" data-t="바라는 마음 한 줄을 연등에 적어 하늘로 띄워요.">바라는 마음 한 줄을 연등에 적어 하늘로 띄워요.</p>
-      <form class="wish" data-wish><input maxlength="40" autocomplete="off" placeholder="모두가 평안하기를" data-ph="모두가 평안하기를" /><button class="ss-btn"><span data-t="연등 띄우기">연등 띄우기</span></button></form>
-      <p class="hint" data-hint-m="띄운 뒤 휴대폰을 뒤로 젖히면 연등이 더 높이 올라가요" data-hint-d="여러 개를 띄워도 좋아요"></p>
-      <p class="tiny" data-t="적은 글은 이 화면에만 머물고 어디에도 저장되지 않아요.">적은 글은 이 화면에만 머물고 어디에도 저장되지 않아요.</p>
-    </section>
-
-    <!-- 7. 좌선 -->
-    <section class="sc zen" data-sc="zen">
-      <p class="eye">07 · <span data-t="좌선">좌선</span></p>
-      <p class="zen-time">0:00</p>
-      <div class="row"><button class="ss-chip" data-zen="1">1<span data-t="분">분</span></button><button class="ss-chip" data-zen="3">3<span data-t="분">분</span></button><button class="ss-chip" data-zen="5">5<span data-t="분">분</span></button></div>
-      <p class="lead" data-t="아무것도 하지 않는 시간. 끝나면 종이 한 번 울려요.">아무것도 하지 않는 시간. 끝나면 종이 한 번 울려요.</p>
-      <p class="hint" data-hint-m="시작한 뒤 휴대폰을 엎어 두어도 괜찮아요" data-hint-d="시작하면 화면이 어두워져요"></p>
-    </section>
-
-    <!-- 8. 회향 -->
-    <section class="sc end" data-sc="end">
-      <p class="eye">08 · <span data-t="회향">회향</span></p>
-      <h2 data-t="머문 시간을 일상으로 돌려보냅니다.">머문 시간을 일상으로 돌려보냅니다.</h2>
-      <p class="stay"></p>
-      <a class="ss-btn" href="./" data-t="다시 일상으로">다시 일상으로</a>
-      <p class="credit" data-t="이 전시는 VALIX가 대한불교조계종과의 협력을 가정해 만든 기획 제안용 프로토타입입니다. 실제 주최·후원을 뜻하지 않으며, 협의 전 단계입니다. 모든 소리는 웹 오디오로 실시간 합성했습니다.">이 전시는 VALIX가 대한불교조계종과의 협력을 가정해 만든 기획 제안용 프로토타입입니다. 실제 주최·후원을 뜻하지 않으며, 협의 전 단계입니다. 모든 소리는 웹 오디오로 실시간 합성했습니다.</p>
-    </section>
-  </main>
-
-  <div class="zen-veil" hidden><p class="zv-t">0:00</p><p class="zv-s" data-t="숨을 따라가요">숨을 따라가요</p><button class="ss-chip" data-zen-stop><span data-t="그만하기">그만하기</span></button></div>
-  <script type="module" src="js/sansa.js?v=1"></script>
+  <script type="module" src="js/sansa.js?v=3"></script>
 </body>
 </html>
