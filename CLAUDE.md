@@ -14,6 +14,7 @@ VALIX의 X(Value X) = 무한한 우주. 전시 하나가 행성 하나. 미시�
 | `js/home-mobile.js` | 홈 모바일 전용: 나침반 고리(행성계가 방위에 맞춰 회전), 기울이기, 흔들기, 좌우 스와이프, 하단 행성 시트 |
 | `cell.html` + `js/cell.js` | 전시 페이지. 블록 렌더러(cover, text, quote, sticky, timeline, quantum, prism, shadow, soundmap, listen, piano, wave, video …). `?id=g001`이면 기획전(방 여러 개를 한 페이지로) |
 | `bitssal.html` + `js/bitssal.js` | X-003 빛쌀 단독 스크롤 스토리 (캔버스 쌀알 1,900개, 14장면). 끝부분에 모바일 전용 블록(흔들기·AR) |
+| `sansa.html` + `js/sansa.js` + `css/sansa.css` | **X-004 산사, 잠시 머물다** 온라인 산사 힐링 전시 (기획 제안 프로토타입, 조계종 협력 가정·협의 전 — 실제 주최로 표시하지 말 것, 로고·공식 문구 사용 금지). 장면: 일주문 → 숨 고르기(원·진동·마이크로 촛불) → 풍경(기울여 바람) → 범종(누르기·흔들기) → 목탁(두드리기·박자) → 세 번의 절(엎었다 들기) → 연등(소원 한 줄, 저장 안 함, 뒤로 젖히면 더 높이) → 좌선(1·3·5분, 끝나면 종) → 회향(머문 시간). 안개 산 배경은 기울기로 입체. 소리 전부 합성. 번역은 파일 안 `W` |
 | `js/cell-mobile.js` | 전시 페이지 모바일 전용(휴대폰에서만 불러옴): 지금 블록에서 할 수 있는 동작 안내 칩, 타임라인·단계 진동, 끝 블록 돌리기→다음 행성, 모바일 문구 번역(`WORDS`) |
 | `js/sensors.js` | 모바일 센서 공용: `IS_MOBILE`, `sensor`(tiltX/tiltY/heading/shake/spin/faceDown/blow, onShake/onSpin/onFaceDown/onBlow, vibrate, enable), `startCamera`, `startMic`, `getPosition`/`distanceKm`, `keepAwake`(화면 꺼짐 방지), `onPinch` |
 | `js/data.js` | 데이터 로드: 구글 시트(gviz) → 실패 시 `data/cells.json`. 기획전 묶기, 번호 재부여(X-001…), 다국어 적용 |

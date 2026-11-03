@@ -16,7 +16,7 @@ const t = (k, n) => { let s = (T[lang] && T[lang][k]) ?? k; if (n != null) s = s
 const br = (s) => esc(s).replace(/\n/g, '<br>');
 document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
 
-const VERSION = '0.6.0';
+const VERSION = '0.7.0';
 
 /* ---------- 우주 방랑자 이름 ---------- */
 const NAMES = {
@@ -69,6 +69,7 @@ const featured = () => { const o = cells.filter(isOpen); return o[o.length - 1] 
 const PLAYS = {
   g001: { ko: ['흔들면 우주가 관측돼요.\n당신이 보는 순간, 무엇이 정해질까요?', '흔들어 양자 관측 · 기울여 프리즘과 그림자 빛'], en: ['Shake to observe the universe.\nWhat is decided the moment you look?', 'Shake to observe · tilt for prism and shadow light'], zh: ['摇一摇，观测宇宙。\n你看的那一刻，什么被决定了？', '摇晃观测量子 · 倾斜看棱镜与影子'], ja: ['振ると宇宙が観測されます。\n見た瞬間、何が決まるのでしょう？', '振って量子を観測 · 傾けてプリズムと影の光'], glyph: 'M12 3v4M12 17v4M3 12h4M17 12h4M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0' },
   c005: { ko: ['한 톨의 쌀은\n누구의 삶이었을까요?', '기울이면 쌀이 쏟아지고, 엎어두면 묵념이 돼요'], en: ['Whose life was\na single grain of rice?', 'Tilt to pour rice · lay your phone face down to observe silence'], zh: ['一粒米，\n曾是谁的人生？', '倾斜让米流下 · 手机朝下放置即为默哀'], ja: ['一粒の米は\n誰の人生だったのでしょう？', '傾けると米がこぼれ、伏せると黙祷になります'], glyph: 'M12 4c3 4 3 12 0 16c-3-4-3-12 0-16z' },
+  c006: { ko: ['오늘, 아무것도 하지 않아도\n괜찮을까요?', '기울이면 풍경이 울리고, 흔들면 범종, 엎었다 들면 절 한 번'], en: ['Is it alright\nto do nothing today?', 'Tilt to ring the chime, shake for the bell, lay down and lift to bow'], zh: ['今天，什么都不做\n也可以吗？', '倾斜让风铃作响，摇晃敲钟，朝下放再拿起即一拜'], ja: ['今日は、何もしなくても\nいいですか？', '傾けると風鈴、振ると鐘、伏せて持ち上げると一礼'] },
   c004: { ko: ['소음과 음악,\n그 경계는 어디일까요?', '소리를 듣고, 건반을 직접 눌러 보세요'], en: ['Noise and music —\nwhere is the line?', 'Listen, then play the keys yourself'], zh: ['噪音与音乐，\n界线在哪里？', '聆听，然后亲手弹奏'], ja: ['ノイズと音楽、\nその境界はどこでしょう？', '音を聴いて、鍵盤を押してみましょう'], glyph: 'M4 12h2l2-5 3 10 3-8 2 3h4' },
 };
 const playOf = (c) => { const p = PLAYS[c.id]; const l = p ? (p[lang] || p.ko) : [c.subtitle || name(c), c.summary || '']; return { q: l[0], how: l[1], glyph: (p && p.glyph) || 'M12 12m-6 0a6 6 0 1 0 12 0a6 6 0 1 0-12 0' }; };

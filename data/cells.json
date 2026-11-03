@@ -70,6 +70,23 @@
    "bgm": "",
    "fx": "rice",
    "url": "bitssal.html"
+  },
+  {
+   "id": "c006",
+   "order": 6,
+   "status": "open",
+   "title": "X-006 · 산사, 잠시 머물다",
+   "subtitle": "말없이 함께 앉아 있는 온라인 절 — 숨·풍경·범종·목탁·절·연등·좌선",
+   "artist": "VALIX 기획 제안 · 대한불교조계종 협력 가정(협의 전)",
+   "period": "2026.11 – 프로토타입",
+   "color": "#8fae95",
+   "thumbnail": "",
+   "summary": "안개 낀 새벽 산사에 잠시 머무는 힐링 전시. 휴대폰을 기울여 풍경을 울리고, 흔들어 범종을 치고, 엎었다 들며 절을 올리고, 연등에 마음 한 줄을 적어 띄웁니다. 마지막엔 아무것도 하지 않는 좌선의 시간.",
+   "bgm": "",
+   "fx": "",
+   "planet": "ocean",
+   "month": "2026-11",
+   "url": "sansa.html"
   }
  ],
  "blocks": [
@@ -796,6 +813,28 @@
    "body": "",
    "media": "",
    "caption": "",
+   "bg": "",
+   "align": ""
+  },
+  {
+   "cell_id": "c006",
+   "order": 1,
+   "type": "cover",
+   "title": "산사, 잠시 머물다",
+   "body": "말없이 함께 앉아 있는 온라인 절.",
+   "media": "",
+   "caption": "",
+   "bg": "",
+   "align": ""
+  },
+  {
+   "cell_id": "c006",
+   "order": 2,
+   "type": "quote",
+   "title": "",
+   "body": "이곳에서는 아무것도 하지 않아도 괜찮습니다.",
+   "media": "",
+   "caption": "산사, 잠시 머물다 — 일주문에서",
    "bg": "",
    "align": ""
   }
