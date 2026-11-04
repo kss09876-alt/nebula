@@ -4,7 +4,9 @@
 import { sound } from './bitssal-sound.js?v=4';
 import { lang, tr, langSwitcher } from './i18n.js?v=3';
 import { IS_MOBILE, sensor, startCamera, startMic, getPosition, distanceKm, keepAwake } from './sensors.js?v=2';
+import { STORY, LAYOUT, YEARS_AT } from './bitssal-story.js?v=1';
 const BX = lang !== 'ko' ? (await import(`./bitssal-i18n-${lang}.js?v=1`)).default : null;
+const SY = STORY[lang] || STORY.ko; // 순이의 이야기 (가상의 인물)
 const SRC1 = tr('진실·화해를위한과거사정리위원회, 「대구10월사건 관련 민간인 희생 사건」');
 const SRC2 = tr('진실·화해를위한과거사정리위원회, 「경산 코발트광산 사건」');
 const RICE = [255, 248, 230], DIM = [92, 86, 76], RED = [200, 56, 47], WARM = [255, 214, 150];
@@ -135,8 +137,15 @@ if (IS_MOBILE) {
   if (light && light.cards[0]) light.cards[0].html += `<button class="act-btn mic-btn">${tr('후 불어 빛 띄우기 (마이크)')}</button>`;
   if (light && light.cards[0]) light.cards[0].html += `<button class="act-btn ar-btn">${tr('카메라로 내 공간에 빛 남기기')}</button><p class="note">${tr('카메라 영상은 이 화면에서만 보이고 저장·전송되지 않습니다.')}</p>`;
 }
+// 순이의 이야기를 장면마다 끼워 넣고, 이야기가 들어갈 자리를 위해 장면 높이·카드 위치를 다시 잡음
+SCENES.forEach((sc) => {
+  const L = LAYOUT[sc.id]; if (!L) return;
+  sc.h = L.h; L.at.forEach((a, i) => { if (sc.cards[i]) sc.cards[i].at = a; });
+  (SY[sc.id] || []).forEach((st, i) => sc.cards.push({ at: L.story[i], kind: 'story', who: st.who, html: st.html, first: sc.id === 'prologue' }));
+});
 const CREDITS = `<footer class="bs-credits"><div>
   <h3>${tr('출처와 안내')}</h3>
+  <p>${SY.note}</p>
   <p>${tr('역사 서술: ')}${SRC1}(jinsil.go.kr/KoreanWar/30.do), ${SRC2}(jinsil.go.kr/KoreanWar/36.do)</p>
   <p>${tr('밥상·약도·광산 통로 장면은 이해를 돕기 위한 일러스트이며 실제 장소나 인물을 재현하지 않습니다. ‘전시 문안’으로 표시된 문장은 창작 문안으로, 희생자나 유족의 실제 발언이 아닙니다.')}</p>
   <p>${tr('작품: 진시영 · 김동선, 《빛쌀》, 2026 · 기획: XPACE (VALIX LAB)')}</p>
@@ -145,11 +154,27 @@ const CREDITS = `<footer class="bs-credits"><div>
 // ---------------- DOM 구성 ----------------
 const story = document.getElementById('story');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-story.innerHTML = SCENES.map((s, si) => `<section class="scene" id="s-${s.id}" data-i="${si}" style="height:${s.h}vh">${s.cards.map((c, ci) => cardHTML(s, c, si, ci)).join('')}</section>`).join('') + CREDITS;
+story.innerHTML = SCENES.map((s, si) => `<section class="scene" id="s-${s.id}" data-i="${si}" data-h="${s.h}" style="height:${s.h}vh">${s.cards.map((c, ci) => cardHTML(s, c, si, ci)).join('')}</section>`).join('') + CREDITS;
+// 카드가 길어져도(작은 화면·번역·이야기 카드) 서로 겹치지 않게: 원래 자리보다 위로는 안 올리고, 앞 카드 밑으로만 밀어냄. 모자라면 장면을 늘림
+function relayout() {
+  const gap = Math.max(28, innerHeight * 0.06);
+  document.querySelectorAll('.scene').forEach((sc) => {
+    const base = (+sc.dataset.h / 100) * innerHeight;
+    const cards = [...sc.querySelectorAll(':scope > .card')].sort((a, b) => a.dataset.at - b.dataset.at);
+    let y = 0;
+    cards.forEach((c) => { const top = Math.max(+c.dataset.at * base, y); c.style.top = `${Math.round(top)}px`; y = top + c.offsetHeight + gap; });
+    sc.style.height = `${Math.round(Math.max(base, y + innerHeight * 0.25))}px`;
+  });
+}
+let relT = 0; const relSoon = () => { cancelAnimationFrame(relT); relT = requestAnimationFrame(relayout); };
+relayout(); addEventListener('resize', relSoon); addEventListener('load', relSoon);
+if (document.fonts) document.fonts.ready.then(relSoon);
+if (window.ResizeObserver) { const ro = new ResizeObserver(relSoon); document.querySelectorAll('.card').forEach((c) => ro.observe(c)); }
 
 function cardHTML(s, c, si, ci) {
-  const pos = `style="top:${c.at * 100}%"`;
+  const pos = `style="top:${c.at * 100}%" data-at="${c.at}"`;
   const src = c.src ? `<p class="src">${tr('출처: ')}${esc(c.src)}</p>` : '';
+  if (c.kind === 'story') return `<article class="card story" ${pos}><p class="st-who"><b>${esc(SY.label)}</b>${esc(c.who)}</p>${c.html}${c.first ? `<p class="note st-note">${esc(SY.note)}</p>` : ''}</article>`;
   if (c.kind === 'record') return `<article class="card rec ${c.tone || ''}" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3>${c.html}${src}</article>`;
   if (c.kind === 'reveal') return `<article class="card rec reveal-rec" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3><div class="blur">${c.html}</div><button class="rv-btn">${tr('기록 읽기')}</button>${src}</article>`;
   if (c.kind === 'correct') return `<article class="card rec reveal-rec correct" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3><div class="blur">${c.html}</div><button class="rv-btn">${tr('기록 읽기')}</button><button class="fix-btn" hidden>${tr('기록 바로잡기')}</button><p class="fix-note" hidden>${esc(c.fix)}</p>${src}</article>`;
@@ -231,7 +256,8 @@ prog.addEventListener('click', (e) => { const b = e.target.closest('button'); if
 function jump(id) { const el = document.getElementById('s-' + id); if (el) window.scrollTo({ top: el.offsetTop + 2, behavior: 'smooth' }); }
 
 // 카드 등장
-const io = new IntersectionObserver((es) => es.forEach((e) => e.target.classList.toggle('in', e.isIntersecting)), { rootMargin: '-12% 0px -12% 0px' });
+const reading = new Set(); // 이야기 카드를 읽는 동안 화면 위 큰 숫자·라벨을 흐리게 (작은 화면)
+const io = new IntersectionObserver((es) => { es.forEach((e) => { e.target.classList.toggle('in', e.isIntersecting); if (e.target.classList.contains('story')) { if (e.isIntersecting) reading.add(e.target); else reading.delete(e.target); } }); document.body.classList.toggle('reading', reading.size > 0); }, { rootMargin: '-12% 0px -12% 0px' });
 document.querySelectorAll('.card').forEach((c) => io.observe(c));
 
 // 기록 읽기 / 바로잡기
@@ -327,7 +353,7 @@ const REGIONS = [
   { name: tr('경기 · 황해'), x: -0.35, y: -0.75, day: 20 }, { name: tr('강원'), x: 0.3, y: -0.7, day: 29 },
   { name: tr('전남'), x: -0.5, y: 0.6, day: 29 }, { name: tr('전북'), x: -0.5, y: 0.18, day: 79 },
 ];
-const YEARS = [{ y: 1993, at: 0.25 }, { y: 2000, at: 0.36 }, { y: 2001, at: 0.44 }, { y: 2007, at: 0.6 }, { y: 2009, at: 0.68 }];
+const YEARS = [1993, 2000, 2001, 2007, 2009].map((y) => ({ y, at: YEARS_AT[y] }));
 const labelEls = {};
 function label(key, text, cls = '') {
   if (!labelEls[key]) { const d = document.createElement('button'); d.className = 'lab ' + cls; d.textContent = text; labelsEl.appendChild(d); labelEls[key] = d; }
