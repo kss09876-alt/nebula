@@ -4,9 +4,8 @@
 import { sound } from './bitssal-sound.js?v=4';
 import { lang, tr, langSwitcher } from './i18n.js?v=3';
 import { IS_MOBILE, sensor, startCamera, startMic, getPosition, distanceKm, keepAwake } from './sensors.js?v=2';
-import { STORY, LAYOUT, YEARS_AT } from './bitssal-story.js?v=1';
-const BX = lang !== 'ko' ? (await import(`./bitssal-i18n-${lang}.js?v=1`)).default : null;
-const SY = STORY[lang] || STORY.ko; // 순이의 이야기 (가상의 인물)
+import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=1';
+import { facePoints, drawPortrait } from './bitssal-faces.js?v=1';
 const SRC1 = tr('진실·화해를위한과거사정리위원회, 「대구10월사건 관련 민간인 희생 사건」');
 const SRC2 = tr('진실·화해를위한과거사정리위원회, 「경산 코발트광산 사건」');
 const RICE = [255, 248, 230], DIM = [92, 86, 76], RED = [200, 56, 47], WARM = [255, 214, 150];
@@ -21,131 +20,14 @@ const thumb = (id) => `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
 const photo = (k, cap) => ({ kind: 'photo', id: PH[k], cap: cap || tr('작품 사진 — {w}', { w: WORK }) });
 const vid = (id, cap, title) => ({ kind: 'vid', id, cap, title });
 
-// ---------------- 장면 정의 ----------------
-// cards: at = 장면 안에서의 위치(0~1), kind = text | record | reveal | correct | choice | input | photo | vid | carousel | archive
-const SCENES = [
-  { id: 'prologue', title: '한 톨', h: 170, cards: [
-    { at: 0.06, html: '<p class="kicker">X-003 · 진시영 · 김동선 《빛쌀》</p><h1>빛쌀</h1><p class="lead">한 톨의 쌀.<br>당신에게는 어떤 의미인가요?</p><p class="hint">어둠 속 쌀알에 커서를 가져가 보세요. 눌러서 따라가면 이야기가 시작됩니다.</p>' },
-    { at: 0.55, html: '<p>이 쌀알은 유리 조형물 《빛쌀》의 맨 위, 넓은 밥상에서 출발합니다. 좁은 유리 통로를 지나 아래의 둥근 그릇에 닿기까지, 이 전시는 한 톨이 지나온 길을 따라갑니다.</p><p class="note">1946년 대구10월사건과 1950년 경산 코발트광산 사건은 서로 다른 사건입니다. 이 전시는 두 사건을 구분해 전합니다.</p>' },
-  ] },
-  { id: 'work', title: '작품', h: 230, cards: [
-    { at: 0.05, html: '<p class="kicker">작품 《빛쌀》</p><h2>유리 위에 맺힌 빛</h2><p>유리 조형물 위로 쌀과 빛의 영상이 흐릅니다. 사진을 넘기며 작품의 네 부분을 먼저 둘러보세요.</p>' },
-    { at: 0.28, kind: 'carousel', items: [
-      { id: PH[0], t: '01 · 밥상', d: '넓은 윗부분. 쌀알이 모여 한 사람의 하루가 되는 자리.' },
-      { id: PH[1], t: '02 · 통로', d: '좁아지는 유리 목. 삶이 좁은 길로 내몰리는 시간.' },
-      { id: PH[2], t: '03 · 어둠', d: '아래로 이어지는 깊은 몸체.' },
-      { id: PH[3], t: '04 · 그릇', d: '바닥의 둥근 그릇. 남겨진 빛이 고이는 곳.' },
-    ] },
-    { at: 0.66, ...vid(VD.main, `${WORK}, 가변 크기, 유리 오브제 위 단채널 영상 프로젝션`, '작품 영상') },
-  ] },
-  { id: 'life', title: '밥상', h: 250, cards: [
-    { at: 0.06, html: '<p class="chap">01 · 한 톨의 삶</p><h2>1946년, 대구</h2><p>해방 이듬해. 쌀 한 톨은 곧 한 사람의 하루였습니다. 밥을 짓고, 도시락을 싸고, 함께 둘러앉는 평범한 밥상.</p>' },
-    { at: 0.34, html: '<p><b>그릇을 눌러 밥을 담아 보세요.</b> 열 개의 그릇이 모두 차면 한 집의 하루가 됩니다.</p><p class="legend share">차린 그릇 <b class="bowl-n">0</b> / 10</p><p class="note">밥상 장면은 이해를 돕기 위한 일러스트입니다.</p>' },
-    { at: 0.66, ...photo(4) },
-  ] },
-  { id: 'hunger', title: '굶주림', h: 300, cards: [
-    { at: 0.04, html: '<p class="chap">02 · 해방 이후, 굶주림</p><h2>그릇이 비어 갑니다</h2><p>스크롤을 내리면 그릇의 쌀이 하나씩 빠져나갑니다.</p><p class="try">화면을 <b>길게 누르고</b> 있으면 쌀을 붙잡을 수 있습니다. 그러나 오래 버티지는 못합니다.</p>' },
-    { at: 0.26, kind: 'record', title: '미곡수집령', html: '<p>미군정은 「미곡수집령」을 발표해 쌀을 거두고 제한 배급을 실시했다. 여름 보리(하곡)까지 수집했고, 경북에서는 양곡 수집이 특히 강압적으로 진행되었다.</p>', src: SRC1 },
-    { at: 0.43, kind: 'record', title: '돌아온 사람들', html: '<p>해외에서 돌아온 동포가 늘면서 식량난은 더 심해졌다.</p>', src: SRC1 },
-    { at: 0.58, kind: 'record', title: '콜레라와 수해', html: '<p>1946년 5월 콜레라가 퍼지고 6월에는 수해가 겹쳤다. 방역을 위한 교통 차단으로 많은 주민이 기아 상태에 놓였고, 청송 등 북부 산간지역에서는 굶어 죽는 사람도 나왔다.</p>', src: SRC1 },
-    { at: 0.76, ...vid(VD.acc, '작품 영상 — 쌀의 축적과 부족. 작품의 장면이며 당시 기록 영상이 아닙니다.', '쌀의 축적과 부족') },
-  ] },
-  { id: 'demand', title: '요구', h: 320, cards: [
-    { at: 0.05, html: '<p class="chap">03 · 우리는 쌀을 원했다</p><h2>흩어진 쌀알이 모입니다</h2><p>커서를 움직여 보세요. 쌀알들이 당신 쪽으로 모여듭니다.</p><p class="legend"><i></i> 쌀알 하나 = 10명</p>' },
-    { at: 0.24, html: '<p>당신의 한 톨도 보탤 수 있습니다.</p><button class="act-btn add-voice">한 톨 보태기</button><p class="legend share">보탠 쌀알 <b class="voice-n">0</b></p>' },
-    { at: 0.42, kind: 'record', title: '1946년 9월', html: '<p>9월 23일 대구의 노동조합들이 파업에 들어갔고, 27일 남조선총파업대구시투쟁위원회가 결성되었다. 미군정은 경찰과 우익청년단 등을 동원해 진압하고 노동자 약 1,200명을 검거했다.</p>', src: SRC1 },
-    { at: 0.58, kind: 'record', title: '10월 1일 오전, 대구부청 앞', html: '<p>시민 1,000여 명이 쌀을 요구하는 시위를 벌였다.</p>', src: SRC1 },
-    { at: 0.72, kind: 'record', title: '10월 1일, 대구역 앞', html: '<p>노동자들의 시위대는 대구역과 공회당 주변에 모였고, 그 수는 수천 명에서 1만 5천 명으로 불어났다.</p>', src: SRC1 },
-    { at: 0.86, ...photo(6) },
-  ] },
-  { id: 'street', title: '거리', h: 470, cards: [
-    { at: 0.03, html: '<p class="chap">04 · 1946년 10월, 거리</p><h2>시간을 따라 걷습니다</h2><p>스크롤이 시계가 됩니다. 지도 위 장소를 누르면 그곳의 기록이 열립니다.</p><p class="note">지도는 위치 관계를 단순화한 약도입니다.</p>' },
-    { at: 0.18, ...photo(7) },
-    { at: 0.38, kind: 'record', title: '10월 1일 오후 7시쯤', html: '<p>대구역 앞에서 경찰과 철도노조원이 충돌한 뒤, 경찰이 발포해 철도노조원 김용태 등 두 명이 사망했다.</p><p class="quiet">이 전시는 그 순간을 재현하지 않습니다. 잠시 멈춥니다.</p>', src: SRC1, tone: 'red' },
-    { at: 0.56, kind: 'record', title: '10월 2일', html: '<p>대구의전 학생들이 숨진 노동자의 시신을 들것에 싣고 대구경찰서로 행진했다. 학생대표단은 구금자 석방과 발포 중지를 요구했고, 경찰서장이 무력 해산 명령을 거부하자 경찰은 철수했다. 군중은 경찰서를 점거했다.</p>', src: SRC1 },
-    { at: 0.76, kind: 'record', title: '10월 2일 오후', html: '<p>미군의 명령을 받은 경찰이 발포해 민간인 17~18명과 경찰 4명이 사망했다.</p>', src: SRC1, tone: 'red' },
-    { at: 0.9, kind: 'record', title: '오후 5시, 계엄령', html: '<p>미군은 장갑차와 기관총 부대를 투입하고 오후 5시 계엄령을 선포했다. 저녁 7시부터 통행금지가 시행되었다.</p>', src: SRC1 },
-  ] },
-  { id: 'spread', title: '확산', h: 280, cards: [
-    { at: 0.06, html: '<p class="chap">04 · 1946년 가을</p><h2>번져 간 불빛</h2><p>스크롤하면 날짜가 흐르고, 사건이 번진 지역에 불이 켜집니다. 지역 이름을 누르면 날짜로 이동합니다.</p><p class="note">점의 개수는 지역별 규모를 뜻하지 않습니다.</p>' },
-    { at: 0.45, kind: 'record', title: '10월 1일~3일', html: '<p>달성군에서 시작해 칠곡·고령, 성주·영일 등 경북 19개 군으로 번졌다.</p>', src: SRC1 },
-    { at: 0.8, kind: 'record', title: '12월 중순까지', html: '<p>경남, 충남·충북, 경기·황해, 강원, 전남, 전북으로 확산되었고, 농민들의 추수봉기와 결합해 12월 중순까지 전국 73개 시군으로 퍼졌다.</p>', src: SRC1 },
-  ] },
-  { id: 'erased', title: '지워진 이름', h: 320, cards: [
-    { at: 0.05, html: '<p class="chap">05 · 항쟁 이후, 지워진 이름</p><h2>흐려진 기록을 읽습니다</h2><p>거리의 충돌 뒤에도 탄압과 감시는 이어졌습니다.</p><p class="try">오른쪽 문서 위를 <b>커서로 문질러</b> 흐려진 글줄을 되살려 보세요. 아래 기록 카드도 눌러 읽을 수 있습니다.</p>' },
-    { at: 0.26, kind: 'reveal', title: '진압과 토벌', html: '<p>사건 관련자들은 현장에서 살해되거나 검거되어 감옥에 갔고, 일부는 산으로 들어갔다. 1948년 정부 수립 때까지 토벌이 이어졌고, 그 과정에서 관련 없는 주민도 희생되었다.</p>', src: SRC1 },
-    { at: 0.46, kind: 'correct', title: '1946년 10월 5일, 칠곡 금암동', html: '<p>경찰이 마을로 총을 쏘며 들어와 주민 박○도를 사살했다. 그는 이후 신원조사 기록에 <s class="wrong">남로당 가입자</s>로 기재되었다.</p>', fix: '이 기록은 잘못 기재된 것이었습니다.', src: SRC1 },
-    { at: 0.66, kind: 'reveal', title: '2010년 3월 30일, 진실규명 결정', html: '<p>진실화해위원회는 대구·칠곡·영천·경주의 일부만 조사했음에도 민간인 60명 정도의 희생을 추산했고, 실제 희생자는 더 많을 것으로 보았다.</p>', src: SRC1 },
-    { at: 0.84, ...photo(8) },
-  ] },
-  { id: 'boundary', title: '1950', h: 200, cards: [
-    { at: 0.15, html: '<h2 class="big">4년 뒤,<br>다른 사건</h2><p>1946년 대구10월사건과 1950년 경산 코발트광산 사건은 시점과 피해 대상, 가해 구조가 다릅니다.</p><p>한국전쟁이 일어난 뒤 10월사건 관련자와 그 가족 일부가 보도연맹원으로 예비검속되어 희생되기도 했습니다. 그러나 이 연결을 모든 희생자에게 일반화하지 않습니다.</p>' },
-    { at: 0.6, kind: 'choice', html: '<p class="warn">다음 장은 민간인 집단희생을 다룹니다.</p><p>사진이나 잔혹한 장면 없이 공식 조사 기록으로 전합니다.</p>', summary: '1950년 7~8월, 경북 경산 코발트광산 등지에서 국민보도연맹원·요시찰 대상자·대구형무소 재소자 등이 적법한 절차 없이 집단 희생되었습니다. 진실화해위원회는 2009년 11월 17일 진실규명을 결정했습니다.' },
-  ] },
-  { id: 'mine', title: '광산', h: 520, cards: [
-    { at: 0.03, html: '<p class="chap">06 · 바닥 없는 어둠</p><h2>좁은 통로 아래로</h2><p>스크롤할수록 깊이 내려갑니다. 관람객이 무언가를 떨어뜨리는 조작은 없습니다.</p><p class="try">어둠 속에서는 <b>커서가 손전등</b>이 됩니다. 비추는 곳에서만 빛이 보입니다.</p>' },
-    { at: 0.17, kind: 'record', title: '시기와 장소', html: '<p>1950년 7월 중·하순부터 8월 중순경까지. 경북 경산시 평산동의 코발트광산. 일제강점기에 개발된 광산으로 수직굴과 수평갱도가 이어져 있었다.</p>', src: SRC2 },
-    { at: 0.31, kind: 'record', title: '끌려온 사람들', html: '<p>경산·청도·영동, 대구형무소 등지에서 끌려온 국민보도연맹원과 요시찰 대상자, 그리고 대구형무소 재소자 상당수가 희생되었다.</p>', src: SRC2 },
-    { at: 0.44, kind: 'record', title: '가해 주체', html: '<p>경산·청도 지역 경찰, 경북지구CIC 경산·청도 파견대, 국군 제22헌병대.</p>', src: SRC2 },
-    { at: 0.58, kind: 'record', title: '희생 규모', html: '<p>진실화해위원회는 1,800명을 웃돌 것으로 추정했지만 정확한 전체 수는 확인되지 않았다. 유족회와 시민사회는 3,500명 이상으로 추정한다. 신원이 확인된 사람은 127명이다.</p><p class="quiet">희미한 점은 추정치, 밝은 점은 신원이 확인된 사람입니다. 두 숫자는 서로 다른 지표입니다.</p>', src: SRC2 },
-    { at: 0.73, ...vid(VD.dark, '작품 영상 — 원형 시점과 어둠. 실제 장소가 아닌 작품의 상징적 장면입니다.', '원형 시점과 어둠') },
-    { at: 0.92, html: '<p class="center">확인되지 않은 이름까지,<br>기억의 밖에 둘 수는 없습니다.</p><p class="note center">전시 문안</p>' },
-  ] },
-  { id: 'truth', title: '진실규명', h: 330, cards: [
-    { at: 0.05, html: '<p class="chap">07 · 묻혀 있던 진실</p><h2>오래 걸린 시간</h2><p>연도를 지날 때마다 바닥의 빛이 조금씩 떠오릅니다. 위쪽의 연도를 눌러도 됩니다.</p>' },
-    { at: 0.22, kind: 'record', title: '1993년', html: '<p>지역 언론이 사건을 알리기 시작했다.</p>', src: SRC2 },
-    { at: 0.36, kind: 'record', title: '2000년 · 2001년', html: '<p>2000년 경산유족회가 결성되었다. 2001년 시멘트로 봉인된 갱도 입구가 열렸고, 3일간 유해 40구를 수습했다.</p>', src: SRC2 },
-    { at: 0.52, kind: 'record', title: '2007년 · 2009년', html: '<p>2007년 진실화해위원회의 공식 유해 발굴 조사가 시작되었고, 2009년 11월 17일 진실규명이 결정되었다.</p>', src: SRC2 },
-    { at: 0.68, ...photo(1) },
-    { at: 0.88, html: '<p>그러나 지금까지도 모든 유해를 수습하지 못했습니다. 바닥에 남은 빛은 아직 돌아오지 못한 사람들입니다.</p>' },
-  ] },
-  { id: 'share', title: '나눔', h: 250, cards: [
-    { at: 0.06, html: '<p class="chap">08 · 쌀은 다시 나눔이 되었다</p><h2>대구에서 광주로</h2><p>대구에서 삶을 위해 요구했던 쌀은, 1980년 5월 광주에서 시민들이 서로를 살리기 위해 나누는 주먹밥이 되었습니다.</p>' },
-    { at: 0.4, html: '<p>주먹밥을 눌러 옆 사람에게 건네 보세요.</p><p class="legend share">나눈 주먹밥 <b class="share-n">0</b>개</p>' },
-    { at: 0.72, html: '<blockquote>대구에서 삶을 위해 요구했던 쌀은 광주에서 서로를 살리기 위해 나누는 음식이 되었다.</blockquote><p class="note">진시영 · 김동선, 《빛쌀》 작업노트 중에서</p>' },
-  ] },
-  { id: 'light', title: '빛', h: 360, cards: [
-    { at: 0.04, html: '<p class="chap">08 · 기억은 다시 빛이 된다</p><h2>처음 보았던 한 톨이,<br>지금은 어떻게 보이나요?</h2><p class="try">어둠 어디든 <b>눌러서</b> 작은 빛을 켤 수 있습니다.</p><p class="legend share">켜진 빛 <b class="lamp-n">0</b></p>' },
-    { at: 0.24, kind: 'input' },
-    { at: 0.45, ...vid(VD.light, '작품 영상 — 입자의 확산과 빛', '입자의 확산과 빛') },
-    { at: 0.66, ...photo(3) },
-    { at: 0.88, html: '<p class="center big-quote">LIFE remains in LIGHT.</p><p class="note center">어둠 속에 묻힌 삶은 기억하는 사람들의 빛 속에서 다시 한 톨의 이름이 된다 — 《빛쌀》 설치계획 중에서</p>' },
-  ] },
-  { id: 'archive', title: '아카이브', h: 270, cards: [
-    { at: 0.06, kind: 'archive' },
-  ] },
-];
-// 번역 덮어쓰기 (장면 id · 카드 순서 기준)
-if (BX) SCENES.forEach((sc) => { const t = BX[sc.id]; if (!t) return; if (t.t) sc.title = t.t; (t.c || []).forEach((tc, j) => { const c = sc.cards[j]; if (!tc || !c) return; if (tc.items && c.items) { tc.items.forEach((it, k) => c.items[k] && Object.assign(c.items[k], it)); } const { items, ...rest } = tc; Object.assign(c, rest); }); });
-// 터치 기기: 커서 안내 문구를 터치용으로 바꿈
+// ---------------- 장면 정의 (bitssal-scenes.js) ----------------
+// 이야기 중심: 장면마다 순이의 이야기 → 이야기에 맞춘 조작 → 짧은 기록
 const TOUCH = matchMedia('(hover: none), (pointer: coarse)').matches;
-const TOUCH_TXT = {
-  ko: [['어둠 속 쌀알에 커서를 가져가 보세요. 눌러서 따라가면 이야기가 시작됩니다.', '어둠 속 쌀알을 눌러 보세요. 이야기가 시작됩니다.'], ['커서를 움직여 보세요. 쌀알들이 당신 쪽으로 모여듭니다.', '화면을 눌러 보세요. 쌀알들이 누른 곳으로 모여듭니다.'], ['오른쪽 문서 위를 <b>커서로 문질러</b>', '문서 위를 <b>손가락으로 톡톡 눌러</b>'], ['어둠 속에서는 <b>커서가 손전등</b>이 됩니다.', '어둠 속에서는 <b>누른 곳이 손전등처럼</b> 밝아집니다.']],
-  en: [['Move your cursor to the grain in the dark. Click it to follow, and the story begins.', 'Tap the grain in the dark, and the story begins.'], ['Move your cursor. The grains gather toward you.', 'Tap the screen. The grains gather where you touch.'], ['<b>Rub the document</b> on the right with your cursor', '<b>Tap the document</b> again and again'], ['In the dark, <b>your cursor becomes a flashlight</b>.', 'In the dark, <b>wherever you tap lights up like a flashlight</b>.']],
-  zh: [['把光标移到黑暗中的米粒上。点击它跟随，故事就开始了。', '点一下黑暗中的米粒，故事就开始了。'], ['移动光标试试。米粒会向你聚拢。', '点一下画面。米粒会向你点的地方聚拢。'], ['用光标在右边的文件上<b>擦一擦</b>', '在文件上<b>多点几下</b>'], ['在黑暗中，<b>光标会变成手电筒</b>。', '在黑暗中，<b>你点的地方会像手电筒一样亮起</b>。']],
-  ja: [['闇の中の米粒にカーソルを近づけてみてください。押してついていくと、物語が始まります。', '闇の中の米粒をタップしてください。物語が始まります。'], ['カーソルを動かしてみてください。米粒があなたのほうへ集まってきます。', '画面をタップしてみてください。米粒がタップした場所へ集まってきます。'], ['右の文書の上を<b>カーソルでこすって</b>', '文書の上を<b>指で何度かタップして</b>'], ['闇の中では、<b>カーソルが懐中電灯</b>になります。', '闇の中では、<b>タップした場所が懐中電灯</b>のように明るくなります。']],
-};
-if (TOUCH) SCENES.forEach((sc) => sc.cards.forEach((c) => { if (c.html) (TOUCH_TXT[lang] || []).forEach(([a, b]) => { c.html = c.html.split(a).join(b); }); }));
-// 모바일 전용 안내 · AR 버튼
-if (IS_MOBILE) {
-  const life = SCENES.find((s) => s.id === 'life'), light = SCENES.find((s) => s.id === 'light');
-  if (life && life.cards[1]) life.cards[1].html += `<p class="try">${tr('폰을 기울이면 그릇의 쌀이 쏟아지고, 흔들면 쌀이 흔들립니다.')}</p>`;
-  const share = SCENES.find((s) => s.id === 'share'), mine = SCENES.find((s) => s.id === 'mine'), spread = SCENES.find((s) => s.id === 'spread');
-  if (share && share.cards[1]) share.cards[1].html += `<p class="try">${tr('폰을 핸들처럼 돌리면 주먹밥이 옆 사람에게 차례로 건네져요.')}</p>`;
-  if (mine && mine.cards[mine.cards.length - 1]) mine.cards[mine.cards.length - 1].html += `<p class="try center">${tr('잠시 폰을 엎어 두고 묵념해 보세요. 소리가 잦아듭니다.')}</p>`;
-  if (spread && spread.cards[0]) spread.cards[0].html += `<button class="act-btn geo-btn">${tr('내가 있는 곳에서 대구까지 거리 보기')}</button><p class="geo-out"></p><p class="note">${tr('위치는 거리 계산에만 쓰이고 저장·전송되지 않습니다.')}</p>`;
-  if (light && light.cards[0]) light.cards[0].html += `<button class="act-btn mic-btn">${tr('후 불어 빛 띄우기 (마이크)')}</button>`;
-  if (light && light.cards[0]) light.cards[0].html += `<button class="act-btn ar-btn">${tr('카메라로 내 공간에 빛 남기기')}</button><p class="note">${tr('카메라 영상은 이 화면에서만 보이고 저장·전송되지 않습니다.')}</p>`;
-}
-// 순이의 이야기를 장면마다 끼워 넣고, 이야기가 들어갈 자리를 위해 장면 높이·카드 위치를 다시 잡음
-SCENES.forEach((sc) => {
-  const L = LAYOUT[sc.id]; if (!L) return;
-  sc.h = L.h; L.at.forEach((a, i) => { if (sc.cards[i]) sc.cards[i].at = a; });
-  (SY[sc.id] || []).forEach((st, i) => sc.cards.push({ at: L.story[i], kind: 'story', who: st.who, html: st.html, first: sc.id === 'prologue' }));
-});
+const { SCENES, UI, NOTE, LABEL, EVENTS } = buildScenes({ lang, IS_MOBILE, TOUCH, PH, VD, photo, vid, SRC1, SRC2 });
+const fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
 const CREDITS = `<footer class="bs-credits"><div>
   <h3>${tr('출처와 안내')}</h3>
-  <p>${SY.note}</p>
+  <p>${NOTE}</p><p>${EVENTS}</p>
   <p>${tr('역사 서술: ')}${SRC1}(jinsil.go.kr/KoreanWar/30.do), ${SRC2}(jinsil.go.kr/KoreanWar/36.do)</p>
   <p>${tr('밥상·약도·광산 통로 장면은 이해를 돕기 위한 일러스트이며 실제 장소나 인물을 재현하지 않습니다. ‘전시 문안’으로 표시된 문장은 창작 문안으로, 희생자나 유족의 실제 발언이 아닙니다.')}</p>
   <p>${tr('작품: 진시영 · 김동선, 《빛쌀》, 2026 · 기획: XPACE (VALIX LAB)')}</p>
@@ -167,15 +49,16 @@ function relayout() {
   });
 }
 let relT = 0; const relSoon = () => { cancelAnimationFrame(relT); relT = requestAnimationFrame(relayout); };
-relayout(); addEventListener('resize', relSoon); addEventListener('load', relSoon);
+const portraits = () => document.querySelectorAll('canvas.st-face').forEach((c) => drawPortrait(c, c.dataset.face));
+relayout(); portraits(); addEventListener('resize', () => { relSoon(); portraits(); }); addEventListener('load', relSoon);
 if (document.fonts) document.fonts.ready.then(relSoon);
 if (window.ResizeObserver) { const ro = new ResizeObserver(relSoon); document.querySelectorAll('.card').forEach((c) => ro.observe(c)); }
 
 function cardHTML(s, c, si, ci) {
   const pos = `style="top:${c.at * 100}%" data-at="${c.at}"`;
   const src = c.src ? `<p class="src">${tr('출처: ')}${esc(c.src)}</p>` : '';
-  if (c.kind === 'story') return `<article class="card story" ${pos}><p class="st-who"><b>${esc(SY.label)}</b>${esc(c.who)}</p>${c.html}${c.first ? `<p class="note st-note">${esc(SY.note)}</p>` : ''}</article>`;
-  if (c.kind === 'record') return `<article class="card rec ${c.tone || ''}" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3>${c.html}${src}</article>`;
+  if (c.kind === 'story') return `<article class="card story" ${pos}${c.face ? ` data-face="${c.face}"` : ''}>${c.chap ? `<p class="chap">${esc(c.chap)}</p>` : ''}<div class="st-top">${c.face ? `<canvas class="st-face" data-face="${c.face}" aria-hidden="true"></canvas>` : ''}<div><p class="st-who"><b>${esc(LABEL)}</b>${esc(c.who)}</p><h2>${esc(c.head)}</h2></div></div>${c.html}${c.first ? `<p class="note st-note">${esc(NOTE)}<br>${esc(EVENTS)}</p>` : ''}</article>`;
+  if (c.kind === 'record') return `<article class="card rec brief ${c.tone || ''}" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3>${c.html}${src}</article>`;
   if (c.kind === 'reveal') return `<article class="card rec reveal-rec" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3><div class="blur">${c.html}</div><button class="rv-btn">${tr('기록 읽기')}</button>${src}</article>`;
   if (c.kind === 'correct') return `<article class="card rec reveal-rec correct" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3><div class="blur">${c.html}</div><button class="rv-btn">${tr('기록 읽기')}</button><button class="fix-btn" hidden>${tr('기록 바로잡기')}</button><p class="fix-note" hidden>${esc(c.fix)}</p>${src}</article>`;
   if (c.kind === 'choice') return `<article class="card choice" ${pos}>${c.html}<div class="ch-btns"><button data-go="mine">${tr('계속 보기')}</button><button data-sum>${tr('요약만 보기')}</button><button data-go="truth">${tr('다음 장으로')}</button></div><div class="ch-sum" hidden><p>${esc(c.summary)}</p></div></article>`;
@@ -334,7 +217,8 @@ const seg = (p, a, b) => sm((p - a) / (b - a));
 
 // 상태 (인터랙션)
 let stopARref = null;
-const state = { entered: false, share: 0, balls: [], memories: [], bowls: new Array(10).fill(0), voice: 0, hold: 0, lamps: [], rub: new Float32Array(900), carK: 0 };
+const state = { entered: false, share: 0, balls: [], memories: [], bowls: new Array(10).fill(0), voice: 0, hold: 0, lamps: [], rub: new Float32Array(900), carK: 0, flowT: 0, jar: 0, jarOut: 0, wait: 0, dawn: false, july: 0, brotherLight: false };
+const TROT = new Float32Array(N);
 let ptrDown = false;
 addEventListener('pointerdown', (e) => { if (!e.target.closest('.card, .bs-top, .bs-menu, .bs-progress, .lab, .lb')) ptrDown = true; });
 addEventListener('pointerup', () => (ptrDown = false)); addEventListener('pointercancel', () => (ptrDown = false));
@@ -371,8 +255,45 @@ function showTip(title, text, el) {
 }
 
 // 밥상 그릇 (일러스트)
-const BOWLS = ['아침 밥상', '도시락', '장터의 국밥', '공장 점심', '아이의 밥그릇', '제삿밥', '새참', '저녁 밥상', '나눠 먹는 한 그릇', '빈 그릇'].map((t, k) => ({ t: tr(t), a: (k / 10) * Math.PI * 2 - Math.PI / 2 }));
+const BOWLS = UI.family.map((t, k) => ({ t: fmt(UI.bowlOf, { n: t }), a: (k / 10) * Math.PI * 2 - Math.PI / 2 })); // 열 식구의 그릇
 const bowlPos = (k) => ({ x: CX + Math.cos(BOWLS[k].a) * R * 0.85, y: CY + Math.sin(BOWLS[k].a) * R * 0.62 });
+// 쌀독 (굶주림 장면, 왼쪽) — 털 때마다 나오는 쌀이 줄어듦
+const jarPos = () => ({ x: CX - R * 1.05, y: CY + R * 0.75 });
+const JAR_YIELD = [6, 5, 4, 3, 3, 2, 2, 1, 1, 1, 0];
+function jarShake() {
+  const n = JAR_YIELD[Math.min(state.jar, JAR_YIELD.length - 1)]; state.jar++;
+  state.jarOut = Math.min(40, state.jarOut + n); state.jarShakeT = performance.now();
+  document.querySelectorAll('.jar-n').forEach((el) => (el.textContent = state.jarOut));
+  if (n) { sound.rattle(0.15 + n * 0.07); sensor.vibrate(n * 6); } else { sound.ping('reveal'); sensor.vibrate([10, 60, 10]); if (!state.jarTip) { state.jarTip = true; const q = jarPos(); showTip(UI.jarEmpty, UI.jarEmptyT, { getBoundingClientRect: () => ({ left: q.x - 40, top: q.y - 90 }) }); } }
+}
+// 7월의 밥 한 그릇 (진실규명 장면): 한 번 누를 때마다 한 해
+const julyPos = (k) => { const cols = mobile ? 12 : 19, gw = R * 2 / (cols - 1); return { x: CX - R + (k % cols) * gw, y: CY - R * 0.78 + Math.floor(k / cols) * R * (mobile ? 0.1 : 0.12) }; };
+function addJuly() {
+  if (state.july >= 76) return; state.july++; sound.ping('bowl'); sensor.vibrate(10);
+  document.querySelectorAll('.july-n').forEach((el) => (el.textContent = state.july)); document.querySelectorAll('.july-y').forEach((el) => (el.textContent = 1950 + state.july));
+  if (state.july === 76) showTip(UI.julyDone, UI.julyDoneT, { getBoundingClientRect: () => ({ left: CX - 120, top: CY - R * 0.4 }) });
+}
+// 쌀로 그린 얼굴: 지금 읽는 이야기 카드의 인물을 무대의 쌀알이 그림
+const face = { kind: null, k: 0, col: 0, pts: null };
+const FN = 1000;
+function wantFace(id) {
+  if (id === 'light' && state.brotherLight) return { kind: 'brother', col: 3 };
+  if (id === 'street' && state.dawn) return { kind: 'brother', col: 0, max: 0.92 };
+  const els = sections[cur].querySelectorAll('.card.story.in[data-face]'); if (!els.length) return null;
+  let best = null, bd = 1e9; els.forEach((el) => { const r = el.getBoundingClientRect(), d = Math.abs(r.top + r.height / 2 - innerHeight / 2); if (d < bd) { bd = d; best = el; } });
+  return best ? { kind: best.dataset.face, col: 0 } : null;
+}
+function applyFace(id) {
+  const want = wantFace(id);
+  if (want && want.kind !== face.kind) { if (face.k > 0.04) face.k = Math.max(0, face.k - 0.06); else { face.kind = want.kind; face.pts = facePoints(want.kind, FN); } }
+  else if (want) face.k = Math.min(want.max || 1, face.k + 0.025);
+  else face.k = Math.max(0, face.k - 0.04);
+  if (want) face.col = want.col;
+  if (face.k <= 0 || !face.pts) return;
+  const sc = R * (mobile ? 0.55 : 0.62), fx = CX, fy = mobile ? CY - R * 0.32 : CY - R * 0.05, k = face.k;
+  for (let j = 0; j < face.pts.length; j++) { const q = face.pts[j], i = j + 1; TX[i] = lerp(TX[i], fx + q.x * sc, k); TY[i] = lerp(TY[i], fy + q.y * sc, k); TA[i] = lerp(TA[i], q.a, k); if (k > 0.5) C[i] = face.col === 3 ? 3 : q.c; TROT[i] = q.r; }
+  for (let i = face.pts.length + 1; i < N; i++) TA[i] *= 1 - 0.65 * k;
+}
 // 주먹밥
 function initBalls() { state.balls = Array.from({ length: 10 }, (_, k) => ({ a: (k / 10) * Math.PI * 2, r: 0.75, tr: 0.75, ta: (k / 10) * Math.PI * 2, size: 1 })); }
 initBalls();
@@ -392,9 +313,9 @@ const TARGETS = {
   },
   work(p) {
     // 유리 조형물 실루엣을 따라 흐르는 쌀알 (윗 접시 → 좁은 목 → 아래 그릇)
-    const t = performance.now() / 1000, sc = R / 260;
+    const sc = R / 260;
     for (let i = 0; i < 900; i++) {
-      const u = (R1[i] + t * 0.03 * (0.5 + R3[i])) % 1; let x, y;
+      const u = (R1[i] + state.flowT * (0.5 + R3[i])) % 1; let x, y;
       if (u < 0.25) { const a = R2[i] * 6.28, r = Math.sqrt(u / 0.25); x = Math.cos(a) * 130 * r; y = -230 + Math.sin(a) * 18 * r; }
       else if (u < 0.75) { const v = (u - 0.25) / 0.5; const w = lerp(120, 10, Math.min(1, v * 3)) * (R2[i] - 0.5) * 2; x = w; y = -220 + v * 380; }
       else { const v = (u - 0.75) / 0.25, a = R2[i] * Math.PI; x = Math.cos(a + Math.PI) * 90 * Math.sqrt(R3[i]); y = 170 + Math.sin(a) * 30 * v; }
@@ -424,11 +345,13 @@ const TARGETS = {
       if (R1[i] < gone) setT(i, sx + (R2[i] - 0.5) * 50, sy + (R3[i] - 0.5) * 30, 0.35, 1);
       else setT(i, b.x + Math.cos(ang) * rr, b.y + Math.sin(ang) * rr * 0.6, 1, 0);
     }
-    hideAll(140);
+    const sb = bowlPos(3), jp = jarPos();
+    for (let j = 0; j < 40; j++) { const i = 140 + j; if (j < state.jarOut) { const ang = R2[i] * 6.28, rr = Math.sqrt(R3[i]) * 14; setT(i, sb.x + Math.cos(ang) * rr, sb.y - 4 + Math.sin(ang) * rr * 0.5, 1, 3); } else setT(i, jp.x + (R1[i] - 0.5) * 20, jp.y + 4, 0, 0); }
+    hideAll(180);
   },
   demand(p) {
     const n = Math.round(lerp(100, 1500, seg(p, 0.55, 0.85)));
-    const att = ptr.in && (TOUCH || (!mobile && ptr.x > W * 0.38)); const ax = att ? lerp(CX, ptr.x, TOUCH ? 0.75 : 0.55) : CX, ay = att ? lerp(CY, ptr.y, TOUCH ? 0.75 : 0.55) : CY;
+    const att = ptr.in && (TOUCH || (!mobile && ptr.x > W * 0.38)), tlt = IS_MOBILE && sensor.on; const ax = (att ? lerp(CX, ptr.x, TOUCH ? 0.75 : 0.55) : CX) + (tlt ? sensor.tiltX * R * 0.55 : 0), ay = (att ? lerp(CY, ptr.y, TOUCH ? 0.75 : 0.55) : CY) + (tlt ? sensor.tiltY * R * 0.4 : 0);
     const rc = R * 0.92 * Math.sqrt(n / 1500) + 14;
     for (let i = 0; i < N; i++) {
       if (i < n) { const r = Math.sqrt((i + 0.5) / n) * rc, a = i * 2.39996; setT(i, ax + Math.cos(a) * r, ay + Math.sin(a) * r, 1, 0); }
@@ -581,6 +504,12 @@ function drawBackdrop(id, p, t) {
       g.strokeStyle = `rgba(255,248,230,${0.45 * k})`;
       g.beginPath(); g.moveTo(sx - 36, sy - 30); g.quadraticCurveTo(sx - 46, sy + 30, sx, sy + 34); g.quadraticCurveTo(sx + 46, sy + 30, sx + 36, sy - 30); g.closePath(); g.stroke();
       g.fillStyle = `rgba(255,248,230,${0.55 * k})`; g.font = '12px Pretendard, sans-serif'; g.textAlign = 'center'; g.fillText(tr('수집'), sx, sy - 40);
+      // 쌀독 (항아리) — 털면 잠깐 흔들림
+      const jp = jarPos(), jk = seg(p, 0.02, 0.2), wob = Math.max(0, 1 - (performance.now() - (state.jarShakeT || 0)) / 400) * Math.sin(t * 40) * 0.08;
+      g.save(); g.translate(jp.x, jp.y); g.rotate(wob); g.strokeStyle = `rgba(255,248,230,${0.5 * jk})`;
+      g.beginPath(); g.moveTo(-18, -34); g.quadraticCurveTo(-44, -18, -38, 10); g.quadraticCurveTo(-30, 36, 0, 38); g.quadraticCurveTo(30, 36, 38, 10); g.quadraticCurveTo(44, -18, 18, -34); g.closePath(); g.stroke();
+      g.beginPath(); g.ellipse(0, -34, 18, 5, 0, 0, 6.283); g.stroke(); g.restore();
+      g.fillStyle = `rgba(255,248,230,${0.6 * jk})`; g.font = '12px Pretendard, sans-serif'; g.textAlign = 'center'; g.fillText(UI.jar, jp.x, jp.y - 46);
       // 콜레라·수해: 물결 (p 0.6~)
       const wv = seg(p, 0.6, 0.8);
       if (wv > 0) { g.strokeStyle = `rgba(150,180,200,${0.25 * wv})`; for (let k2 = 0; k2 < 4; k2++) { g.beginPath(); for (let x = 0; x <= W; x += 12) g.lineTo(x, H - 30 - k2 * 14 + Math.sin(x / 40 + t * 1.5 + k2) * 5); g.stroke(); } }
@@ -605,7 +534,9 @@ function drawBackdrop(id, p, t) {
     g.strokeStyle = 'rgba(255,248,230,.18)'; g.setLineDash([4, 6]);
     g.beginPath(); g.moveTo(CX - R * 1.2, CY - R * 0.62); g.lineTo(CX + R * 1.2, CY - R * 0.5); g.stroke(); g.setLineDash([]);
     if (state.freeze || (p >= 0.72 && p < 0.86)) { g.fillStyle = `rgba(200,56,47,${0.06 + 0.04 * Math.sin(t * 2)})`; g.fillRect(0, 0, W, H); }
-    const cf = seg(p, 0.86, 0.98); if (cf > 0) { g.fillStyle = `rgba(0,0,0,${cf * 0.6})`; g.fillRect(0, 0, W, H); }
+    const cf = seg(p, 0.86, 0.98) * (1 - (state.dawnK || 0) * 0.8); if (cf > 0) { g.fillStyle = `rgba(0,0,0,${cf * 0.6})`; g.fillRect(0, 0, W, H); }
+    if (state.dawnK > 0) { const dg = g.createLinearGradient(0, H, 0, H * 0.3); dg.addColorStop(0, `rgba(255,190,120,${0.22 * state.dawnK})`); dg.addColorStop(1, 'rgba(255,190,120,0)'); g.fillStyle = dg; g.fillRect(0, 0, W, H); }
+    if (p > 0.82 && !state.dawn && state.wait > 0.01) { g.strokeStyle = 'rgba(255,214,150,.7)'; g.lineWidth = 2; g.beginPath(); g.arc(CX, CY + R * 0.9, 22, -Math.PI / 2, -Math.PI / 2 + state.wait * 6.283); g.stroke(); g.lineWidth = 1; }
   }
   if (id === 'spread') {
     REGIONS.forEach((rg) => {
@@ -628,6 +559,7 @@ function drawBackdrop(id, p, t) {
     g.beginPath(); g.moveTo(CX - R * 0.95, hy - R * 0.32); g.quadraticCurveTo(CX, hy + R * 0.3, CX + R * 0.95, hy - R * 0.32); g.stroke();
     g.beginPath(); g.ellipse(CX, hy - R * 0.32, R * 0.95, 10, 0, 0, 6.283); g.stroke();
     if (id === 'mine') { const d = seg(p, 0, 0.9); g.fillStyle = `rgba(0,0,0,${0.15 + d * 0.35})`; g.fillRect(0, 0, W, H); }
+    if (id === 'truth') for (let k = 0; k < state.july; k++) { const q = julyPos(k); g.strokeStyle = 'rgba(255,214,150,.55)'; g.beginPath(); g.ellipse(q.x, q.y, 9, 4, 0, 0, 6.283); g.stroke(); g.beginPath(); g.ellipse(q.x, q.y + 2, 6, 3, 0, 0, Math.PI); g.stroke(); g.fillStyle = 'rgba(255,248,230,.9)'; for (let m = 0; m < 4; m++) { g.beginPath(); g.ellipse(q.x - 4 + m * 2.6, q.y - 1.5 - (m % 2), 1.6, 0.8, m, 0, 6.283); g.fill(); } }
     if (id === 'truth' && state.truthLine > 0) { const y = CY - R * 0.95; g.strokeStyle = `rgba(255,214,150,${0.6 * state.truthLine})`; g.beginPath(); g.moveTo(CX - R * state.truthLine, y); g.lineTo(CX + R * state.truthLine, y); g.stroke(); }
   }
   if (id === 'share') {
@@ -655,7 +587,9 @@ function frame(now) {
   if (TOUCH && ptr.in && now - ptr.t > 2500) ptr.in = false;
   measure();
   const sc = SCENES[cur], id = sc.id, p = curP;
+  { const tl = IS_MOBILE && sensor.on ? Math.min(1, Math.abs(sensor.tiltX) + Math.abs(sensor.tiltY)) : 0; state.flowT += dt * 0.03 * (1 + tl * 3.5); }
   TARGETS[id](p);
+  applyFace(id);
   document.body.dataset.scene = id;
   // HUD 가시성
   hud.clock.classList.toggle('on', id === 'street' || id === 'spread');
@@ -663,7 +597,8 @@ function frame(now) {
   hud.year.classList.toggle('on', id === 'boundary');
   hud.depth.classList.toggle('on', id === 'mine');
   glass.classList.toggle('on', id === 'prologue' && state.entered);
-  glass.style.opacity = id === 'prologue' ? seg(p, 0.2, 0.55) * (state.entered ? 0.9 : 0.5) : 0;
+  glass.style.opacity = id === 'prologue' ? seg(p, 0.2, 0.55) * (state.entered ? 0.9 : 0.5) * (1 - face.k) : 0;
+  document.body.classList.toggle('facing', face.k > 0.3);
   [...prog.children].forEach((b, i) => b.classList.toggle('on', i <= cur));
   prog.children[cur].querySelector('i').style.width = Math.round(p * 100) + '%';
 
@@ -674,21 +609,32 @@ function frame(now) {
   // 모바일: 기울이면 쌀알이 낮은 쪽으로 쏠리고(밥상·굶주림 장면에선 그릇에서 쏟아짐), 흔들면 떨림. 광산·진실규명 장에서는 쓰지 않음
   const calm = id === 'boundary' || id === 'mine' || id === 'truth';
   const gx = IS_MOBILE && sensor.on && !calm ? sensor.tiltX : 0, gy = IS_MOBILE && sensor.on && !calm ? sensor.tiltY : 0, sh = IS_MOBILE && !calm ? sensor.shake : 0;
-  if (IS_MOBILE && (id === 'life' || id === 'hunger')) {
-    const before = state.spill || 0;
-    if (Math.abs(gx) > 0.45) { state.spill = Math.min(1, before + dt * (Math.abs(gx) - 0.45) * 2.2); state.spillDir = Math.sign(gx); }
-    else state.spill = Math.max(0, before - dt * 0.18);
-    if (state.spill > before + 0.002 && now - (state.rt || 0) > 140) { state.rt = now; sound.rattle(0.25 + Math.abs(gx) * 0.4); sensor.vibrate(8); }
-    const n = id === 'life' ? 540 : 140;
-    for (let i = 0; i < n; i++) if (R1[i] < state.spill) { TX[i] = state.spillDir > 0 ? W - 14 - R2[i] * 70 : 14 + R2[i] * 70; TY[i] = H - 18 - R3[i] * 46 * (1 - Math.abs(R2[i] - 0.5)); }
-  } else if (IS_MOBILE) state.spill = 0;
+  // 밥상: 폰을 기울인 쪽 그릇에 밥이 담김
+  if (IS_MOBILE && sensor.on && id === 'life' && Math.abs(gx) > 0.3) {
+    let changed = false;
+    BOWLS.forEach((b, k) => { if (Math.sign(Math.cos(b.a)) === Math.sign(gx) && Math.abs(Math.cos(b.a)) > 0.2 && state.bowls[k] < 1) { state.bowls[k] = Math.min(1, state.bowls[k] + dt * 0.5 * Math.abs(gx)); changed = true; } });
+    if (changed && now - (state.rt || 0) > 160) { state.rt = now; sound.rattle(0.2 + Math.abs(gx) * 0.3); sensor.vibrate(6); const done = state.bowls.filter((v) => v >= 1).length; document.querySelectorAll('.bowl-n').forEach((n) => (n.textContent = done)); if (done === 10 && !state.bowlTip) { state.bowlTip = true; sound.ping('bowlsDone'); showTip(UI.bowlsDone, UI.bowlsDoneT, { getBoundingClientRect: () => ({ left: CX - 120, top: CY + R * 0.7 }) }); } }
+  }
+  // 통행금지의 밤: 움직이지 않고 기다리면 새벽이 옴 (폰은 기울기·흔들림, PC는 마우스)
+  if (id === 'street' && p > 0.82 && !state.dawn) {
+    const still = IS_MOBILE && sensor.on ? Math.abs(sensor.tiltX - (state.ptx ?? 0)) + Math.abs(sensor.tiltY - (state.pty ?? 0)) < 0.004 && sensor.shake < 0.05 : now - ptr.t > 700;
+    state.wait = Math.max(0, Math.min(1, state.wait + (still ? dt / 6 : -dt / 2)));
+    if (now - (state.wt || 0) > 200) { state.wt = now; document.querySelectorAll('.wait-n').forEach((el) => (el.textContent = Math.round(state.wait * 100))); }
+    if (state.wait >= 1) { state.dawn = true; document.querySelectorAll('.wait-n').forEach((el) => (el.textContent = 100)); sound.ping('enter'); sensor.vibrate([40, 80, 40]); showTip(UI.dawn, UI.dawnT, { getBoundingClientRect: () => ({ left: CX - 120, top: CY + R * 0.5 }) }); }
+  }
+  if (IS_MOBILE) { state.ptx = sensor.tiltX; state.pty = sensor.tiltY; }
+  state.dawnK = Math.min(1, (state.dawnK || 0) + (state.dawn && id === 'street' ? dt / 3 : -dt));
+  if (state.dawnK < 0) state.dawnK = 0;
+  // 빛이 열 개 모이면 오빠의 얼굴이 빛으로 떠오름
+  if (id === 'light' && !state.brotherLight && state.lamps.length >= 10) { state.brotherLight = true; sound.ping('memory'); sensor.vibrate([30, 60, 30, 60, 90]); showTip(UI.brotherLight, UI.brotherLightT, { getBoundingClientRect: () => ({ left: CX - 120, top: CY + R * 0.6 }) }); }
   const ox = gx * W * 0.07, oy = gy * H * 0.05;
   const ease = reduced ? 1 : state.freeze ? 0 : id === 'mine' ? 0.035 : 0.075;
   if (state.ar) { g.clearRect(0, 0, W, H); g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(0, 0, W, H); }
   for (let i = 0; i < N; i++) {
     X[i] += (TX[i] - X[i]) * ease; Y[i] += (TY[i] - Y[i]) * ease; A[i] += (TA[i] - A[i]) * 0.08;
     if (A[i] < 0.01) continue;
-    if (!state.freeze) ROT[i] += (R3[i] - 0.5) * 0.01;
+    if (face.k > 0.3 && i > 0 && i <= FN) { const d = ((TROT[i] - ROT[i]) % Math.PI + Math.PI * 1.5) % Math.PI - Math.PI / 2; ROT[i] += d * 0.12; }
+    else if (!state.freeze) ROT[i] += (R3[i] - 0.5) * 0.01;
     let al = A[i];
     if (torch > 0) { const d = Math.hypot(X[i] - tx, Y[i] - ty); al *= lerp(1, d < 150 ? 1.25 - d / 300 : 0.12, torch); }
     if (al < 0.01) continue;
@@ -714,8 +660,10 @@ addEventListener('click', (e) => {
   const id = SCENES[cur].id;
   if (id === 'prologue' && Math.hypot(e.clientX - X[0], e.clientY - Y[0]) < 60) { state.entered = true; sound.ping('enter'); sensor.vibrate(25); setTimeout(() => window.scrollTo({ top: sections[0].offsetTop + sections[0].offsetHeight * 0.55, behavior: 'smooth' }), 300); }
   if (id === 'life') {
-    BOWLS.forEach((b, k) => { const q = bowlPos(k); if (Math.hypot(e.clientX - q.x, e.clientY - q.y) < 36 && state.bowls[k] < 1) { state.bowls[k] = Math.min(1, state.bowls[k] + 0.5); const done = state.bowls.filter((v) => v >= 1).length; sound.ping(done === 10 && state.bowls[k] >= 1 ? 'bowlsDone' : 'bowl'); sensor.vibrate(done === 10 && state.bowls[k] >= 1 ? [30, 50, 30, 50, 60] : 15); sound.rattle(0.3); document.querySelectorAll('.bowl-n').forEach((n) => (n.textContent = done)); if (done === 10) showTip(tr('한 집의 하루'), tr('열 그릇이 모두 찼습니다. 이 평범한 밥상이 다음 장면에서 비어 갑니다.'), { getBoundingClientRect: () => ({ left: CX - 120, top: CY + R * 0.7 }) }); else showTip(b.t, state.bowls[k] >= 1 ? tr('한 그릇을 다 담았습니다.') : tr('한 번 더 누르면 가득 찹니다.'), { getBoundingClientRect: () => ({ left: q.x - 40, top: q.y - 10 }) }); } });
+    BOWLS.forEach((b, k) => { const q = bowlPos(k); if (Math.hypot(e.clientX - q.x, e.clientY - q.y) < 36 && state.bowls[k] < 1) { state.bowls[k] = Math.min(1, state.bowls[k] + 0.5); const done = state.bowls.filter((v) => v >= 1).length; sound.ping(done === 10 && state.bowls[k] >= 1 ? 'bowlsDone' : 'bowl'); sensor.vibrate(done === 10 && state.bowls[k] >= 1 ? [30, 50, 30, 50, 60] : 15); sound.rattle(0.3); document.querySelectorAll('.bowl-n').forEach((n) => (n.textContent = done)); if (done === 10) { state.bowlTip = true; showTip(UI.bowlsDone, UI.bowlsDoneT, { getBoundingClientRect: () => ({ left: CX - 120, top: CY + R * 0.7 }) }); } else showTip(b.t, state.bowls[k] >= 1 ? UI.bowlFull : UI.bowlMore, { getBoundingClientRect: () => ({ left: q.x - 40, top: q.y - 10 }) }); } });
   }
+  if (id === 'hunger') { const q = jarPos(); if (Math.hypot(e.clientX - q.x, e.clientY - q.y) < 60) jarShake(); }
+  if (id === 'truth') addJuly();
   if (TOUCH && (id === 'mine' || id === 'truth')) { // 터치: 밝은 점 근처를 누르면 설명
     for (let i = 0; i < 1800; i += 14) { if (C[i] === 3 && A[i] > 0.5 && Math.hypot(e.clientX - X[i], e.clientY - Y[i]) < 24) { showTip(tr('신원이 확인된 사람'), tr('127명 가운데 한 사람입니다. 이 전시는 이름을 표시하지 않습니다.'), { getBoundingClientRect: () => ({ left: X[i] - 20, top: Y[i] }) }); break; } }
   }
@@ -730,7 +678,7 @@ addEventListener('click', (e) => {
 addEventListener('pointermove', (e) => {
   const id = SCENES[cur].id;
   if (id === 'life') {
-    BOWLS.forEach((b, k) => { const q = bowlPos(k); if (Math.hypot(e.clientX - q.x, e.clientY - q.y) < 30 && hud._last !== k) { hud._last = k; showTip(b.t, tr('그해의 평범한 한 끼 (일러스트) · 눌러서 밥을 담아 보세요'), { getBoundingClientRect: () => ({ left: q.x - 40, top: q.y - 10 }) }); } });
+    BOWLS.forEach((b, k) => { const q = bowlPos(k); if (Math.hypot(e.clientX - q.x, e.clientY - q.y) < 30 && hud._last !== k) { hud._last = k; showTip(b.t, UI.bowlHover, { getBoundingClientRect: () => ({ left: q.x - 40, top: q.y - 10 }) }); } });
   }
   if (id === 'mine' || id === 'truth') {
     for (let i = 0; i < 1800; i += 14) { if (C[i] === 3 && A[i] > 0.5 && Math.hypot(e.clientX - X[i], e.clientY - Y[i]) < 8) { if (hud._last !== i) { hud._last = i; showTip(tr('신원이 확인된 사람'), tr('127명 가운데 한 사람입니다. 이 전시는 이름을 표시하지 않습니다.'), { getBoundingClientRect: () => ({ left: X[i] - 20, top: Y[i] }) }); } break; } }
@@ -762,6 +710,7 @@ if (IS_MOBILE) {
   sensor.onShake((v) => {
     const id = SCENES[cur].id;
     if (id === 'boundary' || id === 'mine' || id === 'truth') return;
+    if (id === 'hunger') { jarShake(); return; }
     sound.rattle(0.4 + v * 0.6); sensor.vibrate([25, 30, 25]);
   });
   addEventListener('click', function aw() { removeEventListener('click', aw, true); keepAwake(); }, true);

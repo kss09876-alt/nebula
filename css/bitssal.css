@@ -287,3 +287,18 @@ body.ar-on .card:not(.in) { visibility: hidden; }
 .card.story .st-note { border-top: 1px solid rgba(255,214,150,.18); padding-top: 12px; }
 @media (max-width: 760px) { .card.story { padding: 20px 20px 16px; } .card.story p:not(.st-who):not(.note) { font-size: 17px; line-height: 1.9; } }
 @media (max-width: 760px) { body.reading #hud > div, body.reading #labels { opacity: .12 !important; transition: opacity .5s; } }
+
+/* 이야기 중심 (2026-11): 이야기 카드 머리 — 쌀로 그린 얼굴 + 때·나이 + 제목 */
+.card.story .chap { margin-bottom: 10px; }
+.card.story .st-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.card.story .st-top .st-who { margin-bottom: 6px; }
+.card.story .st-top h2 { font-size: clamp(22px, 2.2vw, 30px); margin: 0; line-height: 1.3; color: #fff4dc; }
+.card.story .st-face { flex: 0 0 auto; width: 92px; height: 108px; border-radius: 8px; background: radial-gradient(circle at 50% 40%, rgba(255,214,150,.08), rgba(0,0,0,0) 70%); }
+@media (max-width: 760px) { .card.story .st-face { width: 80px; height: 94px; } }
+/* 기록은 짧게: 작고 조용하게 */
+.rec.brief { padding: 14px 18px; background: rgba(12,11,9,.8); border-left-width: 2px; }
+.rec.brief h3 { font-size: 15px; margin-bottom: 6px; color: var(--muted); font-weight: 700; }
+.rec.brief p { font-size: 14px; line-height: 1.75; color: #c9c4b9; }
+.rec.brief .quiet { font-size: 12.5px; }
+.rec.brief .src { font-size: 11px; }
+body.facing .hud-year.on, body.facing .hud-count.on, body.facing .hud-clock.on { opacity: .14 !important; }
