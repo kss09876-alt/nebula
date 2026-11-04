@@ -5,6 +5,7 @@ import { loadData, esc } from './data.js?v=17';
 import { lang, LANGS } from './i18n.js?v=3';
 import { hasRing } from './planets.js?v=4';
 import { planetSrc, planetKey, onPlanet, planetBitmap, warm } from './planet-store.js?v=1';
+import { videoHTML, mountVideos, playVideo, stopVideos } from './video.js?v=1';
 import { IS_MOBILE, sensor } from './sensors.js?v=2';
 
 /* ---------- 문구 ---------- */
@@ -184,7 +185,7 @@ const sheet = (() => {
   const el = document.createElement('section'); el.className = 'sheet'; el.hidden = true; el.setAttribute('role', 'dialog');
   document.body.append(bg, el);
   let y0 = null, dy = 0;
-  const close = () => { el.classList.remove('in'); bg.classList.remove('in'); setTimeout(() => { el.hidden = bg.hidden = true; el.innerHTML = ''; }, 320); };
+  const close = () => { stopVideos(); el.classList.remove('in'); bg.classList.remove('in'); setTimeout(() => { el.hidden = bg.hidden = true; el.innerHTML = ''; }, 320); };
   bg.addEventListener('click', close);
   el.addEventListener('touchstart', (e) => { if (el.scrollTop <= 0) y0 = e.touches[0].clientY; }, { passive: true });
   el.addEventListener('touchmove', (e) => { if (y0 == null) return; dy = Math.max(0, e.touches[0].clientY - y0); el.style.transform = `translateY(${dy}px)`; }, { passive: true });
@@ -415,7 +416,8 @@ function onAction(e) {
   if ((b = q('[data-month]'))) { viewMonth = b.dataset.month === thisMonth() ? '' : b.dataset.month; coverIdx = 0; sheet.close(); go('home'); return true; }
   if ((b = q('[data-yt]'))) {
     const id = b.dataset.yt;
-    sheet.open(`<div class="yt-player"><iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0" title="${esc(b.dataset.ytt)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div><p class="yt-title">${esc(b.dataset.ytt)}</p><div style="padding:16px 24px 0"><a class="btn line" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">${t('YouTube에서 보기')} ↗</a></div>`, 'video');
+    const sh = sheet.open(`<div class="yt-player">${videoHTML(`https://youtu.be/${id}`, { w: 1280 })}</div><p class="yt-title">${esc(b.dataset.ytt)}</p><div style="padding:16px 24px 0"><a class="btn line" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">${t('YouTube에서 보기')} ↗</a></div>`, 'video');
+    mountVideos(sh); playVideo(sh.querySelector('.vx-v'));
     return true;
   }
   if (q('[data-all]')) {

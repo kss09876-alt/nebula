@@ -3,6 +3,7 @@
 //                「경산 코발트광산 사건」(jinsil.go.kr/KoreanWar/36.do)
 import { sound } from './bitssal-sound.js?v=4';
 import { lang, tr, langSwitcher } from './i18n.js?v=3';
+import { videoHTML, mountVideos, playVideo, onVideo, stopVideos } from './video.js?v=1';
 import { IS_MOBILE, sensor, startCamera, startMic, getPosition, distanceKm, keepAwake } from './sensors.js?v=2';
 import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=1';
 import { facePoints, drawPortrait } from './bitssal-faces.js?v=1';
@@ -75,8 +76,8 @@ function cardHTML(s, c, si, ci) {
     <p class="note">${tr('영상·사진: ')}${WORK}</p></div>`;
   return `<article class="card ${c.kind || ''}" ${pos}>${c.html}</article>`;
 }
-function vidHTML(id, title) {
-  return `<div class="bs-video" data-vid="${id}"><img src="${thumb(id)}" alt="" loading="lazy" onerror="this.remove()"><button class="vplay"><span>▶</span>${esc(title || tr('영상 재생'))}</button></div>`;
+function vidHTML(id, title) { // 썸네일만 먼저, 누르면 그때 재생 (video.js)
+  return videoHTML(id, { title: title || tr('영상 재생'), cls: 'bs-video', btn: 'vplay' });
 }
 
 
@@ -156,20 +157,20 @@ document.querySelectorAll('.choice').forEach((c) => {
 });
 
 // 영상: 눌렀을 때만 불러오기
-document.querySelectorAll('.bs-video').forEach((v) => v.querySelector('.vplay').addEventListener('click', () => {
-  v.innerHTML = `<iframe src="https://drive.google.com/file/d/${v.dataset.vid}/preview" allow="autoplay; fullscreen" allowfullscreen title="영상"></iframe>`; v.classList.add('playing'); sound.duck(0.15);
-}));
+mountVideos(story);
+// 영상을 보는 동안: 배경 소리 낮추고 쌀알 캔버스는 쉬게 함 (휴대폰에서 영상이 끊기지 않도록)
+onVideo('play', () => { state.videoOn = true; sound.duck(0.15); });
+onVideo('stop', () => { state.videoOn = false; sound.duck(1); });
 // 라이트박스
 const lb = document.createElement('div'); lb.className = 'lb'; lb.hidden = true; lb.innerHTML = '<button class="lb-x" aria-label="' + tr('닫기') + '">×</button><div class="lb-in"></div>'; document.body.appendChild(lb);
 function openLB(html) { lb.querySelector('.lb-in').innerHTML = html; lb.hidden = false; document.body.classList.add('lb-open'); }
-function closeLB() { sound.duck(1); lb.hidden = true; lb.querySelector('.lb-in').innerHTML = ''; document.body.classList.remove('lb-open'); }
+function closeLB() { stopVideos(); sound.duck(1); lb.hidden = true; lb.querySelector('.lb-in').innerHTML = ''; document.body.classList.remove('lb-open'); }
 lb.addEventListener('click', (e) => { if (e.target === lb || e.target.closest('.lb-x')) closeLB(); });
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lb.hidden) closeLB(); });
 document.addEventListener('click', (e) => {
   const i = e.target.closest('[data-lb-img]'), v = e.target.closest('[data-lb-vid]');
   if (i) openLB(`<img src="${img(i.dataset.lbImg, 2200)}" alt=""><p>${tr('작품 사진 — {w}', { w: WORK })}</p>`);
-  if (v) sound.duck(0.15);
-  if (v) openLB(`<div class="lb-vid"><iframe src="https://drive.google.com/file/d/${v.dataset.lbVid}/preview" allow="autoplay; fullscreen" allowfullscreen title="작업 영상"></iframe></div><p>${tr('작업 영상')} — ${WORK}</p>`);
+  if (v) { openLB(`<div class="lb-vid">${videoHTML(v.dataset.lbVid, { title: tr('작업 영상'), w: 1600 })}</div><p>${tr('작업 영상')} — ${WORK}</p>`); const el = lb.querySelector('.vx-v'); mountVideos(lb); playVideo(el); }
 });
 // 캐러셀
 document.querySelectorAll('.car').forEach((c) => {
@@ -583,6 +584,7 @@ function placeLabels(id, p) {
 // ---------------- 루프 ----------------
 let last = performance.now();
 function frame(now) {
+  if (state.videoOn || !lb.hidden) { last = now; requestAnimationFrame(frame); return; } // 영상·라이트박스 보는 동안 쉼
   const dt = Math.min(0.05, (now - last) / 1000); last = now; const t = now / 1000;
   if (TOUCH && ptr.in && now - ptr.t > 2500) ptr.in = false;
   measure();

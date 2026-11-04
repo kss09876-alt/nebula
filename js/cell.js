@@ -1,6 +1,7 @@
 import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=17';
 import { tr, langSwitcher } from './i18n.js?v=3';
 import { IS_MOBILE, sensor, keepAwake } from './sensors.js?v=2';
+import { videoHTML, mountVideos } from './video.js?v=1';
 
 const story = document.getElementById('story');
 const wipe = document.getElementById('wipe');
@@ -45,7 +46,7 @@ const R = {
   video: (b) => `
     <section class="b-video"><div class="wrap reveal">
       ${b.title ? `<h2>${esc(b.title)}</h2>` : ''}
-      <div class="ratio">${b.media ? `<iframe src="${esc(videoEmbed(b.media))}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>` : '<div class="ph"><span>VIDEO</span></div>'}</div>
+      ${b.media ? videoHTML(b.media, { title: b.title || '', w: 1280 }) : '<div class="ratio"><div class="ph"><span>VIDEO</span></div></div>'}
       ${b.caption ? `<p class="caption">${esc(b.caption)}</p>` : ''}
     </div></section>`,
   // sticky: 한쪽은 고정된 미디어(큐브), 다른 쪽은 스크롤되는 단계 텍스트. body를 '|'로 구분
@@ -264,6 +265,7 @@ if (IS_MOBILE) {
   if (!bs.some((b) => b.type === 'cover')) bs = [{ type: 'cover' }, ...bs];
   if (!bs.some((b) => b.type === 'end')) bs.push({ type: 'end' });
   story.innerHTML = bs.map((b) => (R[b.type] || R.text)(b, cell, idx, cells)).join('');
+  mountVideos(story);
   setupAll(cell.color);
   setupBgm(cell);
 })();
@@ -310,6 +312,7 @@ function renderGroup(g, blocks) {
     <a class="back" href="./">${tr('← 행성계로 돌아가기')}</a>
   </section>`;
   story.innerHTML = html + end;
+  mountVideos(story);
   setupAll(rooms[0]?.color || g.color);
   // 지금 보고 있는 방: 상단 표시 · 강조색 · 배경음 전환
   const els = [...document.querySelectorAll('.room')];
