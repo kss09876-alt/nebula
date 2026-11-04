@@ -277,3 +277,13 @@ body.ar-on .card:not(.in) { visibility: hidden; }
 .quiet-msg b { font-size: 18px; color: var(--rice); } .quiet-msg span { font-size: 13px; color: var(--muted); }
 @keyframes qIn { 0% { opacity: 0; } 12% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
 .act-btn + .act-btn { margin-top: 0; }
+
+/* 순이의 이야기 (가상의 인물 · 전시 문안) */
+.card.story { padding: 26px 28px 22px; background: linear-gradient(180deg, rgba(36,29,20,.92), rgba(20,16,11,.92)); border: 1px solid rgba(255,214,150,.22); border-radius: 4px; box-shadow: 0 30px 60px rgba(0,0,0,.45); backdrop-filter: blur(6px); }
+.card.story .st-who { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12px; letter-spacing: .08em; color: var(--warm); margin-bottom: 14px; }
+.card.story .st-who b { font-weight: 700; padding: 3px 9px; border-radius: 999px; background: rgba(255,214,150,.14); letter-spacing: .04em; }
+.card.story p:not(.st-who):not(.note) { font-family: 'Nanum Myeongjo', 'Noto Serif KR', 'Noto Serif SC', 'Noto Serif JP', 'AppleMyungjo', 'Batang', serif; font-size: clamp(17px, 1.35vw, 20px); line-height: 1.95; color: #f3e9d6; }
+.card.story .note { margin-top: 12px; }
+.card.story .st-note { border-top: 1px solid rgba(255,214,150,.18); padding-top: 12px; }
+@media (max-width: 760px) { .card.story { padding: 20px 20px 16px; } .card.story p:not(.st-who):not(.note) { font-size: 17px; line-height: 1.9; } }
+@media (max-width: 760px) { body.reading #hud > div, body.reading #labels { opacity: .12 !important; transition: opacity .5s; } }
