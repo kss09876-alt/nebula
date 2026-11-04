@@ -20,6 +20,11 @@ h1, h3, p { margin: 0; }
 .ic svg, .hud-bot svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .ic[aria-pressed="false"] .w { opacity: .2; }
 .chant { position: fixed; z-index: 5; right: 14px; top: calc(var(--sat) + 74px); height: 44px; padding: 0 18px; border-radius: 999px; background: var(--glass); border: 1px solid var(--line); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); font-size: 15px; }
+.chant-cap { position: fixed; z-index: 4; left: 50%; transform: translateX(-50%); bottom: calc(var(--sab) + 170px); margin: 0; text-align: center; pointer-events: none; text-shadow: 0 2px 14px rgba(0,0,0,.7); animation: tin .6s ease both; }
+.chant-cap span { display: block; font-size: 26px; letter-spacing: .14em; font-weight: 600; color: rgba(255,240,210,.38); }
+.chant-cap b { font-weight: inherit; transition: color .18s, text-shadow .18s; }
+.chant-cap b.on { color: #ffe3a3; text-shadow: 0 0 18px rgba(255,200,110,.75), 0 2px 14px rgba(0,0,0,.7); }
+.chant-cap small { display: block; margin-top: 6px; font-size: 12px; letter-spacing: .08em; color: rgba(255,240,210,.55); }
 .chant.on { background: rgba(227,194,125,.25); border-color: rgba(227,194,125,.5); }
 
 .hud-bot { position: fixed; z-index: 5; left: 50%; transform: translateX(-50%); bottom: calc(var(--sab) + 16px); display: flex; gap: 2px; padding: 8px 10px; border-radius: 30px; background: var(--glass); border: 1px solid var(--line); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }

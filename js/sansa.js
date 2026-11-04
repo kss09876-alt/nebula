@@ -192,46 +192,161 @@ const base = { y: 0, x: 0, h: null, yaw: 0 };
 function calibrate() { base.y = sensor.tiltY; base.x = sensor.tiltX; base.h = sensor.heading; base.yaw = st.yaw; st.dragYaw = 0; }
 
 /* ---------- 소리 ---------- */
-let ac, master, amb, ambOut, chantG, soundOn = false, chantOn = false;
+// iPhone은 무음 스위치가 켜져 있으면 Web Audio가 꺼짐 → '재생' 모드로 바꾸고, 소리 없는 오디오를 함께 틀어 둠
+const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let unlockEl = null;
+function silentWav() { const n = 4000, b = new Uint8Array(44 + n), v = new DataView(b.buffer), w = (o, s) => [...s].forEach((c, i) => { b[o + i] = c.charCodeAt(0); }); w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); w(36, 'data'); v.setUint32(40, n, true); b.fill(128, 44); let s = ''; b.forEach((x) => { s += String.fromCharCode(x); }); return 'data:audio/wav;base64,' + btoa(s); }
+function unlock() {
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+  if (IS_IOS) { if (!unlockEl) { unlockEl = document.createElement('audio'); unlockEl.src = silentWav(); unlockEl.loop = true; unlockEl.setAttribute('playsinline', ''); unlockEl.setAttribute('x-webkit-airplay', 'deny'); } unlockEl.play().catch(() => {}); }
+  if (!ac) return;
+  if (ac.state !== 'running') ac.resume().catch(() => {});
+  const s = ac.createBufferSource(); s.buffer = ac.createBuffer(1, 1, 22050); s.connect(ac.destination); s.start(0); // 1샘플로 깨우기
+}
+let ac, master, amb, ambOut, chantG, noiseBuf, soundOn = false, chantOn = false;
 function audio() {
   if (ac) return ac;
-  ac = new (window.AudioContext || window.webkitAudioContext)();
-  master = ac.createGain(); master.gain.value = 0.9;
+  ac = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
+  // 휴대폰 스피커에서도 잘 들리게: 압축기로 전체 음량을 고르게 올림
+  const comp = ac.createDynamicsCompressor(); comp.threshold.value = -22; comp.knee.value = 10; comp.ratio.value = 5; comp.attack.value = 0.003; comp.release.value = 0.25;
+  const lim = ac.createDynamicsCompressor(); lim.threshold.value = -4; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.001; lim.release.value = 0.1; // 찢어지는 소리 방지
+  const out = ac.createGain(); out.gain.value = 1.6; comp.connect(out).connect(lim).connect(ac.destination);
+  master = ac.createGain(); master.gain.value = 1;
   const conv = ac.createConvolver(), len = ac.sampleRate * 3.5, ir = ac.createBuffer(2, len, ac.sampleRate);
   for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
-  conv.buffer = ir; const wet = ac.createGain(); wet.gain.value = 0.5;
-  master.connect(ac.destination); master.connect(conv).connect(wet).connect(ac.destination);
+  conv.buffer = ir; const wet = ac.createGain(); wet.gain.value = 0.35;
+  master.connect(comp); master.connect(conv).connect(wet).connect(comp);
   amb = ac.createGain(); amb.gain.value = 0; amb.connect(master);
   ambOut = ac.createGain(); ambOut.gain.value = 1; ambOut.connect(amb);
   const noise = (sec, brown) => { const b = ac.createBuffer(1, ac.sampleRate * sec, ac.sampleRate), d = b.getChannelData(0); let l = 0; for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; if (brown) { l = (l + 0.02 * w) / 1.02; d[i] = l * 3.5; } else d[i] = w; } return b; };
+  noiseBuf = noise(1);
   const loop = (buf) => { const s = ac.createBufferSource(); s.buffer = buf; s.loop = true; s.start(); return s; };
-  const filt = (type, f, q = 0.7) => { const b = ac.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; return b; };
   const wf = filt('lowpass', 500), wg = ac.createGain(); wg.gain.value = 0.07; loop(noise(4)).connect(wf).connect(wg).connect(ambOut);
   const lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = 0.06; lg.gain.value = 280; lfo.connect(lg).connect(wf.frequency); lfo.start();
   const bg = ac.createGain(); bg.gain.value = 0.1; loop(noise(5, true)).connect(filt('highpass', 300)).connect(filt('bandpass', 900, 0.6)).connect(bg).connect(ambOut);
   const room = ac.createGain(); room.gain.value = 0.05; loop(noise(5, true)).connect(filt('lowpass', 160)).connect(room).connect(amb); // 법당 안 공기
   (function bird() { if (soundOn && st.z > -2 && Math.random() < 0.6) { const n = 2 + (Math.random() * 4 | 0), b0 = 2400 + Math.random() * 1600; for (let i = 0; i < n; i++) setTimeout(() => blip(b0 * (1 + Math.random() * 0.15), b0 * (1.3 + Math.random() * 0.4), 0.06 + Math.random() * 0.06, 0.022), i * 120); } setTimeout(bird, 2500 + Math.random() * 6000); })();
-  // 염불: 낮은 허밍 두 목소리 + 느린 목탁 (가사 없음)
   chantG = ac.createGain(); chantG.gain.value = 0; chantG.connect(master);
-  const notes = [146.83, 130.81, 146.83, 164.81, 146.83, 130.81];
-  [0, 1].forEach((v) => { const o = ac.createOscillator(); o.type = 'sawtooth'; const f1 = filt('bandpass', 520, 4), f2 = filt('bandpass', 900, 5), g = ac.createGain(); g.gain.value = v ? 0.05 : 0.08; o.connect(f1).connect(g); o.connect(f2).connect(g); g.connect(chantG); const vib = ac.createOscillator(), vg = ac.createGain(); vib.frequency.value = 4.6; vg.gain.value = 1.4; vib.connect(vg).connect(o.frequency); vib.start(); o.start(); let k = v * 3; (function step() { o.frequency.setTargetAtTime(notes[k++ % notes.length] * (v ? 0.5 : 1), ac.currentTime, 0.25); setTimeout(step, 1800); })(); });
-  (function mokLoop() { if (chantOn) sound.mok(0.25); setTimeout(mokLoop, 900); })();
+  // 다른 앱에서 돌아오거나 권한 창이 뜬 뒤 멈춘 소리를 다시 켬
+  ac.onstatechange = () => { if (soundOn && !document.hidden && ac.state !== 'running') setTimeout(() => ac.resume().catch(() => {}), 300); };
   return ac;
 }
+function filt(type, f, q = 0.7) { const b = ac.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; return b; }
+function env(g, t0, peak, dur, att = 0.003) { g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(peak, t0 + att); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); }
 function blip(f0, f1, dur, vol) { const t0 = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(); o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(f1, t0 + dur); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); o.connect(g).connect(amb); o.start(t0); o.stop(t0 + dur + 0.05); }
 function partials(f, rs, dur, vol) { if (!ac || !soundOn) return; const t0 = ac.currentTime; rs.forEach(([r, a], i) => { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f * r; g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol * a, t0 + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur * (1 - i * 0.08)); o.connect(g).connect(master); o.start(t0); o.stop(t0 + dur + 0.1); }); }
 const sound = {
-  bell() { partials(82, [[1, 1], [2, 0.55], [2.41, 0.5], [2.98, 0.35], [4.17, 0.22], [5.43, 0.15], [0.5, 0.4]], 12, 0.22); },
-  bowl() { partials(196, [[1, 1], [2.71, 0.4], [5.1, 0.2]], 8, 0.12); },
-  bead() { partials(1320 + Math.random() * 80, [[1, 1], [2.4, 0.3]], 0.35, 0.05); },
-  mok(v = 0.5) { if (!ac || !soundOn) return; const t0 = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(); o.frequency.setValueAtTime(820, t0); o.frequency.exponentialRampToValueAtTime(560, t0 + 0.08); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(v, t0 + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22); o.connect(g).connect(master); o.start(t0); o.stop(t0 + 0.25); },
+  bell() { partials(82, [[1, 1], [2, 0.55], [2.41, 0.5], [2.98, 0.35], [4.17, 0.22], [5.43, 0.15], [0.5, 0.4]], 12, 0.3); },
+  bowl() { partials(196, [[1, 1], [2.71, 0.4], [5.1, 0.2]], 8, 0.16); },
+  bead() { partials(1320 + Math.random() * 80, [[1, 1], [2.4, 0.3]], 0.35, 0.07); },
+  // 목탁: 속이 빈 나무를 치는 '똑' — 짧은 딸깍 + 몸통 울림 두 개
+  mok(v = 0.8, when) {
+    if (!ac || !soundOn) return; const t0 = Math.max(ac.currentTime, when || 0), r = 1 + (Math.random() - 0.5) * 0.03;
+    const bus = ac.createGain(); bus.gain.value = v; bus.connect(master);
+    const body = ac.createOscillator(), bg = ac.createGain(); body.frequency.setValueAtTime(760 * r, t0); body.frequency.exponentialRampToValueAtTime(640 * r, t0 + 0.06); env(bg, t0, 0.5, 0.17, 0.0015); body.connect(bg).connect(bus); body.start(t0); body.stop(t0 + 0.2);
+    const low = ac.createOscillator(), lg = ac.createGain(); low.frequency.setValueAtTime(380 * r, t0); env(lg, t0, 0.28, 0.09, 0.002); low.connect(lg).connect(bus); low.start(t0); low.stop(t0 + 0.12);
+    const hi = ac.createOscillator(), hg = ac.createGain(); hi.frequency.value = 1830 * r; env(hg, t0, 0.1, 0.04, 0.001); hi.connect(hg).connect(bus); hi.start(t0); hi.stop(t0 + 0.06);
+    const n = ac.createBufferSource(), ng = ac.createGain(), nf = filt('bandpass', 2600, 1.4); n.buffer = noiseBuf; env(ng, t0, 0.4, 0.025, 0.0008); n.connect(nf).connect(ng).connect(bus); n.start(t0, Math.random() * 0.5, 0.05);
+  },
 };
+
+/* ---------- 염불: 나무아미타불 (목소리 합성) ---------- */
+// 사람 목소리처럼: 성대(톱니파) → 입 모양(포먼트 필터 3개). 세 사람이 함께 외는 소리 + 음절마다 목탁
+const FM = { // [주파수, 세기] × 3 (낮은 남자 목소리)
+  a: [[720, 1], [1100, 0.5], [2450, 0.18]],
+  u: [[330, 1], [780, 0.32], [2250, 0.1]],
+  i: [[290, 1], [2200, 0.26], [2950, 0.18]],
+  m: [[260, 0.9], [1050, 0.05], [2300, 0.03]],
+  n: [[260, 0.9], [1650, 0.07], [2600, 0.04]],
+  l: [[380, 1], [1250, 0.22], [2650, 0.1]],
+};
+const BWS = [90, 120, 170];
+const SYL = [ // 소리 · 첫소리 · 끝소리 · 음높이(배수) · 박자
+  { k: '나', on: 'n', v: 'a', p: 1, b: 1 },
+  { k: '무', on: 'm', v: 'u', p: 1, b: 1 },
+  { k: '아', on: '', v: 'a', p: 9 / 8, b: 1 },
+  { k: '미', on: 'm', v: 'i', p: 9 / 8, b: 1 },
+  { k: '타', on: 't', v: 'a', p: 1, b: 1 },
+  { k: '불', on: 'p', v: 'u', coda: 'l', p: 8 / 9, b: 2 },
+];
+const F0 = 108, BEAT = 0.5;
+let voices = null, chantNext = 0, chantIdx = 0, chantTimer = 0;
+function makeVoices() {
+  return [[0, 0, 1, 0], [-9, 0.018, 0.75, -0.35], [7, 0.032, 0.7, 0.35]].map(([cents, lag, lvl, pan]) => {
+    const o = ac.createOscillator(); o.type = 'sawtooth';
+    const vib = ac.createOscillator(), vg = ac.createGain(); vib.frequency.value = 4.2 + Math.random() * 0.8; vg.gain.value = 1.1; vib.connect(vg).connect(o.frequency);
+    const e = ac.createGain(); e.gain.value = 0;
+    const p = ac.createStereoPanner ? ac.createStereoPanner() : ac.createGain(); if (p.pan) p.pan.value = pan;
+    const f = BWS.map(() => filt('bandpass', 500, 5)), fg = BWS.map(() => ac.createGain());
+    f.forEach((x, i) => { o.connect(x).connect(fg[i]).connect(e); });
+    const br = ac.createBufferSource(), bg = ac.createGain(); br.buffer = noiseBuf; br.loop = true; bg.gain.value = 0.05; br.connect(bg); f.forEach((x) => bg.connect(x)); br.start(0, Math.random()); // 숨소리
+    const chest = filt('lowpass', 220, 0.7), cg = ac.createGain(); cg.gain.value = 0.25; o.connect(chest).connect(cg).connect(e); // 가슴 울림
+    e.connect(p).connect(chantG);
+    o.start(); vib.start();
+    return { o, f, fg, e, k: Math.pow(2, cents / 1200), lag, lvl: lvl * 0.5 };
+  });
+}
+function shape(v, name, t, tau) { FM[name].forEach(([fr, a], i) => { v.f[i].frequency.setTargetAtTime(fr, t, tau); v.f[i].Q.setTargetAtTime(fr / BWS[i], t, tau); v.fg[i].gain.setTargetAtTime(a, t, tau); }); }
+function burst(t, vol) { const n = ac.createBufferSource(), g = ac.createGain(), f = filt('bandpass', 3600, 1.2); n.buffer = noiseBuf; env(g, t, vol, 0.06, 0.004); n.connect(f).connect(g).connect(chantG); n.start(t, Math.random() * 0.5, 0.08); }
+function sing(v, t, s, i) {
+  const D = s.b * BEAT, L = v.lvl, eg = v.e.gain;
+  v.o.frequency.setTargetAtTime(F0 * s.p * v.k, t, 0.035);
+  if (s.on === 'n' || s.on === 'm') { shape(v, s.on, t, 0.012); eg.setTargetAtTime(L * 0.42, t, 0.015); shape(v, s.v, t + 0.085, 0.025); eg.setTargetAtTime(L, t + 0.085, 0.025); }
+  else if (s.on === 't') { eg.setTargetAtTime(0, t, 0.006); shape(v, s.v, t, 0.01); if (i === 0) burst(t + 0.045, 0.16); eg.setTargetAtTime(L, t + 0.075, 0.02); }
+  else if (s.on === 'p') { eg.setTargetAtTime(0, t, 0.006); shape(v, s.v, t, 0.01); eg.setTargetAtTime(L, t + 0.05, 0.02); }
+  else { eg.setTargetAtTime(L * 0.25, t, 0.008); shape(v, s.v, t, 0.02); eg.setTargetAtTime(L, t + 0.03, 0.03); }
+  if (s.coda) shape(v, s.coda, t + D * 0.45, 0.06);
+  if (s.b > 1) { v.o.frequency.setTargetAtTime(F0 * s.p * v.k * 0.97, t + D * 0.5, 0.3); eg.setTargetAtTime(0, t + D - 0.28, 0.07); } // 길게 끌다 내려놓기
+  else eg.setTargetAtTime(L * 0.8, t + D - 0.07, 0.02);
+}
+const capEl = $('.chant-cap');
+function chantTick(ahead = 1.0) {
+  if (!chantOn || !ac) return;
+  while (chantNext < ac.currentTime + ahead) {
+    const i = chantIdx % SYL.length, s = SYL[i], t = chantNext;
+    voices.forEach((v, n) => sing(v, t + v.lag, s, n));
+    sound.mok(i === 0 ? 0.85 : 0.65, t);
+    if (s.b > 1) sound.mok(0.4, t + BEAT);
+    setTimeout(() => { if (chantOn) capEl.querySelectorAll('b').forEach((b, j) => b.classList.toggle('on', j === i)); }, Math.max(0, (t - ac.currentTime) * 1000));
+    if (chantIdx > 0 && i === 0 && (chantIdx / SYL.length) % 4 === 0) partials(196, [[1, 1], [2.71, 0.4], [5.1, 0.2]], 6, 0.07); // 네 번마다 경쇠
+    chantNext += s.b * BEAT; chantIdx++;
+  }
+}
+function chant(on) {
+  chantOn = on; audio();
+  if (on) {
+    if (!voices) voices = makeVoices();
+    chantNext = ac.currentTime + 0.35; chantIdx = 0;
+    chantG.gain.cancelScheduledValues(ac.currentTime); chantG.gain.setTargetAtTime(1, ac.currentTime, 0.2);
+    clearInterval(chantTimer); chantTimer = setInterval(chantTick, 200); chantTick();
+    if (window.__snd) window.__snd.tick = chantTick;
+  } else {
+    clearInterval(chantTimer);
+    chantG.gain.cancelScheduledValues(ac.currentTime); chantG.gain.setTargetAtTime(0, ac.currentTime, 0.4);
+    if (voices) voices.forEach((v) => { v.e.gain.cancelScheduledValues(ac.currentTime); v.e.gain.setTargetAtTime(0, ac.currentTime + 0.6, 0.1); });
+  }
+  capEl.hidden = !on; capEl.querySelectorAll('b').forEach((b) => b.classList.remove('on'));
+  updChant();
+}
+
 const sndBtn = $('[data-sound]');
-function setSound(on) { soundOn = on; audio(); ac.resume(); amb.gain.setTargetAtTime(on ? 1 : 0, ac.currentTime, 0.8); if (!on) { chantOn = false; chantG.gain.setTargetAtTime(0, ac.currentTime, 0.3); updChant(); } sndBtn.setAttribute('aria-pressed', String(on)); }
+function setSound(on) {
+  soundOn = on; audio(); unlock();
+  amb.gain.setTargetAtTime(on ? 1 : 0, ac.currentTime, 0.8);
+  if (!on) { if (chantOn) chant(false); if (unlockEl) unlockEl.pause(); }
+  sndBtn.setAttribute('aria-pressed', String(on));
+}
 sndBtn.addEventListener('click', () => setSound(!soundOn));
 const chantBtn = $('[data-chant]');
 function updChant() { chantBtn.classList.toggle('on', chantOn); chantBtn.querySelector('span').textContent = t(chantOn ? '염불 멈추기' : '염불 듣기'); }
-chantBtn.addEventListener('click', () => { if (!soundOn) setSound(true); chantOn = !chantOn; chantG.gain.setTargetAtTime(chantOn ? 0.9 : 0, ac.currentTime, 1); updChant(); });
+chantBtn.addEventListener('click', () => { if (!soundOn) setSound(true); else unlock(); chant(!chantOn); });
+// 손이 닿을 때마다 멈춘 소리가 있으면 다시 깨움 (iPhone)
+addEventListener('touchend', () => { if (soundOn && ac && ac.state !== 'running') unlock(); }, { passive: true });
+document.addEventListener('visibilitychange', () => {
+  if (!ac) return;
+  if (document.hidden) { ac.suspend().catch(() => {}); if (unlockEl) unlockEl.pause(); }
+  else if (soundOn) { unlock(); if (chantOn) { chantNext = ac.currentTime + 0.3; } }
+});
 
 /* ---------- 동작 ---------- */
 const actBtns = (a) => document.querySelector(`[data-act="${a}"]`);
@@ -360,7 +475,7 @@ let nick = '느린 방랑자'; try { const p = JSON.parse(localStorage.getItem('
 const tag = document.createElement('div'); tag.className = 'tag'; tag.innerHTML = `<i>${t('나')}</i><span></span>`; tag.querySelector('span').textContent = nick; $('#tags').appendChild(tag);
 
 /* ---------- 시작 ---------- */
-let started = false; if (location.hash === "#debug") { window.__st = st; window.__base = base; }
+let started = false; if (location.hash === "#debug") { window.__st = st; window.__base = base; window.__snd = { sound, chant, setSound, get ac() { return ac; } }; }
 camera.position.set(0, 5, 40);
 const gateEl = $('#gate'), enterBtn = $('#enter');
 setTimeout(() => { enterBtn.disabled = false; $('.g-state').style.visibility = 'hidden'; }, 900);
