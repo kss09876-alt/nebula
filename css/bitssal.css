@@ -302,3 +302,4 @@ body.ar-on .card:not(.in) { visibility: hidden; }
 .rec.brief .quiet { font-size: 12.5px; }
 .rec.brief .src { font-size: 11px; }
 body.facing .hud-year.on, body.facing .hud-count.on, body.facing .hud-clock.on { opacity: .14 !important; }
+.lb-vid .vx-v { position: absolute; inset: 0; aspect-ratio: auto; }
