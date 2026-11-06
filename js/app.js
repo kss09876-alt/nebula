@@ -5,7 +5,7 @@ import { loadData, esc } from './data.js?v=17';
 import { lang, LANGS } from './i18n.js?v=3';
 import { hasRing } from './planets.js?v=4';
 import { planetSrc, planetKey, onPlanet, planetBitmap, warm } from './planet-store.js?v=1';
-import { videoHTML, mountVideos, playVideo, stopVideos } from './video.js?v=1';
+import { videoHTML, mountVideos, playVideo, stopVideos } from './video.js?v=2';
 import { IS_MOBILE, sensor } from './sensors.js?v=2';
 
 /* ---------- 문구 ---------- */

@@ -17,10 +17,14 @@ const SC = {
   truth:    { chord: [31, 38, 43, 50], bright: 800, grains: 0.25, scale: [67, 74, 79], vol: 0.7, rise: true },
   share:    { chord: [41, 48, 53, 57, 64], bright: 2000, grains: 0.8, scale: [72, 77, 79, 81, 84], vol: 0.8 },
   light:    { chord: [38, 45, 50, 54, 57, 64], bright: 3000, grains: 1.2, scale: [74, 78, 81, 83, 86, 90], vol: 0.85 },
+  records:  { chord: [38, 45, 50], bright: 900, grains: 0.12, scale: [74, 81], vol: 0.45 },
   archive:  { chord: [38, 45, 50, 57], bright: 1600, grains: 0.3, scale: [74, 81, 86], vol: 0.5 },
 };
 
+// 동굴: 갇힌 듯 울리는 공간 (1950 → 광산 → 7월에서 서서히 풀림)
+const CAVE = { boundary: 0.35, mine: 1, truth: 0.6 };
 let resting = false, restDuck = 1;
+let caveSend, caveOut, rumbleGain, hbGain, nextBeat = 0;
 let ctx, master, filt, wet, dry, rev, bellBus, voices = [], windSrc, windGain, pulseGain, on = false, started = false, cur = '', nextGrain = 0, nextPulse = 0, freezeDuck = 1;
 
 function impulse(sec = 4.5) {
@@ -29,6 +33,24 @@ function impulse(sec = 4.5) {
   return b;
 }
 
+// 동굴 잔향: 가까운 벽에서 되돌아오는 반사(짧고 촘촘) + 길고 어두운 꼬리
+function caveIR(sec = 7) {
+  const sr = ctx.sampleRate, len = sr * sec, b = ctx.createBuffer(2, len, sr);
+  for (let c = 0; c < 2; c++) {
+    const d = b.getChannelData(c); let lp = 0;
+    for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; lp += (w - lp) * (0.08 + 0.25 * (1 - i / len)); d[i] = lp * Math.pow(1 - i / len, 1.6) * 0.9; }
+    [0.019, 0.031, 0.047, 0.066, 0.089, 0.12, 0.17, 0.23].forEach((tt, k) => { const at = Math.floor((tt + c * 0.004 + Math.random() * 0.003) * sr); d[at] += (0.9 - k * 0.09) * (k % 2 ? -1 : 1); });
+  }
+  return b;
+}
+// iPhone 무음 스위치가 켜져 있어도 소리가 나게
+let unlockEl = null;
+function unlockIOS() {
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+  if (!/iP(hone|ad|od)/.test(navigator.userAgent) && !(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return;
+  if (!unlockEl) { const n = 2000, a = new Uint8Array(44 + n), v = new DataView(a.buffer), w = (o, t) => [...t].forEach((ch, i) => { a[o + i] = ch.charCodeAt(0); }); w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); w(36, 'data'); v.setUint32(40, n, true); a.fill(128, 44); let str = ''; a.forEach((x) => { str += String.fromCharCode(x); }); unlockEl = document.createElement('audio'); unlockEl.src = 'data:audio/wav;base64,' + btoa(str); unlockEl.loop = true; unlockEl.setAttribute('playsinline', ''); }
+  unlockEl.play().catch(() => {});
+}
 function build() {
   ctx = new (window.AudioContext || window.webkitAudioContext)();
   master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
@@ -61,6 +83,36 @@ function build() {
   const wl = ctx.createOscillator(), wlg = ctx.createGain(); wl.frequency.value = 0.08; wlg.gain.value = 250; wl.connect(wlg); wlg.connect(wf.frequency); wl.start();
   windGain = ctx.createGain(); windGain.gain.value = 0; windSrc.connect(wf); wf.connect(windGain); windGain.connect(dry); windGain.connect(rev); windSrc.start();
   pulseGain = ctx.createGain(); pulseGain.gain.value = 0; pulseGain.connect(dry); pulseGain.connect(rev);
+  // 동굴 버스: 보내기 → 동굴 잔향 + 좁은 굴의 공명(짧은 되먹임) → 어둡게 → 출력
+  caveSend = ctx.createGain(); caveSend.gain.value = 0;
+  const cr = ctx.createConvolver(); cr.buffer = caveIR(); const clp = ctx.createBiquadFilter(); clp.type = 'lowpass'; clp.frequency.value = 1800;
+  const comb = ctx.createDelay(0.1); comb.delayTime.value = 0.027; const fb = ctx.createGain(); fb.gain.value = 0.42; const cf = ctx.createBiquadFilter(); cf.type = 'lowpass'; cf.frequency.value = 900;
+  caveOut = ctx.createGain(); caveOut.gain.value = 0;
+  caveSend.connect(cr); cr.connect(clp); clp.connect(caveOut);
+  caveSend.connect(comb); comb.connect(cf); cf.connect(fb); fb.connect(comb); cf.connect(caveOut);
+  caveOut.connect(comp);
+  filt.connect(caveSend); bellBus.connect(caveSend); windGain.connect(caveSend); pulseGain.connect(caveSend);
+  // 땅 울림 (아주 낮은 웅웅거림)
+  const rs = ctx.createBufferSource(); rs.buffer = nb; rs.loop = true; rs.playbackRate.value = 0.5;
+  const rlp = ctx.createBiquadFilter(); rlp.type = 'lowpass'; rlp.frequency.value = 85;
+  rumbleGain = ctx.createGain(); rumbleGain.gain.value = 0; rs.connect(rlp); rlp.connect(rumbleGain); rumbleGain.connect(dry); rumbleGain.connect(caveSend); rs.start();
+  hbGain = ctx.createGain(); hbGain.gain.value = 0.5; hbGain.connect(dry); hbGain.connect(caveSend);
+}
+// 물방울: 높은 음이 짧게 떨어지며 동굴에 울림
+function drip(pan = 0, vel = 1) {
+  if (!ctx) return;
+  const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain(), f0 = 1300 + Math.random() * 900;
+  o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * 0.42, t + 0.07);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.07 * vel, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+  const p = ctx.createStereoPanner ? ctx.createStereoPanner() : null; o.connect(g);
+  if (p) { p.pan.value = Math.max(-1, Math.min(1, pan)); g.connect(p); p.connect(caveSend); p.connect(dry); } else { g.connect(caveSend); g.connect(dry); }
+  o.start(t); o.stop(t + 0.2);
+}
+function heart(when = 0, vel = 1) {
+  const t = ctx.currentTime + when, o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(55, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.18);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.16 * vel, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+  o.connect(g); g.connect(hbGain); o.start(t); o.stop(t + 0.4);
 }
 
 function setScene(id) {
@@ -71,6 +123,7 @@ function setScene(id) {
     else v.g.gain.setTargetAtTime(0, t, 1.2);
   });
   windGain.gain.setTargetAtTime((s.wind || 0) * 0.5, t, 2);
+  const cv = CAVE[id] || 0; caveOut.gain.setTargetAtTime(cv * 0.9, t, 1.5); rumbleGain.gain.setTargetAtTime(cv * 0.55, t, 2);
   cur = id;
 }
 
@@ -109,6 +162,7 @@ function thump(when = 0, vel = 1) {
 export const sound = {
   get on() { return on; },
   async start() {
+    unlockIOS();
     if (!ctx) build();
     if (ctx.state === 'suspended') await ctx.resume();
     started = true; on = true; master.gain.setTargetAtTime(0.9, ctx.currentTime, 1.5);
@@ -135,6 +189,9 @@ export const sound = {
     if (s.rise) br *= 0.7 + p * 1.2;
     if (s.thin) br *= 1 - p * 0.55;
     if (id === 'mine') br *= 1 - Math.min(1, p) * 0.4;
+    const cave = (CAVE[id] || 0) * (id === 'truth' ? Math.max(0.15, 1 - p) : id === 'mine' ? 0.6 + Math.min(1, p) * 0.4 : 1);
+    caveSend.gain.setTargetAtTime(cave * (st.quiet ? 0.4 : 1), t, 0.8); caveOut.gain.setTargetAtTime(cave * 0.9, t, 0.8);
+    if (id === 'mine' && t > nextBeat && !st.freeze) { heart(0, 0.5 + Math.min(1, p) * 0.5); heart(0.38, 0.32); nextBeat = t + 60 / (54 - Math.min(1, p) * 8); }
     filt.frequency.setTargetAtTime(br, t, 0.6);
     // 오후 7시의 멈춤: 음악이 숨을 멈춤
     const target = st.freeze ? 0.06 : 1;
@@ -172,5 +229,9 @@ export const sound = {
   // 영상 재생 중에는 줄이기
   rest(r) { resting = !!r; },
   rattle(v) { if (ctx && on) rattle(v); },
+  drip(pan, vel) { if (ctx && on) drip(pan, vel); },
   duck(v) { if (ctx && on) { dry.gain.setTargetAtTime(0.6 * v, ctx.currentTime, 0.5); wet.gain.setTargetAtTime(0.55 * v, ctx.currentTime, 0.5); } },
 };
+// 앱 전환·전화·권한 창 뒤에 멈춘 소리를 다시 켬 (iPhone)
+document.addEventListener('visibilitychange', () => { if (!ctx) return; if (document.hidden) { if (unlockEl) unlockEl.pause(); } else if (on) { unlockIOS(); if (ctx.state !== 'running') ctx.resume().catch(() => {}); } });
+addEventListener('touchend', () => { if (ctx && on && ctx.state !== 'running') ctx.resume().catch(() => {}); }, { passive: true });

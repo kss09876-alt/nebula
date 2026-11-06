@@ -1,11 +1,11 @@
 // X-003 · 빛쌀 — 한 톨의 쌀을 따라가는 연속 스크롤 이야기
 // 사실 서술 출처: 진실·화해를위한과거사정리위원회 「대구10월사건 관련 민간인 희생 사건」(jinsil.go.kr/KoreanWar/30.do),
 //                「경산 코발트광산 사건」(jinsil.go.kr/KoreanWar/36.do)
-import { sound } from './bitssal-sound.js?v=4';
+import { sound } from './bitssal-sound.js?v=5';
 import { lang, tr, langSwitcher } from './i18n.js?v=3';
-import { videoHTML, mountVideos, playVideo, onVideo, stopVideos } from './video.js?v=1';
+import { videoHTML, mountVideos, playVideo, onVideo, stopVideos } from './video.js?v=2';
 import { IS_MOBILE, sensor, startCamera, startMic, getPosition, distanceKm, keepAwake } from './sensors.js?v=2';
-import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=1';
+import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=2';
 import { facePoints, drawPortrait } from './bitssal-faces.js?v=1';
 const SRC1 = tr('진실·화해를위한과거사정리위원회, 「대구10월사건 관련 민간인 희생 사건」');
 const SRC2 = tr('진실·화해를위한과거사정리위원회, 「경산 코발트광산 사건」');
@@ -24,11 +24,11 @@ const vid = (id, cap, title) => ({ kind: 'vid', id, cap, title });
 // ---------------- 장면 정의 (bitssal-scenes.js) ----------------
 // 이야기 중심: 장면마다 순이의 이야기 → 이야기에 맞춘 조작 → 짧은 기록
 const TOUCH = matchMedia('(hover: none), (pointer: coarse)').matches;
-const { SCENES, UI, NOTE, LABEL, EVENTS } = buildScenes({ lang, IS_MOBILE, TOUCH, PH, VD, photo, vid, SRC1, SRC2 });
+const { SCENES, UI, NOTE, LABEL, PARTS } = buildScenes({ lang, IS_MOBILE, TOUCH, PH, VD, photo, vid, SRC1, SRC2 });
 const fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
 const CREDITS = `<footer class="bs-credits"><div>
   <h3>${tr('출처와 안내')}</h3>
-  <p>${NOTE}</p><p>${EVENTS}</p>
+  <p>${NOTE}</p>
   <p>${tr('역사 서술: ')}${SRC1}(jinsil.go.kr/KoreanWar/30.do), ${SRC2}(jinsil.go.kr/KoreanWar/36.do)</p>
   <p>${tr('밥상·약도·광산 통로 장면은 이해를 돕기 위한 일러스트이며 실제 장소나 인물을 재현하지 않습니다. ‘전시 문안’으로 표시된 문장은 창작 문안으로, 희생자나 유족의 실제 발언이 아닙니다.')}</p>
   <p>${tr('작품: 진시영 · 김동선, 《빛쌀》, 2026 · 기획: XPACE (VALIX LAB)')}</p>
@@ -58,7 +58,7 @@ if (window.ResizeObserver) { const ro = new ResizeObserver(relSoon); document.qu
 function cardHTML(s, c, si, ci) {
   const pos = `style="top:${c.at * 100}%" data-at="${c.at}"`;
   const src = c.src ? `<p class="src">${tr('출처: ')}${esc(c.src)}</p>` : '';
-  if (c.kind === 'story') return `<article class="card story" ${pos}${c.face ? ` data-face="${c.face}"` : ''}>${c.chap ? `<p class="chap">${esc(c.chap)}</p>` : ''}<div class="st-top">${c.face ? `<canvas class="st-face" data-face="${c.face}" aria-hidden="true"></canvas>` : ''}<div><p class="st-who"><b>${esc(LABEL)}</b>${esc(c.who)}</p><h2>${esc(c.head)}</h2></div></div>${c.html}${c.first ? `<p class="note st-note">${esc(NOTE)}<br>${esc(EVENTS)}</p>` : ''}</article>`;
+  if (c.kind === 'story') return `<article class="card story" ${pos}${c.face ? ` data-face="${c.face}"` : ''}>${c.chap ? `<p class="chap">${esc(c.chap)}</p>` : ''}<div class="st-top">${c.face ? `<canvas class="st-face" data-face="${c.face}" aria-hidden="true"></canvas>` : ''}<div><p class="st-who"><b>${esc(LABEL)}</b>${esc(c.who)}</p><h2>${esc(c.head)}</h2></div></div>${c.html}${c.first ? `<p class="note st-note">${esc(NOTE)}</p>` : ''}</article>`;
   if (c.kind === 'record') return `<article class="card rec brief ${c.tone || ''}" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3>${c.html}${src}</article>`;
   if (c.kind === 'reveal') return `<article class="card rec reveal-rec" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3><div class="blur">${c.html}</div><button class="rv-btn">${tr('기록 읽기')}</button>${src}</article>`;
   if (c.kind === 'correct') return `<article class="card rec reveal-rec correct" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3><div class="blur">${c.html}</div><button class="rv-btn">${tr('기록 읽기')}</button><button class="fix-btn" hidden>${tr('기록 바로잡기')}</button><p class="fix-note" hidden>${esc(c.fix)}</p>${src}</article>`;
@@ -130,12 +130,12 @@ if (lang !== 'ko') {
 
 // 목차 / 진행 막대
 const menu = document.getElementById('bs-menu'), menuBtn = document.querySelector('.bs-menu-btn');
-menu.innerHTML = `<ol>${SCENES.map((s, i) => `<li><a href="#s-${s.id}"><span>${String(i + 1).padStart(2, '0')}</span>${esc(s.title)}</a></li>`).join('')}</ol>`;
+menu.innerHTML = `<ol>${SCENES.map((s, i) => `${i === 0 || s.part !== SCENES[i - 1].part ? `<li class="m-part">${esc(PARTS[(s.part || 1) - 1])}</li>` : ''}<li><a href="#s-${s.id}"><span>${String(i + 1).padStart(2, '0')}</span>${esc(s.title)}</a></li>`).join('')}</ol>`;
 menuBtn.addEventListener('click', () => { menu.hidden = !menu.hidden; menuBtn.setAttribute('aria-expanded', String(!menu.hidden)); });
 menu.addEventListener('click', (e) => { const a = e.target.closest('a'); if (!a) return; e.preventDefault(); jump(a.getAttribute('href').slice(3)); menu.hidden = true; });
 const prog = document.querySelector('.bs-progress');
 prog.style.gridTemplateColumns = `repeat(${SCENES.length}, 1fr)`;
-prog.innerHTML = SCENES.map((s, i) => `<button title="${esc(s.title)}" data-id="${s.id}"><i></i></button>`).join('');
+prog.innerHTML = SCENES.map((s, i) => `<button title="${esc(s.title)}" data-id="${s.id}" class="part${s.part || 1}"><i></i></button>`).join('');
 prog.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) jump(b.dataset.id); });
 function jump(id) { const el = document.getElementById('s-' + id); if (el) window.scrollTo({ top: el.offsetTop + 2, behavior: 'smooth' }); }
 
@@ -291,8 +291,10 @@ function applyFace(id) {
   else face.k = Math.max(0, face.k - 0.04);
   if (want) face.col = want.col;
   if (face.k <= 0 || !face.pts) return;
+  TA[0] *= 1 - face.k; // 첫 쌀알(빛)이 얼굴을 가리지 않게
   const sc = R * (mobile ? 0.55 : 0.62), fx = CX, fy = mobile ? CY - R * 0.32 : CY - R * 0.05, k = face.k;
-  for (let j = 0; j < face.pts.length; j++) { const q = face.pts[j], i = j + 1; TX[i] = lerp(TX[i], fx + q.x * sc, k); TY[i] = lerp(TY[i], fy + q.y * sc, k); TA[i] = lerp(TA[i], q.a, k); if (k > 0.5) C[i] = face.col === 3 ? 3 : q.c; TROT[i] = q.r; }
+  const n = face.pts.length;
+  for (let j = 0; j < n; j++) { const q = face.pts[j], i = j + 1, kj = Math.max(0, Math.min(1, k * 1.7 - (j / n) * 0.7)); TX[i] = lerp(TX[i], fx + q.x * sc, kj); TY[i] = lerp(TY[i], fy + q.y * sc, kj); TA[i] = lerp(TA[i], q.a, kj); if (kj > 0.5) C[i] = face.col === 3 ? 3 : q.c; TROT[i] = q.r; }
   for (let i = face.pts.length + 1; i < N; i++) TA[i] *= 1 - 0.65 * k;
 }
 // 주먹밥
@@ -376,18 +378,16 @@ const TARGETS = {
       }
       let alpha = p < 0.12 && i >= 100 ? seg(p, 0.02, 0.12) * (i < 1500 ? 1 : 0) : 1;
       let col = 0;
-      if (p >= 0.38 && i < 2) { col = 2; alpha = 0.9; x = st.x + (i ? 10 : -10); y = st.y + 22; }
-      if (fire2 && i >= 2 && i < 2 + 21) { col = 2; alpha = 0.85; x = hl.x + ((i - 2) % 7 - 3) * 11; y = hl.y + 26 + Math.floor((i - 2) / 7) * 11; }
       alpha *= 1 - curfew * 0.85;
       setT(i, x, y, alpha, col);
     }
     hideAll(1500);
     state.freeze = fire1;
     // 시계
-    const T = [[0, '10월 1일', '오전'], [0.12, '10월 1일', '낮'], [0.3, '10월 1일', '오후 6시'], [0.36, '10월 1일', '오후 7시'], [0.48, '10월 2일', '아침'], [0.66, '10월 2일', '경찰서 점거'], [0.72, '10월 2일', '오후'], [0.86, '10월 2일', '오후 5시 · 계엄령'], [0.94, '10월 2일', '저녁 7시 · 통행금지']];
-    let cur = T[0]; T.forEach((t) => { if (p >= t[0]) cur = t; });
-    hud.clock.innerHTML = `<small>${tr('1946년')}</small><b>${tr(cur[1])}</b><span>${tr(cur[2])}</span>`;
-    hud.clock.classList.toggle('red', fire1 || (p >= 0.72 && p < 0.86));
+    // 순이네 집의 시간: 오빠가 나간 아침부터 돌아온 새벽까지
+    const at = [0, 0.2, 0.4, 0.58, 0.82]; let k = 0; at.forEach((v, i) => { if (p >= v) k = i; }); const cur = UI.clock[k];
+    hud.clock.innerHTML = `<small>${UI.year}</small><b>${esc(cur[0])}</b><span>${esc(cur[1])}</span>`;
+    hud.clock.classList.remove('red');
   },
   spread(p) {
     const day = Math.round(lerp(1, 80, seg(p, 0.1, 0.92)));
@@ -398,7 +398,7 @@ const TARGETS = {
     });
     hideAll(gi);
     const d = new Date(1946, 9, day);
-    hud.clock.innerHTML = `<small>${tr('1946년')}</small><b>${tr('{m}월 {d}일', { m: d.getMonth() + 1, d: d.getDate() })}</b><span>${day >= 76 ? tr('전국 73개 시군') : tr('{n}개 지역', { n: REGIONS.filter((r) => day >= r.day).length })}</span>`;
+    hud.clock.innerHTML = `<small>${tr('1946년')}</small><b>${tr('{m}월 {d}일', { m: d.getMonth() + 1, d: d.getDate() })}</b><span></span>`;
     hud.clock.classList.remove('red');
   },
   erased(p) {
@@ -462,6 +462,11 @@ const TARGETS = {
       setT(i, fc.x + Math.cos(th) * rr, fc.y + Math.sin(th) * rr, 0.85, i % 9 === 0 ? 3 : 0);
     }
     hideAll(Math.min(N, n));
+  },
+  records(p) { // 조용한 문서의 글줄
+    const bx = CX - R * 0.8, bw = R * 1.6, by = CY - R * 0.9;
+    for (let i = 0; i < 720; i++) { const line = Math.floor(i / 30), col = i % 30; setT(i, bx + (col / 30) * bw * (line % 5 === 4 ? 0.55 : 1), by + line * (R * 1.8 / 24), 0.16 + (line / 24 < p ? 0.22 : 0), 0); }
+    hideAll(720);
   },
   archive(p) {
     for (let i = 0; i < 400; i++) { const a = R1[i] * 6.28, r = R * (0.9 + R2[i] * 0.6); setT(i, CX + Math.cos(a) * r, CY + Math.sin(a) * r * 0.7, 0.25, 0); }
@@ -534,7 +539,6 @@ function drawBackdrop(id, p, t) {
     for (let k = -3; k <= 3; k++) { g.beginPath(); g.moveTo(CX - R * 1.2, CY + k * R * 0.28); g.lineTo(CX + R * 1.2, CY + k * R * 0.28 + 20); g.stroke(); g.beginPath(); g.moveTo(CX + k * R * 0.3, CY - R); g.lineTo(CX + k * R * 0.3 + 30, CY + R); g.stroke(); }
     g.strokeStyle = 'rgba(255,248,230,.18)'; g.setLineDash([4, 6]);
     g.beginPath(); g.moveTo(CX - R * 1.2, CY - R * 0.62); g.lineTo(CX + R * 1.2, CY - R * 0.5); g.stroke(); g.setLineDash([]);
-    if (state.freeze || (p >= 0.72 && p < 0.86)) { g.fillStyle = `rgba(200,56,47,${0.06 + 0.04 * Math.sin(t * 2)})`; g.fillRect(0, 0, W, H); }
     const cf = seg(p, 0.86, 0.98) * (1 - (state.dawnK || 0) * 0.8); if (cf > 0) { g.fillStyle = `rgba(0,0,0,${cf * 0.6})`; g.fillRect(0, 0, W, H); }
     if (state.dawnK > 0) { const dg = g.createLinearGradient(0, H, 0, H * 0.3); dg.addColorStop(0, `rgba(255,190,120,${0.22 * state.dawnK})`); dg.addColorStop(1, 'rgba(255,190,120,0)'); g.fillStyle = dg; g.fillRect(0, 0, W, H); }
     if (p > 0.82 && !state.dawn && state.wait > 0.01) { g.strokeStyle = 'rgba(255,214,150,.7)'; g.lineWidth = 2; g.beginPath(); g.arc(CX, CY + R * 0.9, 22, -Math.PI / 2, -Math.PI / 2 + state.wait * 6.283); g.stroke(); g.lineWidth = 1; }
@@ -559,7 +563,16 @@ function drawBackdrop(id, p, t) {
     g.beginPath(); g.moveTo(CX + 14, top); g.bezierCurveTo(CX + 20, CY * 0.6, CX + 8, CY, CX + 16, hy - R * 0.35); g.stroke();
     g.beginPath(); g.moveTo(CX - R * 0.95, hy - R * 0.32); g.quadraticCurveTo(CX, hy + R * 0.3, CX + R * 0.95, hy - R * 0.32); g.stroke();
     g.beginPath(); g.ellipse(CX, hy - R * 0.32, R * 0.95, 10, 0, 0, 6.283); g.stroke();
-    if (id === 'mine') { const d = seg(p, 0, 0.9); g.fillStyle = `rgba(0,0,0,${0.15 + d * 0.35})`; g.fillRect(0, 0, W, H); }
+    if (id === 'mine') {
+      const d = seg(p, 0, 0.9); g.fillStyle = `rgba(0,0,0,${0.15 + d * 0.35})`; g.fillRect(0, 0, W, H);
+      // 동굴 벽: 가장자리를 어둡게 감싸 좁은 굴 속에 있는 느낌
+      const vg = g.createRadialGradient(CX, CY, R * 0.4, CX, CY, Math.max(W, H) * 0.75); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, `rgba(0,0,0,${0.55 + d * 0.3})`); g.fillStyle = vg; g.fillRect(0, 0, W, H);
+      const drips = state.drips || (state.drips = []);
+      if (performance.now() > (state.nextDrip || 0)) { state.nextDrip = performance.now() + 900 + Math.random() * 2600; drips.push({ x: CX + (Math.random() - 0.5) * R * 1.4, y: CY - R * 1.1, vy: 0, fy: hy - R * 0.3 + Math.random() * R * 0.25, r: 0 }); }
+      for (let k = drips.length - 1; k >= 0; k--) { const q = drips[k];
+        if (q.r === 0) { q.vy += 0.35; q.y += q.vy; g.fillStyle = 'rgba(200,220,235,.55)'; g.beginPath(); g.ellipse(q.x, q.y, 1.4, 3.2, 0, 0, 6.283); g.fill(); if (q.y >= q.fy) { q.r = 1; sound.drip((q.x - CX) / R, 0.6 + Math.random() * 0.5); } }
+        else { q.r += 1.1; const a = Math.max(0, 0.4 - q.r / 90); g.strokeStyle = `rgba(200,220,235,${a})`; g.beginPath(); g.ellipse(q.x, q.fy, q.r, q.r * 0.28, 0, 0, 6.283); g.stroke(); if (a <= 0) drips.splice(k, 1); } }
+    }
     if (id === 'truth') for (let k = 0; k < state.july; k++) { const q = julyPos(k); g.strokeStyle = 'rgba(255,214,150,.55)'; g.beginPath(); g.ellipse(q.x, q.y, 9, 4, 0, 0, 6.283); g.stroke(); g.beginPath(); g.ellipse(q.x, q.y + 2, 6, 3, 0, 0, Math.PI); g.stroke(); g.fillStyle = 'rgba(255,248,230,.9)'; for (let m = 0; m < 4; m++) { g.beginPath(); g.ellipse(q.x - 4 + m * 2.6, q.y - 1.5 - (m % 2), 1.6, 0.8, m, 0, 6.283); g.fill(); } }
     if (id === 'truth' && state.truthLine > 0) { const y = CY - R * 0.95; g.strokeStyle = `rgba(255,214,150,${0.6 * state.truthLine})`; g.beginPath(); g.moveTo(CX - R * state.truthLine, y); g.lineTo(CX + R * state.truthLine, y); g.stroke(); }
   }
@@ -576,15 +589,27 @@ function drawBackdrop(id, p, t) {
 function placeLabels(id, p) {
   Object.values(labelEls).forEach((l) => (l.style.opacity = 0, l.style.pointerEvents = 'none'));
   const put = (key, x, y, op = 1) => { const l = labelEls[key]; l.style.transform = `translate(-50%,-50%) translate(${x}px,${y}px)`; l.style.opacity = op; l.style.pointerEvents = op > 0.3 ? 'auto' : 'none'; };
-  if (id === 'street') DAEGU.forEach((n) => put('d-' + n.k, CX + n.x * R, CY + n.y * R - 30, 1 - seg(p, 0.9, 1)));
   if (id === 'spread') { const day = Math.round(lerp(1, 80, seg(p, 0.1, 0.92))); REGIONS.forEach((r) => put('r-' + r.name, CX + r.x * R, CY + r.y * R - R * 0.2, day >= r.day ? 1 : 0.35)); }
-  if (id === 'truth') YEARS.forEach((yy, k) => put('y-' + yy.y, CX - R + (k / (YEARS.length - 1)) * R * 2, CY - R * 1.08, p >= yy.at ? 1 : 0.4));
 }
 
 // ---------------- 루프 ----------------
 let last = performance.now();
+const flash = document.createElement('div'); flash.className = 'chap-flash'; flash.setAttribute('aria-hidden', 'true'); document.body.appendChild(flash);
+const seenChap = new Set(); let lastChap = -1;
+function chapterCard(i) {
+  if (i === lastChap) return; lastChap = i; const sc = SCENES[i];
+  if (!sc || sc.id === 'prologue' || sc.id === 'records' || sc.id === 'archive' || seenChap.has(sc.id)) return; seenChap.add(sc.id);
+  const st = sc.cards.find((c) => c.kind === 'story'), num = sc.part === 2 ? 'PART 2' : st && st.chap ? st.chap.split(' · ')[0] : '';
+  flash.innerHTML = `<small>${esc(num)}</small><b>${esc(sc.part === 2 ? sc.title : st ? st.head : sc.title)}</b>`;
+  flash.classList.remove('on'); void flash.offsetWidth; flash.classList.add('on');
+}
+let frameErr = 0;
 function frame(now) {
-  if (state.videoOn || !lb.hidden) { last = now; requestAnimationFrame(frame); return; } // 영상·라이트박스 보는 동안 쉼
+  requestAnimationFrame(frame); // 먼저 다음 프레임을 예약 → 한 프레임에서 오류가 나도 화면이 멈추지 않음
+  try { draw(now); } catch (e) { if (frameErr++ < 3) console.warn('[빛쌀] frame', e); }
+}
+function draw(now) {
+  if (state.videoOn || !lb.hidden) { last = now; return; } // 영상·라이트박스 보는 동안 쉼
   const dt = Math.min(0.05, (now - last) / 1000); last = now; const t = now / 1000;
   if (TOUCH && ptr.in && now - ptr.t > 2500) ptr.in = false;
   measure();
@@ -595,7 +620,7 @@ function frame(now) {
   document.body.dataset.scene = id;
   // HUD 가시성
   hud.clock.classList.toggle('on', id === 'street' || id === 'spread');
-  hud.count.classList.toggle('on', id === 'demand');
+  hud.count.classList.remove('on'); // 이야기 장면에선 숫자를 띄우지 않음
   hud.year.classList.toggle('on', id === 'boundary');
   hud.depth.classList.toggle('on', id === 'mine');
   glass.classList.toggle('on', id === 'prologue' && state.entered);
@@ -653,7 +678,7 @@ function frame(now) {
   if (id === 'hunger' && state.hold > 0.05) { g.strokeStyle = `rgba(255,248,230,${0.5 * state.hold})`; g.beginPath(); g.arc(ptr.x, ptr.y, 26 + state.hold * 10, -Math.PI / 2, -Math.PI / 2 + state.hold * 6.283); g.stroke(); }
   sound.update(id, p, { freeze: state.freeze, lamps: state.lamps.length });
   placeLabels(id, p);
-  requestAnimationFrame(frame);
+  chapterCard(cur);
 }
 
 // ---------------- 캔버스 인터랙션 ----------------

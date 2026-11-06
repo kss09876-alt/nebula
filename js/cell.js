@@ -1,7 +1,7 @@
 import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=17';
 import { tr, langSwitcher } from './i18n.js?v=3';
 import { IS_MOBILE, sensor, keepAwake } from './sensors.js?v=2';
-import { videoHTML, mountVideos } from './video.js?v=1';
+import { videoHTML, mountVideos } from './video.js?v=2';
 
 const story = document.getElementById('story');
 const wipe = document.getElementById('wipe');
