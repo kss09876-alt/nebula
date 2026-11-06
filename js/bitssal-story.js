@@ -13,7 +13,7 @@ const ko = {
   street: [{ who: '1946년 10월 1일 밤', html: '<p>밤이 되자 역 쪽에서 큰일이 났다는 말이 골목을 돌았다. 어머니는 대문을 걸고, 등잔도 켜지 않은 채 앉아 있었다.</p><p>오빠는 새벽에 돌아왔다. 신발에 흙이 잔뜩 묻어 있었고, 아무 말도 하지 않았다. 그날 오빠가 무엇을 보았는지, 나는 끝내 묻지 못했다.</p>' }],
   spread: [{ who: '1946년 가을', html: '<p>소식은 기차보다 빨랐다. 칠곡 외가에서도, 영천 이모네서도 비슷한 이야기가 들려왔다.</p><p>어른들은 그 일을 그냥 ‘대구 일’이라고만 불렀다. 이름을 붙이는 것조차 조심해야 하는 일이 되었다.</p>' }],
   erased: [{ who: '1947년 겨울', html: '<p>그 뒤로 경찰이 몇 번이나 집에 와서 오빠를 찾았다. 오빠는 한동안 이 집 저 집을 옮겨 다니며 지냈다.</p><p>동네 사람들은 오빠 이름을 부를 때 목소리를 낮추기 시작했다. 오빠가 한 일은, 쌀을 달라고 걸어간 것뿐이었는데.</p>' }],
-  boundary: [{ who: '1950년 여름 · 순이, 열네 살', html: '<p>전쟁이 났다. 지난해 오빠는 “도장 하나만 찍으면 앞으로 괜찮다”는 말을 듣고 보도연맹에 이름을 올렸다.</p><p>7월 어느 아침, 지서에서 잠깐 다녀가라는 부름이 왔다. 오빠는 흰 고무신을 신고 나서며 말했다. “저녁밥 해 놔라.”</p><p class="note">이 연결은 순이네 한 가족의 이야기입니다. 1946년의 일과 1950년의 희생을 모든 희생자에게 이어 붙이지 않습니다.</p>' }],
+  boundary: [{ who: '1950년 여름 · 순이, 열네 살', html: '<p>전쟁이 났다. 지난해 오빠는 “도장 하나만 찍으면 앞으로 괜찮다”는 말을 듣고 보도연맹에 이름을 올렸다.</p><p>7월 어느 아침, 지서에서 잠깐 다녀가라는 부름이 왔다. 오빠는 흰 고무신을 신고 나서며 말했다. “저녁밥 해 놔라.”</p>' }],
   mine: [{ who: '1950년 7월', html: '<p>어머니는 그날 저녁, 밥을 한 그릇 더 퍼 두었다. 밥이 식고, 이튿날이 되고, 장마가 지나도 오빠는 돌아오지 않았다.</p><p>경산 쪽 광산으로 사람들이 실려 갔다는 소문을 들었다. 그러나 그곳에 가 볼 수도, 누구에게 물어볼 수도 없었다.</p>' }],
   truth: [
     { who: '1950년부터', html: '<p>그해부터 어머니는 해마다 7월이면 밥을 한 그릇 더 펐다. 아무도 그 그릇에 숟가락을 대지 않았다. 어머니가 돌아가신 뒤로는 내가 펐다.</p><p>1993년, 신문에 처음으로 경산 이야기가 실렸다. 나는 그 기사를 오려 어머니 사진 앞에 두었다.</p>' },
@@ -33,7 +33,7 @@ const en = {
   street: [{ who: 'Night of October 1, 1946', html: '<p>After dark, word went around the alley that something terrible had happened near the station. Mother bolted the gate and sat without lighting the lamp.</p><p>My brother came home at dawn, his shoes caked with mud, and said nothing. I never did ask him what he saw that day.</p>' }],
   spread: [{ who: 'Autumn 1946', html: '<p>The news travelled faster than the trains. Similar stories came from my mother’s family in Chilgok and my aunt in Yeongcheon.</p><p>The grown-ups only called it “the Daegu thing.” Even giving it a name became something to be careful about.</p>' }],
   erased: [{ who: 'Winter 1947', html: '<p>After that, the police came to our house again and again looking for my brother. For a while he moved from house to house.</p><p>People in the neighbourhood began to lower their voices when they said his name. All he had done was walk out to ask for rice.</p>' }],
-  boundary: [{ who: 'Summer 1950 · Suni, age 14', html: '<p>The war began. The year before, my brother had been told that “one stamp and you’ll be fine from now on,” and had put his name in the National Guidance Alliance.</p><p>One morning in July, word came from the police box to drop by for a moment. He put on his white rubber shoes and said, “Have supper ready.”</p><p class="note">This link belongs to one family’s story. The exhibition does not attach the events of 1946 to every victim of 1950.</p>' }],
+  boundary: [{ who: 'Summer 1950 · Suni, age 14', html: '<p>The war began. The year before, my brother had been told that “one stamp and you’ll be fine from now on,” and had put his name in the National Guidance Alliance.</p><p>One morning in July, word came from the police box to drop by for a moment. He put on his white rubber shoes and said, “Have supper ready.”</p>' }],
   mine: [{ who: 'July 1950', html: '<p>That evening Mother served one extra bowl of rice. The rice went cold, the next day came, the monsoon passed, and my brother did not come back.</p><p>We heard rumours that people had been taken to a mine near Gyeongsan. But we could not go there, and there was no one we could ask.</p>' }],
   truth: [
     { who: 'From 1950 on', html: '<p>From that year, every July, Mother served one extra bowl of rice. No one ever put a spoon in it. After she died, I served it.</p><p>In 1993 a newspaper wrote about Gyeongsan for the first time. I cut out the article and placed it before her photograph.</p>' },
@@ -53,7 +53,7 @@ const zh = {
   street: [{ who: '1946年10月1日夜', html: '<p>天黑后，巷子里传开了车站那边出大事的消息。母亲闩上大门，连油灯也没点，就那样坐着。</p><p>哥哥天亮才回来，鞋上沾满了泥，一句话也没说。那天他看到了什么，我始终没能问出口。</p>' }],
   spread: [{ who: '1946年秋', html: '<p>消息比火车还快。漆谷的外婆家、永川的姨妈家，也传来了相似的事。</p><p>大人们只把那件事叫作“大邱的事”。连给它起个名字，都成了要小心的事。</p>' }],
   erased: [{ who: '1947年冬', html: '<p>从那以后，警察好几次来家里找哥哥。哥哥有一阵子在别人家之间辗转躲藏。</p><p>邻居们提到哥哥的名字时，开始压低声音。可他做的，只是走出去要米而已。</p>' }],
-  boundary: [{ who: '1950年夏 · 顺伊，十四岁', html: '<p>战争爆发了。前一年，哥哥听人说“只要盖个章，以后就没事了”，便在保导联盟登记了名字。</p><p>七月的一个早晨，派出所来话，让他过去一趟。哥哥穿上白色胶鞋出门，说：“把晚饭做好。”</p><p class="note">这一联系只属于顺伊一家的故事。本展不把1946年的事件与1950年的遇难套用到所有遇难者身上。</p>' }],
+  boundary: [{ who: '1950年夏 · 顺伊，十四岁', html: '<p>战争爆发了。前一年，哥哥听人说“只要盖个章，以后就没事了”，便在保导联盟登记了名字。</p><p>七月的一个早晨，派出所来话，让他过去一趟。哥哥穿上白色胶鞋出门，说：“把晚饭做好。”</p>' }],
   mine: [{ who: '1950年7月', html: '<p>那天晚上，母亲多盛了一碗饭。饭凉了，第二天到了，梅雨过去了，哥哥也没有回来。</p><p>我们听说有人被拉到庆山那边的矿山。可我们去不了那里，也没有人可以问。</p>' }],
   truth: [
     { who: '从1950年起', html: '<p>从那年起，每到七月，母亲都会多盛一碗饭。谁也没有动过那碗饭。母亲去世后，就由我来盛。</p><p>1993年，报纸第一次登出了庆山的事。我把那篇报道剪下来，放在母亲的照片前。</p>' },
@@ -73,7 +73,7 @@ const ja = {
   street: [{ who: '1946年10月1日の夜', html: '<p>夜になると、駅のほうで大変なことが起きたといううわさが路地をめぐった。母は門にかんぬきをかけ、灯りもつけずに座っていた。</p><p>兄は明け方に帰ってきた。靴は泥だらけで、何も言わなかった。あの日兄が何を見たのか、わたしはとうとう聞けなかった。</p>' }],
   spread: [{ who: '1946年秋', html: '<p>知らせは汽車より速かった。漆谷の母の実家からも、永川のおばの家からも、似た話が届いた。</p><p>大人たちはそれをただ「大邱のこと」と呼んだ。名前をつけることさえ、気をつけなければならないことになった。</p>' }],
   erased: [{ who: '1947年冬', html: '<p>それから警察が何度も家に来て、兄を探した。兄はしばらく、あちこちの家を転々として暮らした。</p><p>近所の人たちは、兄の名前を呼ぶとき声をひそめるようになった。兄がしたのは、米をくれと歩いて行ったことだけだったのに。</p>' }],
-  boundary: [{ who: '1950年夏 · スニ、14歳', html: '<p>戦争が始まった。前の年、兄は「判子ひとつ押せばこの先は大丈夫だ」と言われて、保導連盟に名前を載せていた。</p><p>七月のある朝、駐在所からちょっと寄るようにと呼び出しが来た。兄は白いゴム靴をはいて出かけながら言った。「夕飯、炊いといてくれ」</p><p class="note">このつながりは、スニの家族ひとつの物語です。1946年の出来事と1950年の犠牲を、すべての犠牲者に結びつけることはしません。</p>' }],
+  boundary: [{ who: '1950年夏 · スニ、14歳', html: '<p>戦争が始まった。前の年、兄は「判子ひとつ押せばこの先は大丈夫だ」と言われて、保導連盟に名前を載せていた。</p><p>七月のある朝、駐在所からちょっと寄るようにと呼び出しが来た。兄は白いゴム靴をはいて出かけながら言った。「夕飯、炊いといてくれ」</p>' }],
   mine: [{ who: '1950年7月', html: '<p>その晩、母はご飯をもう一杯よそっておいた。ご飯が冷め、翌日になり、梅雨が明けても、兄は帰ってこなかった。</p><p>慶山のほうの鉱山へ人が連れて行かれたといううわさを聞いた。けれど、そこへ行くことも、誰かにたずねることもできなかった。</p>' }],
   truth: [
     { who: '1950年から', html: '<p>その年から、母は毎年七月になるとご飯をもう一杯よそった。誰もその茶碗にさじをつけなかった。母が亡くなってからは、わたしがよそった。</p><p>1993年、新聞にはじめて慶山の話がのった。わたしはその記事を切り抜いて、母の写真の前に置いた。</p>' },

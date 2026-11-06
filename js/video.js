@@ -48,7 +48,12 @@ export function playVideo(el) {
   el.innerHTML = '';
   const b = busy(el); let timers = [];
   const done = () => { b.remove(); };
-  if (p.kind === 'drive' || p.kind === 'file') {
+  if (p.kind === 'drive') { // 구글이 외부 사이트의 직접 재생을 막아서(형식 오류) 바로 드라이브 플레이어로
+    const f = frame(el, `https://drive.google.com/file/d/${p.id}/preview`);
+    f.addEventListener('load', () => setTimeout(done, 700), { once: true });
+    timers.push(setTimeout(() => escape(el, `https://drive.google.com/file/d/${p.id}/view`, words().open), 9000));
+    active = { el, stop: () => { timers.forEach(clearTimeout); restore(); } };
+  } else if (p.kind === 'file') {
     const v = document.createElement('video');
     v.controls = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', ''); v.preload = 'auto';
     const img = poster(p); if (img) v.poster = img;
