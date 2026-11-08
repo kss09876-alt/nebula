@@ -1,9 +1,14 @@
 // NEBULA — 메인: 성운 가운데에서 태어난 전시 행성계
 import * as THREE from 'three';
-import { loadData, imageUrl, esc } from './data.js?v=18';
+import { loadData, imageUrl, esc } from './data.js?v=19';
 import { hsound } from './home-sound.js?v=6';
 import { tr, lang, langSwitcher } from './i18n.js?v=4';
 import { IS_MOBILE } from './sensors.js?v=3';
+import { initHomeInterface } from './home-interface.js?v=2';
+const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
+let calm = motionQuery.matches;
+try { calm ||= localStorage.getItem('nebula-calm') === 'true'; } catch (e) {}
+document.body.classList.toggle('calm', calm);
 const M = {}; // 모바일 전용 기능 연결점 (home-mobile.js가 채움)
 
 const canvas = document.getElementById('stage');
@@ -26,7 +31,7 @@ scene.add(sun);
 const world = new THREE.Group();
 scene.add(world);
 
-const shortTitle = (t = '') => t.replace(/^(CELL|X)\s*-?\s*\d+\s*·\s*/i, '');
+const shortTitle = (t = '') => t.replace(/^\s*(?:(?:CELL|X|N)\s*-?\s*\d+\s*[·:|–-]\s*)+/i, '');
 const code = (i) => 'N-' + String(i + 1).padStart(3, '0');
 
 // ---------- 공통 텍스처 ----------
@@ -117,19 +122,20 @@ function planetTexture(cell, kind) {
 // ---------- 가운데 별과 성운 ----------
 const core = new THREE.Group();
 world.add(core);
-core.add(new THREE.Mesh(new THREE.SphereGeometry(0.75, 48, 48), new THREE.MeshBasicMaterial({ color: '#fff6e6' })));
-core.add(sprite(glow('#ffd9a0', 1), [6, 6], 0.9));
-core.add(sprite(glow('#9db8ff', 0.8), [11, 11], 0.35));
+core.add(new THREE.Mesh(new THREE.SphereGeometry(0.32, 32, 32), new THREE.MeshBasicMaterial({ color: '#fff6e6' })));
+const coreGlow = sprite(glow('#e9c9a4', 1), [7, 7], 0.78);
+core.add(coreGlow);
+core.add(sprite(glow('#91b8be', 0.8), [13, 13], 0.22));
 // 성운: 가운데 별을 감싼 색 구름 + 나선 팔의 먼지 (별·전시가 태어나는 곳)
 const nebula = new THREE.Group(); world.add(nebula);
 const puffTex = canvasTex(256, 256, (g, w, h) => {
   for (let k = 0; k < 14; k++) { const x = w * (0.3 + Math.random() * 0.4), y = h * (0.3 + Math.random() * 0.4), r = w * (0.12 + Math.random() * 0.22); const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(255,255,255,.35)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
 });
-const NEB_COL = ['#7a5cff', '#ff6fae', '#4fb7ff', '#ffcf8a', '#9b7bff', '#57e0d1'];
+const NEB_COL = ['#9db7d7', '#b99880', '#7d97af', '#d8c098', '#8b92b3', '#7ab4ad'];
 const puffs = [];
 for (let k = 0; k < 42; k++) {
   const arm = k % 2, u = (k / 42), ang = arm * Math.PI + u * 5.2 + (Math.random() - 0.5) * 0.6, r = 1.4 + u * 5.2 + Math.random() * 0.8;
-  const m = new THREE.SpriteMaterial({ map: puffTex, color: NEB_COL[k % NEB_COL.length], transparent: true, opacity: 0.07 + Math.random() * 0.1, depthWrite: false, blending: THREE.AdditiveBlending, rotation: Math.random() * 6.28 });
+  const m = new THREE.SpriteMaterial({ map: puffTex, color: NEB_COL[k % NEB_COL.length], transparent: true, opacity: 0.14 + Math.random() * 0.14, depthWrite: false, blending: THREE.AdditiveBlending, rotation: Math.random() * 6.28 });
   const sp = new THREE.Sprite(m); const sz = 2.2 + Math.random() * 3.2; sp.scale.set(sz, sz, 1);
   sp.position.set(Math.cos(ang) * r, (Math.random() - 0.5) * 0.9, Math.sin(ang) * r); sp.userData = { spin: (Math.random() - 0.5) * 0.15, base: m.opacity, ph: Math.random() * 6.28 };
   nebula.add(sp); puffs.push(sp);
@@ -148,6 +154,21 @@ for (let k = 0; k < 42; k++) {
 // ---------- 행성 ----------
 const planets = [];
 const sphereGeo = new THREE.SphereGeometry(1, 64, 48);
+const pickBodies = [];
+
+function orbitTrail(radius, color) {
+  const pts = [], colors = [], c = new THREE.Color(color);
+  for (let i = 0; i < 32; i++) {
+    const u = i / 31, a = -0.36 * (1 - u);
+    pts.push(new THREE.Vector3(Math.cos(a) * radius, 0, Math.sin(a) * radius));
+    colors.push(c.r * u, c.g * u, c.b * u);
+  }
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  const trail = new THREE.Line(geo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+  world.add(trail);
+  return trail;
+}
 
 function orbitLine(r, color) {
   const pts = []; for (let i = 0; i <= 160; i++) { const a = (i / 160) * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r)); }
@@ -183,6 +204,7 @@ function makePlanet(cell, i, total) {
   const atmo = sprite(glow(cell.color || '#ffffff', 0.9), [radius * 3.4, radius * 3.4], open ? 0.45 : 0.15);
   group.add(atmo);
   const extra = {};
+  extra.trail = orbitTrail(orbitR, cell.color || '#b8cdc4');
   if (fx === 'prism') { extra.ring = ringMesh(radius * 1.4, radius * 2.3); group.add(extra.ring); }
   if (fx === 'rice') {
     const n = 90, p = new Float32Array(n * 3);
@@ -236,11 +258,15 @@ function makePlanet(cell, i, total) {
     label.addEventListener('click', () => open && (M.onTap ? M.onTap(planet) : enter(planet)));
     label.addEventListener('pointerenter', () => { labelHover = planet; });
     label.addEventListener('pointerleave', () => { labelHover = null; });
+    label.addEventListener('focus', () => { labelHover = planet; });
+    label.addEventListener('blur', () => { labelHover = null; });
+    label.disabled = !open;
     labelsEl.appendChild(label);
     planet.label = label;
   }
   body.userData.planet = planet;
   planets.push(planet);
+  pickBodies.push(body);
   if (open && cell.thumbnail) {
     new THREE.TextureLoader().setCrossOrigin('anonymous').load(imageUrl(cell.thumbnail, 1024), (t) => { t.colorSpace = THREE.SRGBColorSpace; mat.map = t; mat.needsUpdate = true; });
   }
@@ -253,17 +279,17 @@ let labelHover = null;
 const ray = new THREE.Raycaster();
 const ptr = new THREE.Vector2(-9, -9);
 
-canvas.addEventListener('pointerdown', (e) => { state.dragging = true; state.moved = 0; state.px = e.clientX; state.py = e.clientY; canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener('pointerdown', (e) => { state.dockFocus = null; state.dragging = true; state.moved = 0; state.px = e.clientX; state.py = e.clientY; canvas.setPointerCapture(e.pointerId); });
 canvas.addEventListener('pointermove', (e) => {
   ptr.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
-  state.mx = ptr.x; state.my = ptr.y;
+  state.mx = calm ? 0 : ptr.x; state.my = calm ? 0 : ptr.y;
   if (state.dragging) {
     const dx = e.clientX - state.px, dy = e.clientY - state.py;
     state.moved += Math.abs(dx) + Math.abs(dy);
     state.tAz += dx * 0.005; state.tEl = Math.max(0.08, Math.min(1.25, state.tEl + dy * 0.003));
     state.px = e.clientX; state.py = e.clientY;
   }
-  card.style.transform = `translate(${e.clientX + 18}px, ${e.clientY + 18}px)`;
+  positionCard(e.clientX, e.clientY);
 });
 canvas.addEventListener('pointerup', (e) => {
   state.dragging = false;
@@ -275,12 +301,18 @@ canvas.addEventListener('pointerup', (e) => {
   } else if (M.onTap) { state.swiped = false; ptr.set(-9, -9); }
 });
 canvas.addEventListener('pointerleave', () => ptr.set(-9, -9));
+canvas.addEventListener('pointercancel', () => { state.dragging = false; ptr.set(-9, -9); });
+addEventListener('blur', () => { state.dragging = false; ptr.set(-9, -9); });
 canvas.addEventListener('wheel', (e) => { state.tDist = Math.max(state.baseDist * 0.45, Math.min(state.baseDist * 1.6, state.tDist + e.deltaY * 0.02)); }, { passive: true });
 
 function pick() {
   ray.setFromCamera(ptr, camera);
-  const hits = ray.intersectObjects(planets.map((p) => p.body), false);
+  const hits = ray.intersectObjects(pickBodies, false);
   return hits.length ? hits[0].object.userData.planet : null;
+}
+function positionCard(x, y) {
+  const w = card.offsetWidth || 290, h = card.offsetHeight || 160;
+  card.style.transform = `translate(${Math.max(12, Math.min(innerWidth - w - 12, x + 18))}px, ${Math.max(80, Math.min(innerHeight - h - 15, y + 18))}px)`;
 }
 const sv = new THREE.Vector3();
 function setHover(p) {
@@ -299,7 +331,9 @@ function setHover(p) {
     card.querySelector('.hc-sub').textContent = p.open ? c.subtitle || '' : tr('아직 빛나지 않은 행성');
     card.querySelector('.hc-meta').textContent = c.rooms ? `ROOMS · ${c.rooms.map((r) => r.short).join(' · ')}` : [c.artist, c.period].filter(Boolean).join(' · ');
     card.style.setProperty('--accent', c.color || '#7ee0d0');
-    card.classList.add('on');
+    const fromDock = state.uiHover || state.dockFocus;
+    card.classList.toggle('on', !fromDock);
+    if (!fromDock) { p.group.getWorldPosition(sv); sv.project(camera); positionCard((sv.x * 0.5 + 0.5) * innerWidth, (-sv.y * 0.5 + 0.5) * innerHeight); }
   } else card.classList.remove('on');
 }
 function enter(p) {
@@ -307,42 +341,53 @@ function enter(p) {
   state.entering = { p, t: performance.now(), from: camera.position.clone() };
   card.classList.remove('on'); hsound.enter(p.i);
   document.body.classList.add('landing');
-  wipe.style.background = p.cell.color || '#7ee0d0';
-  setTimeout(() => wipe.classList.add('on'), 900);
-  setTimeout(() => { location.href = p.cell.url || `cell.html?id=${encodeURIComponent(p.cell.id)}`; }, 1400);
+  const caption = document.getElementById('landing-caption');
+  caption.querySelector('small').textContent = code(p.i);
+  caption.querySelector('strong').textContent = shortTitle(p.cell.title);
+  p.group.getWorldPosition(sv); sv.project(camera);
+  const cx = (sv.x * 0.5 + 0.5) * 100, cy = (-sv.y * 0.5 + 0.5) * 100;
+  wipe.style.clipPath = `circle(0% at ${cx}% ${cy}%)`;
+  setTimeout(() => { wipe.style.clipPath = `circle(150% at ${cx}% ${cy}%)`; wipe.classList.add('on'); }, calm ? 20 : 850);
+  setTimeout(() => { location.href = p.cell.url || `cell.html?id=${encodeURIComponent(p.cell.id)}`; }, calm ? 180 : 1550);
 }
 
 // ---------- 루프 ----------
 const v = new THREE.Vector3(), target = new THREE.Vector3(), up = new THREE.Vector3();
-let last = performance.now(), t0 = performance.now();
+let last = performance.now(), elapsed = 0, raf = 0, started = false;
 function tick(now) {
+  raf = 0;
+  if (document.hidden) return;
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
-  const t = (now - t0) / 1000;
-  if (!state.entering) setHover(state.mFocus || labelHover || pick());
-  M.frame && M.frame(dt);
+  elapsed += calm ? 0 : dt;
+  const t = elapsed, motionDt = calm ? 0 : dt;
+  if (!state.entering) setHover(state.mFocus || state.uiHover || labelHover || state.dockFocus || pick());
+  if (!calm && M.frame) M.frame(dt);
   const slow = state.hovered || state.entering ? 0.15 : 1;
-  if (!state.dragging && !state.entering) state.tAz += dt * 0.02;
+  if (!state.dragging && !state.entering && !state.dockFocus) state.tAz += motionDt * 0.015;
 
-  core.rotation.y += dt * 0.1;
+  core.rotation.y += motionDt * 0.1;
   const pulse = 1 + Math.sin(t * 1.4) * 0.04;
-  nebula.rotation.y += dt * 0.025 * (1 + (state.boost || 0) * 2); // 성운이 천천히 돎
-  for (const sp of puffs) { sp.material.rotation += dt * sp.userData.spin; sp.material.opacity = sp.userData.base * (0.75 + 0.25 * Math.sin(t * 0.4 + sp.userData.ph)) * pulse; }
+  coreGlow.scale.setScalar(7 * pulse);
+  nebula.rotation.y += motionDt * 0.018 * (1 + (state.boost || 0) * 2); // 성운이 천천히 돎
+  for (const sp of puffs) { sp.material.rotation += motionDt * sp.userData.spin; sp.material.opacity = sp.userData.base * (0.75 + 0.25 * Math.sin(t * 0.4 + sp.userData.ph)) * pulse; }
 
   planets.forEach((p) => {
-    p.intro = Math.min(1.6, p.intro + dt * 0.8);
+    p.intro = calm ? 1.6 : Math.min(1.6, p.intro + dt * 0.8);
     const e = 1 - Math.pow(1 - Math.max(0, Math.min(1, p.intro * 1.4 - p.i * 0.12)), 3);
-    p.angle += dt * p.speed * slow * (1 + (state.boost || 0)) * (state.sleep ? 0.08 : 1);
+    p.angle += motionDt * p.speed * slow * (1 + (state.boost || 0)) * (state.sleep ? 0.08 : 1);
     const r = p.orbitR * (0.6 + 0.4 * e);
     p.group.position.set(Math.cos(p.angle) * r, Math.sin(p.angle * 2 + p.i) * 0.08, Math.sin(p.angle) * r);
-    p.body.rotation.y += dt * p.spin;
+    p.body.rotation.y += motionDt * p.spin;
     p.hover += ((state.hovered === p ? 1 : 0) - p.hover) * 0.12;
     p.body.scale.setScalar(p.radius * (0.2 + 0.8 * e) * (1 + p.hover * 0.25));
     p.atmo.material.opacity = ((p.open ? 0.4 : 0.12) + p.hover * 0.45 + Math.sin(t * 1.5 + p.i) * 0.05) * e;
-    p.orbit.material.opacity = (0.12 + p.hover * 0.45) * e;
-    if (p.extra.ring) { p.extra.ring.rotation.z += dt * 0.15; p.extra.ring.material.opacity = (0.75 + p.hover * 0.25) * e; }
-    if (p.extra.redline) { p.extra.redline.rotation.y += dt * 0.2; p.extra.redline.material.opacity = (0.45 + p.hover * 0.5) * e; }
-    if (p.extra.moons) p.extra.moons.forEach((m) => { m.a += dt * m.sp * (1 + p.hover); const v3 = new THREE.Vector3(Math.cos(m.a) * m.rr, 0, Math.sin(m.a) * m.rr).applyEuler(m.ring.rotation); m.mg.position.copy(v3); m.ring.material.opacity = (0.18 + p.hover * 0.4) * e; });
-    if (p.extra.dust) { p.extra.dust.rotation.y += dt * 0.4; p.extra.dust.material.size = 0.07 + Math.abs(Math.sin(t * 3)) * 0.05; }
+    p.orbit.material.opacity = (0.18 + p.hover * 0.34) * e;
+    p.extra.trail.rotation.y = -p.angle;
+    p.extra.trail.material.opacity = (0.36 + p.hover * 0.45) * e;
+    if (p.extra.ring) { p.extra.ring.rotation.z += motionDt * 0.15; p.extra.ring.material.opacity = (0.75 + p.hover * 0.25) * e; }
+    if (p.extra.redline) { p.extra.redline.rotation.y += motionDt * 0.2; p.extra.redline.material.opacity = (0.45 + p.hover * 0.5) * e; }
+    if (p.extra.moons) p.extra.moons.forEach((m) => { m.a += motionDt * m.sp * (1 + p.hover); target.set(Math.cos(m.a) * m.rr, 0, Math.sin(m.a) * m.rr).applyEuler(m.ring.rotation); m.mg.position.copy(target); m.ring.material.opacity = (0.18 + p.hover * 0.4) * e; });
+    if (p.extra.dust) { p.extra.dust.rotation.y += motionDt * 0.4; p.extra.dust.material.size = 0.07 + Math.abs(Math.sin(t * 3)) * 0.05; }
     if (p.extra.waves) p.extra.waves.forEach((l) => { const ph = (t * 0.45 + l.userData.k / 3) % 1; l.scale.setScalar(p.radius * (1.1 + ph * 1.8)); l.material.opacity = (1 - ph) * 0.6 * e; });
   });
 
@@ -350,9 +395,9 @@ function tick(now) {
   state.az += (state.tAz - state.az) * 0.06;
   state.el += (state.tEl - state.el) * 0.06;
   state.dist += (state.tDist - state.dist) * 0.06;
-  if (state.entering) {
+  if (state.entering && !calm) {
     const { p } = state.entering;
-    const k = Math.min(1, (now - state.entering.t) / 1300), ease = k * k * (3 - 2 * k);
+    const k = Math.min(1, (now - state.entering.t) / 1450), ease = 1 - Math.pow(1 - k, 3);
     p.group.getWorldPosition(target);
     up.set(0, p.radius * 0.8, 0);
     v.copy(target).normalize().multiplyScalar(-p.radius * 3.2).add(target).add(up); // X 쪽(빛이 드는 면)에서 다가감
@@ -365,19 +410,26 @@ function tick(now) {
       Math.sin(state.az) * Math.cos(state.el) * state.dist);
     camera.lookAt(0, 0, 0);
   }
+  camera.updateMatrixWorld(true);
 
   // 라벨
   planets.forEach((p) => {
     if (!p.label) return;
     p.group.getWorldPosition(v); v.y += p.radius * 1.7; v.project(camera);
-    p.label.style.opacity = v.z > 1 || state.entering ? 0 : 1;
+    const visible = v.z < 1 && Math.abs(v.x) < 0.95 && v.y > -0.75 && v.y < 0.82 && !state.entering;
+    p.label.style.opacity = visible ? 1 : 0;
+    p.label.style.visibility = visible ? 'visible' : 'hidden';
     p.label.style.transform = `translate(-50%,-100%) translate(${(v.x * 0.5 + 0.5) * innerWidth}px,${(-v.y * 0.5 + 0.5) * innerHeight}px)`;
   });
 
   hsound.update({ drag: Math.abs(state.tAz - state.az) + Math.abs(state.tEl - state.el), zoom: (state.dist - state.baseDist * 0.45) / (state.baseDist * 1.15), t, hovering: !!state.hovered, entering: !!state.entering });
   renderer.render(scene, camera);
-  requestAnimationFrame(tick);
+  raf = requestAnimationFrame(tick);
 }
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { cancelAnimationFrame(raf); raf = 0; state.dragging = false; }
+  else if (started && !raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
+});
 
 function resize() {
   renderer.setSize(innerWidth, innerHeight, false);
@@ -385,27 +437,54 @@ function resize() {
   camera.updateProjectionMatrix();
   const maxR = planets.length ? planets[planets.length - 1].orbitR + 1.2 : 10;
   const fit = maxR / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-  state.baseDist = camera.aspect >= 1 ? fit * 0.72 : fit / camera.aspect * 0.9; // 세로 화면: 바깥 행성까지 보이게
+  state.baseDist = camera.aspect >= 1 ? fit * 0.78 : fit / camera.aspect * 0.8; // 세로 화면: 바깥 행성까지 보이게
   state.tDist = state.dist = state.baseDist;
+  camera.setViewOffset(innerWidth, innerHeight, innerWidth > 820 ? -innerWidth * 0.055 : 0, innerHeight * (innerWidth > 640 ? 0.055 : 0.10), innerWidth, innerHeight);
 }
 addEventListener('resize', resize);
 addEventListener('pageshow', (e) => { if (e.persisted) location.reload(); });
 
 // ---------- 패널 ----------
+let panelTrigger = null;
+let activePanel = null;
+const panelBackground = document.querySelectorAll('.topbar, .hero-copy, .orbit-dock, .home-footer, #labels, #stage');
+function closePanels(restore = true) {
+  document.querySelectorAll('.panel').forEach((panel) => { panel.hidden = true; });
+  ['btn-index', 'btn-about'].forEach((id) => document.getElementById(id).setAttribute('aria-expanded', 'false'));
+  panelBackground.forEach((el) => { el.inert = false; });
+  activePanel = null;
+  if (restore && panelTrigger) panelTrigger.focus();
+  panelTrigger = null;
+}
+function openPanel(btnId, panelId, trigger) {
+  const btn = document.getElementById(btnId), panel = document.getElementById(panelId);
+  const open = panel.hidden;
+  closePanels(false);
+  panel.hidden = !open; btn.setAttribute('aria-expanded', String(open)); hsound.ui(open);
+  if (open) {
+    panelTrigger = trigger || btn; activePanel = panel;
+    panelBackground.forEach((el) => { el.inert = true; });
+    panel.querySelector('.panel-inner').focus();
+  }
+}
 function bindPanel(btnId, panelId) {
   const btn = document.getElementById(btnId), panel = document.getElementById(panelId);
-  btn.addEventListener('click', () => {
-    const open = panel.hidden;
-    document.querySelectorAll('.panel').forEach((p) => (p.hidden = true));
-    document.querySelectorAll('.nav-btn').forEach((b) => b.setAttribute('aria-expanded', 'false'));
-    panel.hidden = !open; btn.setAttribute('aria-expanded', String(open)); hsound.ui(open);
-  });
-  panel.addEventListener('click', (e) => { if (e.target === panel) panel.hidden = true; });
+  panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'true');
+  btn.addEventListener('click', () => openPanel(btnId, panelId, btn));
+  panel.addEventListener('click', (e) => { if (e.target === panel || e.target.closest('.panel-close')) closePanels(); });
 }
 bindPanel('btn-index', 'index-panel');
 bindPanel('btn-about', 'about-panel');
-addEventListener('keydown', (e) => { if (e.key === 'Escape') document.querySelectorAll('.panel').forEach((p) => (p.hidden = true)); });
-
+addEventListener('keydown', (e) => {
+  if (!activePanel) return;
+  if (e.key === 'Escape') { e.preventDefault(); closePanels(); return; }
+  if (e.key !== 'Tab') return;
+  const focusable = [...activePanel.querySelectorAll('button:not(:disabled), a[href], [tabindex="0"]')].filter((el) => el.getClientRects().length);
+  const first = focusable[0], last = focusable.at(-1);
+  if (!first) { e.preventDefault(); return; }
+  if (e.shiftKey && (document.activeElement === first || !focusable.includes(document.activeElement))) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && (document.activeElement === last || !focusable.includes(document.activeElement))) { e.preventDefault(); first.focus(); }
+});
 
 // ---------- 자동 재생 / 입장 화면 ----------
 function sndGate(kicker, title, onStart) {
@@ -457,11 +536,18 @@ function autoSound() {
 document.querySelectorAll('.cell-list').forEach((l) => l.addEventListener('pointerover', (e) => { const li = e.target.closest('li'); if (li && li !== l._last) { l._last = li; hsound.tick(); } }));
 
 // ---------- 시작 ----------
+// Show the atmosphere immediately; live CMS and web fonts must not block first paint.
+resize();
+started = true;
+raf = requestAnimationFrame(tick);
+loader.classList.add('done');
+document.body.classList.add('ready');
+document.querySelector('.orbit-dock').setAttribute('aria-busy', 'true');
 (async () => {
   const { cells, source } = await loadData();
   document.body.dataset.source = source;
-  await document.fonts.ready.catch(() => {});
   cells.forEach((c, i) => makePlanet(c, i, cells.length));
+  initHomeInterface({ planets, state, enter, code, shortTitle, motionQuery, onExplore: (trigger) => openPanel('btn-index', 'index-panel', trigger), onMotion: (value) => { calm = value; if (calm) { state.mx = 0; state.my = 0; } } });
   document.getElementById('cell-list').innerHTML = cells.map((c, i) => `
     <li class="${c.status === 'open' ? '' : 'is-coming'}" style="--accent:${esc(c.color || '#7ee0d0')}">
       ${c.status === 'open' ? `<a href="${esc(c.url || 'cell.html?id=' + encodeURIComponent(c.id))}">` : '<div>'}
@@ -472,9 +558,9 @@ document.querySelectorAll('.cell-list').forEach((l) => l.addEventListener('point
       ${c.rooms ? `<ol class="rooms">${c.rooms.map((r, k) => `<li style="--accent:${esc(r.color || '#fff')}"><a href="cell.html?id=${encodeURIComponent(c.id)}#room-${k + 1}"><span class="no">ROOM ${String(k + 1).padStart(2, '0')}</span><span class="t">${esc(r.short)}</span><span class="m">${esc(r.subtitle || '')}</span></a></li>`).join('')}</ol>` : ''}
     </li>`).join('');
   resize();
-  t0 = last = performance.now();
+  last = performance.now();
   if (IS_MOBILE) { const { initHomeMobile } = await import('./home-mobile.js?v=3'); initHomeMobile(Object.assign(M, { state, planets, world, camera, THREE, enter, hsound, code, shortTitle, canvas })); }
-  loader.classList.add('done');
+  document.querySelector('.orbit-dock').setAttribute('aria-busy', 'false');
+  document.body.dataset.loaded = 'true';
   autoSound();
-  requestAnimationFrame(tick);
 })();

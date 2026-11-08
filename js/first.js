@@ -1,5 +1,5 @@
 // N-001 · 최초의 행성 — 세 개의 방(위성)을 고르는 기획전 허브
-import { loadData, esc } from './data.js?v=18';
+import { loadData, esc } from './data.js?v=19';
 import { hsound } from './home-sound.js?v=6';
 
 const cv = document.getElementById('fp-stage'), g = cv.getContext('2d');

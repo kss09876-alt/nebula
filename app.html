@@ -2,17 +2,21 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#05060c" />
-  <title>VALIX</title>
+  <meta name="description" content="NEBULA — 전시를 탐색하고 행성에 착륙하는 온라인 인터랙티브 전시 앱" />
+  <title>NEBULA — Exhibition Atlas</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
   <!-- 글꼴은 화면에 쓰인 글자만 내려받고, 받는 동안에도 화면을 막지 않음 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" media="print" onload="this.media='all'" />
-  <link rel="stylesheet" href="css/app.css?v=10" />
+  <link rel="stylesheet" href="css/app.css?v=11" />
+  <link rel="stylesheet" href="css/refinement.css?v=1" />
+  <link rel="stylesheet" href="css/app-nebula.css?v=1" />
+  <link rel="icon" href="assets/nebula-mark.svg" type="image/svg+xml" />
 </head>
-<body class="vx">
+<body class="vx nebula-refined">
   <!-- 첫 실행: 시작 화면 → 소개 → 로그인 → 닉네임 -->
-  <section id="splash" class="vx-splash"><div class="mark"><span class="halo"></span><span class="x"></span><b>VALIX</b><small>NEBULA</small></div><p class="foot">VALIX LAB · Online Interactive Exhibition</p></section>
+  <section id="splash" class="vx-splash"><div class="mark"><span class="halo"></span><img class="nb-splash-mark" src="assets/nebula-mark.svg" alt="" /><b>NEBULA</b><small>EXHIBITION ATLAS</small></div><p class="foot">NEBULA · Online Interactive Exhibition</p></section>
   <section id="onboard" class="vx-onboard" hidden></section>
 
   <main id="view" class="vx-view" hidden></main>
@@ -35,9 +39,10 @@
   <section id="landing" class="vx-landing" hidden aria-live="polite">
     <canvas id="land-cv"></canvas>
     <div class="vx-land-text"><p id="land-code"></p><h2 id="land-title"></h2><p id="land-state"></p><button id="land-retry" hidden></button></div>
+    <button id="land-cancel" class="vx-close" aria-label="착륙 취소"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </section>
 
   <div id="toast" class="vx-toast" hidden></div>
-  <script type="module" src="js/app.js?v=15"></script>
+  <script type="module" src="js/app.js?v=17"></script>
 </body>
 </html>

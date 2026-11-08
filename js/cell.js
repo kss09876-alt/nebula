@@ -1,4 +1,4 @@
-import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=18';
+import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=19';
 import { tr, langSwitcher } from './i18n.js?v=4';
 import { IS_MOBILE, sensor, keepAwake } from './sensors.js?v=3';
 import { videoHTML, mountVideos } from './video.js?v=2';

@@ -2,64 +2,74 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#05060b" />
   <title>NEBULA 네뷸라 — 살아 있는 예술이 태어나는 우주</title>
   <meta name="description" content="NEBULA(네뷸라) — 살아 있는 예술이 태어나는 우주. 전시 하나가 행성 하나가 되는 인터랙티브 온라인 전시 플랫폼." />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <link rel="stylesheet" href="css/style.css?v=22" />
-  <script type="importmap">
-    { "imports": { "three": "./js/vendor/three.module.js" } }
-  </script>
+  <link rel="stylesheet" href="css/home.css?v=2" />
+  <link rel="icon" href="assets/nebula-mark.svg" type="image/svg+xml" />
+  <script type="importmap">{ "imports": { "three": "./js/vendor/three.module.js" } }</script>
 </head>
 <body class="home">
   <header class="topbar">
-    <a class="logo" href="./"><span class="logo-x"></span>NEBULA</a>
-    <nav>
-      <button id="btn-sound" class="nav-btn snd" aria-pressed="false" title="배경 사운드"><i></i><i></i><i></i><span>SOUND OFF</span></button>
-      <button id="btn-index" class="nav-btn" aria-expanded="false">INDEX</button>
-      <button id="btn-about" class="nav-btn">ABOUT</button>
+    <a class="logo" href="./" aria-label="NEBULA 홈"><span class="logo-x" aria-hidden="true"></span><span>NEBULA<small>BY VALIX LAB</small></span></a>
+    <p class="atlas-tag"><span class="status-dot" aria-hidden="true"></span>ONLINE EXHIBITION ATLAS</p>
+    <nav aria-label="홈 메뉴">
+      <button id="btn-sound" class="nav-btn snd" aria-pressed="false" aria-label="배경 사운드" title="배경 사운드"><i></i><i></i><i></i><span>SOUND OFF</span></button>
+      <button id="btn-index" class="nav-btn" aria-expanded="false" aria-controls="index-panel">INDEX <span class="nav-plus" aria-hidden="true">+</span></button>
+      <button id="btn-about" class="nav-btn" aria-expanded="false" aria-controls="about-panel">ABOUT</button>
     </nav>
   </header>
-
   <canvas id="stage" aria-label="행성계: 각 행성을 눌러 전시에 착륙합니다"></canvas>
+  <div class="space-vignette" aria-hidden="true"></div>
+  <div class="atlas-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <div id="labels" class="labels"></div>
-
-  <div class="hero-copy">
-    <p class="eyebrow">ONLINE INTERACTIVE EXHIBITION</p>
-    <h1>NEBULA</h1>
+  <p class="side-note" aria-hidden="true">A UNIVERSE OF LIVING ART</p>
+  <main class="hero-copy">
+    <p class="eyebrow"><span aria-hidden="true"></span>ONLINE INTERACTIVE EXHIBITION</p>
+    <h1 aria-label="NEBULA"><span>N</span><span>E</span><span>B</span><span>U</span><span>L</span><span>A</span></h1>
     <p class="lede"><strong>네뷸라</strong> — 살아 있는 예술이 태어나는 우주.<br />행성을 골라 착륙해 보세요.</p>
-  </div>
-
+    <button id="btn-explore" class="explore-btn"><span data-home-copy="explore">전시 둘러보기</span><span aria-hidden="true">↗</span></button>
+  </main>
   <aside id="hover-card" class="hover-card" aria-hidden="true">
-    <span class="hc-no"></span>
-    <strong class="hc-title"></strong>
-    <span class="hc-sub"></span>
-    <span class="hc-meta"></span>
+    <span class="hc-no"></span><strong class="hc-title"></strong><span class="hc-sub"></span><span class="hc-meta"></span>
   </aside>
-
-  <div class="hint">드래그해서 둘러보기 · 행성을 눌러 착륙</div>
-
-  <section id="index-panel" class="panel" hidden>
-    <div class="panel-inner">
-      <h2>INDEX</h2>
+  <aside class="orbit-dock" aria-label="전시 탐색">
+    <div class="dock-head"><span data-home-copy="orbit">지금, 궤도 위에서</span><span class="dock-count"><b id="orbit-count">—</b> PLANETS</span></div>
+    <div id="orbit-tabs" class="orbit-tabs" role="group" aria-label="행성 선택"></div>
+    <div class="dock-preview" id="dock-preview" hidden>
+      <div><small id="dock-code"></small><strong id="dock-title"></strong><p id="dock-subtitle"></p></div>
+      <button id="dock-enter" class="dock-enter" aria-label="선택한 전시에 착륙"><span data-home-copy="land">착륙하기</span><span aria-hidden="true">↗</span></button>
+    </div>
+  </aside>
+  <footer class="home-footer">
+    <p class="hint">드래그해서 둘러보기 · 행성을 눌러 착륙</p>
+    <button id="btn-motion" class="motion-btn" aria-pressed="false"><span class="motion-icon" aria-hidden="true">Ⅱ</span><span data-home-copy="motion">모션 줄이기</span></button>
+    <span class="footer-credit">ART, IN YOUR ORBIT.</span>
+  </footer>
+  <section id="index-panel" class="panel" aria-label="전시 목록" hidden>
+    <div class="panel-inner" tabindex="-1">
+      <div class="panel-heading"><h2>EXHIBITION INDEX</h2><button class="panel-close" aria-label="닫기">×</button></div>
+      <p class="panel-intro" data-home-copy="indexIntro">당신의 다음 행성을 찾아보세요.</p>
       <ol id="cell-list" class="cell-list"></ol>
     </div>
   </section>
-
-  <section id="about-panel" class="panel" hidden>
-    <div class="panel-inner about">
-      <h2>ABOUT</h2>
+  <section id="about-panel" class="panel" aria-label="NEBULA 소개" hidden>
+    <div class="panel-inner about" tabindex="-1">
+      <div class="panel-heading"><h2>ABOUT NEBULA</h2><button class="panel-close" aria-label="닫기">×</button></div>
       <p><strong>NEBULA(네뷸라)</strong>는 살아 있는 예술이 태어나는 우주입니다.</p>
       <p>하루하루의 작은 고민에서 잠시 고개를 들어, 우주와 빛과 소리처럼 더 큰 것을 바라보는 곳. 시야가 넓어지면 생각과 마음의 폭도 함께 넓어진다고 믿습니다.</p>
       <p>성운의 가운데에서 전시 하나하나가 행성으로 태어나 궤도를 돌고, 관람객은 행성에 착륙해 스크롤을 따라 펼쳐지는 인터랙티브 전시를 만납니다. 전시는 보는 사람의 손끝과 움직임에 반응하며 살아 움직입니다.</p>
       <p class="small">Produced by VALIX LAB</p>
     </div>
   </section>
-
-  <div id="loader" class="loader"><span></span></div>
-  <div id="wipe" class="wipe"></div>
+  <div id="loader" class="loader" role="status" aria-label="전시 불러오는 중"><div class="loader-orbit"><span></span><i></i></div><p>NEBULA<small>FORMING YOUR UNIVERSE</small></p></div>
+  <div id="wipe" class="wipe" aria-hidden="true"></div>
+  <div id="landing-caption" class="landing-caption" aria-live="polite"><small></small><strong></strong><span data-home-copy="landing">당신의 궤도로 들어갑니다.</span></div>
   <noscript><p style="padding:2rem">JavaScript가 필요합니다.</p></noscript>
-
-  <script type="module" src="js/main.js?v=21"></script>
+  <script type="module" src="js/main.js?v=24"></script>
 </body>
 </html>

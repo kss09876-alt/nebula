@@ -1,12 +1,21 @@
-// VALIX 앱 화면 — 시작 화면 → 소개 → 로그인 → 닉네임 → 탭(전시·플레이·리워드·마이)
+// NEBULA 앱 화면 — 시작 화면 → 소개 → 로그인 → 닉네임 → 탭(전시·플레이·리워드·마이)
 // 전시 내용은 기존 NEBULA 페이지(cell.html, bitssal.html)를 같은 주소에서 그대로 불러옵니다.
 // 데이터는 기존 data.js(구글 시트 → 백업 JSON)를 그대로 씁니다. 개인 기록은 기기 안(localStorage)에만 저장합니다.
-import { loadData, esc } from './data.js?v=18';
+import { loadData, loadLocalData, esc } from './data.js?v=19';
 import { lang, LANGS } from './i18n.js?v=4';
 import { hasRing } from './planets.js?v=4';
-import { planetSrc, planetKey, onPlanet, planetBitmap, warm } from './planet-store.js?v=1';
+import { planetSrc, planetKey, onPlanet, planetBitmap, warm } from './planet-store.js?v=2';
 import { videoHTML, mountVideos, playVideo, stopVideos } from './video.js?v=2';
 import { IS_MOBILE, sensor } from './sensors.js?v=3';
+import { createAppSky } from './app-sky.js?v=1';
+import { createAppSheet } from './app-sheet.js?v=2';
+import { createAppLanding } from './app-landing.js?v=1';
+import { createMotionPreference } from './app-preferences.js?v=1';
+import { createAppDiscover } from './app-discover.js?v=1';
+import { createExhibitShare } from './app-share.js?v=1';
+import { APP_COPY } from './app-copy.js?v=1';
+const motionQuery = createMotionPreference();
+let nativeActive = true;
 
 /* ---------- 문구 ---------- */
 const T = {
@@ -14,11 +23,12 @@ const T = {
   zh: { '마지막으로\n이 우주에서 불릴\n이름을 정해주세요': '最后，\n请取一个\n在这片宇宙里的名字', '항해명': '航行名', '이름은 이 기기에만 저장돼요.': '名字只保存在本设备上。', '탑승하기': '登船', '먼저 우주 둘러보기': '先看看宇宙', '다른 이름 뽑기': '换一个名字', '이름 바꾸기': '改名', '탑승': '登船', '곳 착륙': ' 颗行星已登陆', '최대 12자까지 입력 가능해요': '最多 12 个字', '전시': '展览', '플레이': '互动', '리워드': '奖励', '마이': '我的', '일상은 작고,\n우주는 넓으니까': '日常很小，\n宇宙很大', '잠시 고개를 들어 더 큰 것을 바라보는 시간': '抬起头，看看更大的世界', '전시 하나가\n행성 하나가 되는 곳': '一个展览\n就是一颗行星', '매주 새로운 행성에 착륙해 보세요': '每周登陆一颗新行星', '다음': '下一步', '건너뛰기': '跳过', '매주 착륙하는\n온라인 인터랙티브 전시': '每周登陆的\n线上互动展览', '생각과 마음의 폭을 넓히는 시간': '拓宽思想与心灵', '카카오로 시작하기': '使用 Kakao 开始', 'Apple로 계속하기': '通过 Apple 继续', '로그인 전 둘러보기': '先逛逛', '로그인은 곧 열려요. 지금은 둘러보기로 시작할게요.': '登录功能即将开放，先随便看看吧。', '마지막으로\n닉네임을 정해주세요': '最后，\n请设置昵称', '닉네임': '昵称', '최대 8자까지 입력 가능해요': '最多 8 个字', '닉네임은 이 기기에만 저장돼요.': '昵称只保存在本设备上。', '시작하기': '开始', '입장하기': '进入', '이번 주 열린 행성': '本周开放的行星', '지금 상영 중': '正在展出', '곧 착륙할 행성': '即将登陆', '기획전': '策划展', '단독전': '个展', '공개': '开放', '예정': '即将', '남음': '后结束', '일': '天', '체험 방법': '体验方法', '휴대폰에서 더 많은 체험을 할 수 있어요.': '在手机上可以体验更多。', 'n주차, 함께 시작해요!': '第 {n} 周，一起开始吧！', 'n주차': '第{n}周', '참여 안내': '参与说明', '3주 연속 착륙하면 <em>항해 리포트</em>가 열려요': '连续 3 周登陆即可解锁<em>航行报告</em>', '이번 주 행성 3곳에 착륙하면\n항해 스탬프 완성!': '本周登陆 3 颗行星\n即可集齐印章！', '행성 3곳에 착륙하면 완성돼요': '登陆 3 颗行星即可完成', '이번 주 스탬프 완성!': '本周印章已集齐！', '스탬프와 기록은 이 기기에만 저장돼요.': '印章与记录只保存在本设备上。', '매주 월요일에 새 주차가 시작돼요. 그 주에 전시에 한 번 이상 입장하면 그 주의 책이 채워져요.': '每周一开始新的一周。当周进入任一展览，即可填满当周的书。', '내 프로필': '我的资料', '나의 기록': '我的记录', '항해 리포트': '航行报告', '다녀온 행성': '到访行星', '머문 시간': '停留时间', '최근 본 전시': '最近观看', '아직 다녀온 행성이 없어요.': '还没有到访的行星。', '언어': '语言', '체험 권한': '体验权限', '기울기·흔들기·마이크·카메라·위치는 전시 안에서 체험할 때만 쓰고, 기기 밖으로 저장하거나 보내지 않아요.': '倾斜、摇晃、麦克风、相机与位置仅在体验中使用，不会保存或发送。', '관람 기록 지우기': '清除记录', '버전': '版本', '닉네임을 바꿀까요?': '修改昵称？', '우주인': '宇航员', '분': '分钟', '시간': '小时', '착륙하는 중': '正在着陆', '대기권 진입': '进入大气层', '착륙 완료': '着陆完成', '신호가 약해요. 연결을 확인해 주세요.': '信号较弱，请检查网络。', '다시 시도': '重试', '전시를 불러오지 못했어요.': '无法加载展览。', '기록을 지웠어요.': '记录已清除。' },
   ja: { '마지막으로\n이 우주에서 불릴\n이름을 정해주세요': '最後に\nこの宇宙で呼ばれる\n名前を決めてください', '항해명': '航海名', '이름은 이 기기에만 저장돼요.': '名前はこの端末にのみ保存されます。', '탑승하기': '搭乗する', '먼저 우주 둘러보기': 'まず宇宙を見てみる', '다른 이름 뽑기': '別の名前をひく', '이름 바꾸기': '名前を変える', '탑승': '搭乗', '곳 착륙': 'つの惑星に着陸', '최대 12자까지 입력 가능해요': '12文字まで入力できます', '전시': '展示', '플레이': 'プレイ', '리워드': 'リワード', '마이': 'マイ', '일상은 작고,\n우주는 넓으니까': '日常は小さく、\n宇宙は広いから', '잠시 고개를 들어 더 큰 것을 바라보는 시간': '少し顔を上げて、もっと大きなものを見る時間', '전시 하나가\n행성 하나가 되는 곳': 'ひとつの展示が\nひとつの惑星になる場所', '매주 새로운 행성에 착륙해 보세요': '毎週、新しい惑星に着陸してみましょう', '다음': '次へ', '건너뛰기': 'スキップ', '매주 착륙하는\n온라인 인터랙티브 전시': '毎週着陸する\nオンライン・インタラクティブ展示', '생각과 마음의 폭을 넓히는 시간': '考えと心の幅を広げる時間', '카카오로 시작하기': 'Kakaoではじめる', 'Apple로 계속하기': 'Appleで続ける', '로그인 전 둘러보기': 'ログインせずに見る', '로그인은 곧 열려요. 지금은 둘러보기로 시작할게요.': 'ログインはまもなく公開します。まずは見てみましょう。', '마지막으로\n닉네임을 정해주세요': '最後に\nニックネームを決めてください', '닉네임': 'ニックネーム', '최대 8자까지 입력 가능해요': '8文字まで入力できます', '닉네임은 이 기기에만 저장돼요.': 'ニックネームはこの端末にのみ保存されます。', '시작하기': 'はじめる', '입장하기': '入場する', '이번 주 열린 행성': '今週ひらいた惑星', '지금 상영 중': '公開中', '곧 착륙할 행성': 'まもなく着陸', '기획전': '企画展', '단독전': '個展', '공개': '公開', '예정': '予定', '남음': '残り', '일': '日', '체험 방법': '体験方法', '휴대폰에서 더 많은 체험을 할 수 있어요.': 'スマートフォンではさらに体験できます。', 'n주차, 함께 시작해요!': '{n}週目、一緒に始めましょう！', 'n주차': '{n}週目', '참여 안내': '参加案内', '3주 연속 착륙하면 <em>항해 리포트</em>가 열려요': '3週連続で着陸すると<em>航海レポート</em>がひらきます', '이번 주 행성 3곳에 착륙하면\n항해 스탬프 완성!': '今週3つの惑星に着陸すると\nスタンプ完成！', '행성 3곳에 착륙하면 완성돼요': '3つの惑星に着陸すると完成します', '이번 주 스탬프 완성!': '今週のスタンプ完成！', '스탬프와 기록은 이 기기에만 저장돼요.': 'スタンプと記録はこの端末にのみ保存されます。', '매주 월요일에 새 주차가 시작돼요. 그 주에 전시에 한 번 이상 입장하면 그 주의 책이 채워져요.': '毎週月曜日に新しい週が始まります。その週に展示へ一度でも入場すると、その週の本が埋まります。', '내 프로필': 'マイプロフィール', '나의 기록': 'わたしの記録', '항해 리포트': '航海レポート', '다녀온 행성': '訪れた惑星', '머문 시간': '滞在時間', '최근 본 전시': '最近見た展示', '아직 다녀온 행성이 없어요.': 'まだ訪れた惑星はありません。', '언어': '言語', '체험 권한': '体験の権限', '기울기·흔들기·마이크·카메라·위치는 전시 안에서 체험할 때만 쓰고, 기기 밖으로 저장하거나 보내지 않아요.': '傾き・振る・マイク・カメラ・位置情報は体験中にのみ使い、保存・送信しません。', '관람 기록 지우기': '記録を消去', '버전': 'バージョン', '닉네임을 바꿀까요?': 'ニックネームを変更しますか？', '우주인': '宇宙飛行士', '분': '分', '시간': '時間', '착륙하는 중': '着陸中', '대기권 진입': '大気圏突入', '착륙 완료': '着陸完了', '신호가 약해요. 연결을 확인해 주세요.': '電波が弱いようです。接続を確認してください。', '다시 시도': '再試行', '전시를 불러오지 못했어요.': '展示を読み込めませんでした。', '기록을 지웠어요.': '記録を消去しました。' },
 };
+Object.keys(APP_COPY).forEach((language) => Object.assign(T[language], APP_COPY[language]));
 const t = (k, n) => { let s = (T[lang] && T[lang][k]) ?? k; if (n != null) s = s.replace('{n}', n).replace(/^n/, n); return s; };
 const br = (s) => esc(s).replace(/\n/g, '<br>');
 document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
 
-const VERSION = '0.7.0';
+const VERSION = '0.8.0';
 
 /* ---------- 우주 방랑자 이름 ---------- */
 const NAMES = {
@@ -59,7 +69,7 @@ function fmtTime(sec) { const m = Math.round(sec / 60); return m < 60 ? `${m}${t
 
 /* ---------- 전시 도우미 ---------- */
 let cells = [];
-const name = (c) => String(c.title || '').replace(/^\s*X-\d+\s*·\s*/, '');
+const name = (c) => String(c.title || '').replace(/^\s*(?:(?:CELL|X|N)\s*-?\s*\d+\s*[·:|–-]\s*)+/i, '');
 const href = (c) => c.url || `cell.html?id=${encodeURIComponent(c.id)}`;
 const isOpen = (c) => c.status === 'open';
 const ringFx = (c) => ['prism', 'trio', 'stars'].includes(c.fx);
@@ -102,21 +112,23 @@ const OB = {
     return `<button class="back" data-ob="login" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M20 12H4M10 6l-6 6 6 6"/></svg></button>
       <h1 class="ob-h">${br(t('마지막으로\n이 우주에서 불릴\n이름을 정해주세요'))}</h1>
       <div class="field"><label for="nick">${t('항해명')}</label>
-        <div class="in"><input id="nick" maxlength="20" autocomplete="off" placeholder="${esc(t('최대 12자까지 입력 가능해요'))}" /><button class="btn dice" data-dice aria-label="${esc(t('다른 이름 뽑기'))}"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="15" cy="15" r="1.2" fill="currentColor"/><circle cx="15" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="15" r="1.2" fill="currentColor"/></svg></button></div>
+        <div class="in"><input id="nick" maxlength="20" autocomplete="off" placeholder="${esc(t('최대 20자까지 입력 가능해요'))}" /><button class="btn dice" data-dice aria-label="${esc(t('다른 이름 뽑기'))}"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="15" cy="15" r="1.2" fill="currentColor"/><circle cx="15" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="15" r="1.2" fill="currentColor"/></svg></button></div>
         <div class="names" id="names"></div>
         <p class="hint">${t('이름은 이 기기에만 저장돼요.')}</p></div>
       <div style="margin-top:auto"><button class="btn black" id="nick-go" data-ob="done">${t('탑승하기')}</button></div>`;
   },
 };
 function showOB(k) {
-  ob.hidden = false; view.hidden = true; tabsEl.hidden = true;
+  stopViewEffects(); ob.hidden = false; view.hidden = true; tabsEl.hidden = true;
   ob.innerHTML = k === 'intro0' ? OB.intro(0) : k === 'intro1' ? OB.intro(1) : OB[k]();
   if (k === 'nick') {
     const i = $('#nick'), b = $('#nick-go'), p = me();
     const fill = () => { const seen = new Set(); const list = []; while (list.length < 4) { const n = wanderer(); if (!seen.has(n)) { seen.add(n); list.push(n); } } $('#names').innerHTML = list.map((n) => `<button data-name="${esc(n)}">${esc(n)}</button>`).join(''); };
     i.value = (p && p.nick) || wanderer(); fill();
     i.addEventListener('input', () => b.className = 'btn ' + (i.value.trim() ? 'black' : 'off'));
+    i.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !event.isComposing && i.value.trim()) { event.preventDefault(); b.click(); } });
   }
+  syncRuntime();
 }
 ob.addEventListener('click', (e) => {
   if (e.target.closest('[data-dice]')) { $('#nick').value = wanderer(); $('#nick-go').className = 'btn black'; return; }
@@ -141,66 +153,29 @@ const T2 = {
 };
 Object.keys(T2).forEach((l) => Object.assign(T[l], T2[l]));
 
-/* ---------- 별빛 배경 (천천히 흐르는 별 + 가끔 유성) ---------- */
-const sky = (() => {
-  const cv = document.createElement('canvas'); cv.id = 'sky'; document.body.prepend(cv);
-  const x = cv.getContext('2d'), calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let W, H, dpr, stars = [], meteor = null, raf = 0, on = true, last = 0, scrollY0 = 0, hd = 0;
-  const size = () => { dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const D = Math.hypot(W, H); stars = Array.from({ length: Math.round(D * D / 2600) }, () => ({ x: W / 2 + (Math.random() - 0.5) * D, y: H / 2 + (Math.random() - 0.5) * D, z: Math.random() ** 2, p: Math.random() * 6.28, c: Math.random() < 0.15 ? '255,226,180' : Math.random() < 0.3 ? '190,205,255' : '255,255,255' })); };
-  function frame(now) {
-    const dt = Math.min(50, now - (last || now)); last = now;
-    x.clearRect(0, 0, W, H);
-    const sy = scrollY * 0.15, dsy = sy - scrollY0; scrollY0 = sy;
-    const tl = window.__vxTilt || { x: 0, y: 0 };
-    if (sensor.on && sensor.heading != null) { let d = sensor.heading * Math.PI / 180 - hd; d = Math.atan2(Math.sin(d), Math.cos(d)); hd += d * 0.05; }
-    const ch = Math.cos(-hd), sh = Math.sin(-hd), cxs = W / 2, cys = H / 2;
-    for (const s of stars) {
-      if (!calm) { s.x -= (0.004 + s.z * 0.02) * dt; s.y -= dsy * (0.3 + s.z); }
-      const D = Math.hypot(W, H), L0 = W / 2 - D / 2, T0 = H / 2 - D / 2;
-      if (s.x < L0) s.x += D; if (s.y < T0) s.y += D; if (s.y > T0 + D) s.y -= D;
-      const tw = 0.45 + 0.55 * Math.sin(now / (900 + s.z * 600) + s.p);
-      x.fillStyle = `rgba(${s.c},${(0.15 + s.z * 0.75) * tw})`; const r = 0.4 + s.z * 1.3;
-      const dx = s.x - cxs, dy = s.y - cys, qx = cxs + dx * ch - dy * sh - tl.x * (4 + s.z * 26), qy = cys + dx * sh + dy * ch - tl.y * (4 + s.z * 22);
-      x.fillRect(qx, qy, r, r);
-    }
-    if (!calm && !meteor && Math.random() < dt / 7000) meteor = { x: W * (0.3 + Math.random() * 0.7), y: Math.random() * H * 0.4, t: 0 };
-    if (meteor) {
-      meteor.t += dt; const k = meteor.t / 900, mx = meteor.x - k * 260, my = meteor.y + k * 130;
-      const g = x.createLinearGradient(mx, my, mx + 90, my - 45); g.addColorStop(0, `rgba(255,255,255,${0.9 * (1 - k)})`); g.addColorStop(1, 'rgba(255,255,255,0)');
-      x.strokeStyle = g; x.lineWidth = 1.4; x.beginPath(); x.moveTo(mx, my); x.lineTo(mx + 90, my - 45); x.stroke();
-      if (k >= 1) meteor = null;
-    }
-    raf = on && !document.hidden ? requestAnimationFrame(frame) : 0;
-  }
-  addEventListener('resize', size); size();
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && on && !raf) { last = 0; raf = requestAnimationFrame(frame); } });
-  return { start() { if (!raf) { on = true; last = 0; raf = requestAnimationFrame(frame); } }, stop() { on = false; cancelAnimationFrame(raf); raf = 0; } };
-})();
-sky.start();
-
-/* ---------- 아래에서 올라오는 시트 ---------- */
-const sheet = (() => {
-  const bg = document.createElement('div'); bg.className = 'sheet-bg'; bg.hidden = true;
-  const el = document.createElement('section'); el.className = 'sheet'; el.hidden = true; el.setAttribute('role', 'dialog');
-  document.body.append(bg, el);
-  let y0 = null, dy = 0;
-  const close = () => { stopVideos(); el.classList.remove('in'); bg.classList.remove('in'); setTimeout(() => { el.hidden = bg.hidden = true; el.innerHTML = ''; }, 320); };
-  bg.addEventListener('click', close);
-  el.addEventListener('touchstart', (e) => { if (el.scrollTop <= 0) y0 = e.touches[0].clientY; }, { passive: true });
-  el.addEventListener('touchmove', (e) => { if (y0 == null) return; dy = Math.max(0, e.touches[0].clientY - y0); el.style.transform = `translateY(${dy}px)`; }, { passive: true });
-  el.addEventListener('touchend', () => { el.style.transform = ''; if (dy > 90) close(); y0 = null; dy = 0; });
-  el.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) close(); });
-  return {
-    open(html, cls = '') { el.className = 'sheet ' + cls; el.innerHTML = `<i class="grab"></i>${html}`; el.hidden = bg.hidden = false; el.scrollTop = 0; requestAnimationFrame(() => { el.classList.add('in'); bg.classList.add('in'); }); return el; },
-    close, get isOpen() { return !el.hidden; }, el,
-  };
-})();
+/* ---------- 앱 상태에 따라 쉬는 배경 · 시트 ---------- */
+const sky = createAppSky({ sensor, motionQuery, getTilt: () => tilt });
+const sheet = createAppSheet({
+  stopVideos, translate: t, motionQuery, background: [view, tabsEl, ob],
+  returnFocus: () => tabsEl.querySelector('[data-tab].on'),
+  onChange() { syncRuntime(); if (!sheet.isOpen) applyPendingData(); },
+});
 
 /* ---------- 좋아요 · 알림 ---------- */
 const likes = () => store.get('valix-likes', []);
 const isLiked = (id) => likes().includes(id);
-function toggleLike(id) { const l = likes(); const i = l.indexOf(id); if (i >= 0) l.splice(i, 1); else l.unshift(id); store.set('valix-likes', l); toast(t(i >= 0 ? '좋아요를 뺐어요.' : '좋아요에 담았어요.')); return i < 0; }
+function toggleLike(id) {
+  const list = likes(), index = list.indexOf(id);
+  if (index >= 0) list.splice(index, 1); else list.unshift(id);
+  store.set('valix-likes', list); toast(t(index >= 0 ? '좋아요를 뺐어요.' : '좋아요에 담았어요.'));
+  const on = index < 0;
+  document.querySelectorAll('[data-like]').forEach((button) => {
+    if (button.dataset.like !== id) return;
+    button.classList.toggle('on', on); button.setAttribute('aria-pressed', String(on)); button.innerHTML = heart(on);
+  });
+  document.querySelectorAll('[data-saved] span').forEach((count) => { count.textContent = list.length; });
+  return on;
+}
 const heart = (on) => `<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" ${on ? 'fill="#ef4a4a" stroke="#ef4a4a"' : ''}/></svg>`;
 const unread = () => store.get('valix-noti', 0) < vol();
 function notiSheet() {
@@ -220,6 +195,7 @@ const startOf = (c) => { const m = String(c.period || '').match(/(\d{4})\.(\d{1,
 
 /* ---------- 전시 상세 ---------- */
 function detailSheet(c) {
+  if (!c) return;
   const p = playOf(c), liked = isLiked(c.id);
   const el = sheet.open(`
     <div class="dt-stage" style="--c:${esc(c.color || '#9db8ff')}"><span class="dt-orbit"><i></i></span><img class="dt-pl" data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt=""></div>
@@ -232,16 +208,26 @@ function detailSheet(c) {
       ${c.rooms && c.rooms.length ? `<div class="dt-rooms"><h4>${t('방')}</h4>${c.rooms.map((r, i) => `<div><em>${String(i + 1).padStart(2, '0')}</em><span><b>${esc(r.short || name(r))}</b><small>${esc(r.subtitle || '')}</small></span></div>`).join('')}</div>` : ''}
       <div class="dt-how"><h4>${t('이렇게 체험해요')}</h4><p>${esc(p.how)}</p><p class="small">${t('휴대폰을 기울이고, 흔들고, 엎어 보세요. 권한은 입장할 때 한 번 물어봐요.')}</p></div>
     </div>
-    <div class="dt-cta"><button class="like${liked ? ' on' : ''}" data-like="${esc(c.id)}" aria-label="${t('좋아요')}">${heart(liked)}</button><button class="btn black" data-land="${esc(c.id)}">${t('착륙하기')}</button></div>`, 'detail');
+    <div class="dt-cta"><button class="like${liked ? ' on' : ''}" data-like="${esc(c.id)}" aria-label="${t('좋아요')}" aria-pressed="${liked}">${heart(liked)}</button><button class="nb-share" data-share="${esc(c.id)}" aria-label="${t('공유하기')}">${shareIcon}</button><button class="btn black" data-land="${esc(c.id)}" ${isOpen(c) ? '' : 'disabled'}>${t(isOpen(c) ? '착륙하기' : '준비 중')}</button></div>`, 'detail');
   return el;
 }
 
 onPlanet((k, u) => { document.querySelectorAll('img[data-pl]').forEach((im) => { if (im.dataset.pl === k) im.src = u; }); });
 
 /* ---------- 탭 화면 ---------- */
-let tab = 'home', ticker = 0;
+let tab = 'home', ticker = 0, revealIO = null;
+const tabScroll = { home: 0, play: 0, reward: 0, my: 0 };
+let countdownNodes = [];
+function stopViewEffects() {
+  revealIO?.disconnect(); revealIO = null;
+  tiltIO?.disconnect(); tiltIO = null; tiltZones = [];
+  cancelAnimationFrame(tiltRaf); tiltRaf = 0;
+  clearInterval(ticker); ticker = 0; countdownNodes = [];
+}
 const bell = () => `<button class="${unread() ? 'dot' : ''}" data-noti aria-label="${t('알림')}"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20a2 2 0 0 0 4 0"/></svg></button>`;
 const clock = `<button data-recent aria-label="${t('최근 본 전시')}"><svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6M3.5 4v4h4M12 8v4l3 2"/></svg></button>`;
+const searchIcon = '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>';
+const shareIcon = '<svg viewBox="0 0 24 24"><path d="M12 16V3m-4 4 4-4 4 4M6 11H4v10h16V11h-2"/></svg>';
 const plus = `<svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg>`;
 const lock = `<svg viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 0 1 10 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V8a3 3 0 0 0-6 0z"/></svg>`;
 function streakInfo() {
@@ -252,6 +238,24 @@ function streakInfo() {
   return { startW, curW, weekHas, streak };
 }
 
+const discover = createAppDiscover({ sheet, getCells: () => cells, getLikes: likes, name, planetSrc, planetKey, esc, t });
+const exhibitShare = createExhibitShare({ sheet, name, esc, t, lang, toast });
+function recentPlanet() {
+  const id = Object.entries(hist()).sort((a, b) => (b[1].last || 0) - (a[1].last || 0)).find(([id]) => cells.some((cell) => cell.id === id && isOpen(cell)))?.[0];
+  return cells.find((cell) => cell.id === id);
+}
+function recentHTML() {
+  const cell = recentPlanet();
+  if (!cell) return '';
+  return `<aside class="nb-resume"><img data-pl="${esc(planetKey(cell))}" src="${planetSrc(cell)}" decoding="async" alt=""/><div><small>${t('최근 본 전시')}</small><b>${esc(name(cell))}</b></div><button data-open="${esc(cell.id)}" aria-label="${esc(t('다시 착륙하기') + ' · ' + name(cell))}">↗</button></aside>`;
+}
+function syncPreferenceControls() {
+  document.querySelectorAll('[data-motion]').forEach((button) => {
+    button.setAttribute('aria-checked', String(motionQuery.matches)); button.disabled = motionQuery.systemReduced;
+    const description = button.querySelector('small');
+    if (description) description.textContent = t(motionQuery.systemReduced ? '시스템에서 모션 감소를 사용 중이에요.' : '카드 기울기와 장식 애니메이션을 줄여요.');
+  });
+}
 const screens = {
   home() {
     const k = viewMonth || thisMonth(), n = issueNo(k), open = picksFor(k), iss = ISSUES[k] || {};
@@ -265,8 +269,8 @@ const screens = {
     return `
       <section class="mag-cover" style="--c:${esc(f.color || '#9db8ff')}" data-tiltzone>
         <div class="mc-top">
-          <button class="mc-mast" data-vols><b>VALIX</b><span>MONTHLY PLANET · No.${n} · ${esc(monthDate(k).toLocaleDateString(lang, { month: 'long' }) + t('호'))} <i></i></span></button>
-          <div class="icons">${clock}${bell()}</div>
+          <button class="mc-mast nb-brand" data-vols aria-label="NEBULA · ${t('지난 호')}"><img class="nb-brand-mark" src="assets/nebula-mark.svg" alt=""/><span><b class="nb-brand-word">NEBULA</b><small class="nb-brand-caption">MONTHLY PLANET · No.${n}</small></span></button>
+          <div class="icons"><button data-search aria-label="${t('전시 검색')}">${searchIcon}</button>${bell()}</div>
         </div>
         <div class="mc-stage">
           <span class="mc-layer mc-far" data-depth="-14"></span>
@@ -274,6 +278,7 @@ const screens = {
           <img class="mc-planet" data-depth="22" data-pl="${esc(planetKey(f))}" src="${planetSrc(f)}" decoding="async" alt="" draggable="false">
           <span class="mc-gloss" data-gloss></span>
         </div>
+        ${open.length > 1 ? `<div class="nb-cover-nav"><button class="nb-cover-arrow" data-cover="-1" aria-label="${t('이전 표지')}">←</button><div class="nb-cover-pager">${open.map((cell, index) => `<button data-cover-index="${index}" aria-pressed="${index === coverIdx}" aria-label="${esc(t('표지') + ' ' + (index + 1) + ' · ' + name(cell))}"><i></i></button>`).join('')}</div><small class="nb-cover-count">${String(coverIdx + 1).padStart(2, '0')} / ${String(open.length).padStart(2, '0')}</small><button class="nb-cover-arrow" data-cover="1" aria-label="${t('다음 표지')}">→</button></div>` : ''}
         <div class="mc-lines">
           ${iss.title ? `<p class="mc-issue">${esc(iss.title)}</p>` : ''}
           <p class="mc-kick">COVER STORY · ${esc(f.code)}</p>
@@ -286,9 +291,11 @@ const screens = {
           <button class="mc-read" data-jump="mag-toc">${t('읽기 시작')} ↓</button>
           <button class="mc-land" data-open="${esc(f.id)}">${t('착륙하기')} →</button>
         </div>
-        <p class="mc-hint" data-sensor-hint><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2" transform="rotate(-12 12 12)"/></svg><span>${t(IS_MOBILE ? '기울이면 표지가 빛나요 · 흔들면 다음 표지' : '마우스를 움직이면 표지가 빛나요')}</span></p>
+        <p class="mc-hint" data-sensor-hint><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2" transform="rotate(-12 12 12)"/></svg><span>${t(motionQuery.matches ? '읽기와 탐색' : IS_MOBILE ? '기울이면 표지가 빛나요 · 옆으로 밀면 다음 표지' : '마우스를 움직이면 표지가 빛나요')}</span></p>
       </section>
 
+      <div class="nb-home-tools"><button data-all>${t('전시 탐색')} ↗</button><button data-saved>${t('좋아요 모아보기')} <span>${likes().length}</span></button></div>
+      ${recentHTML()}
       <section class="mag-sec" id="mag-toc">
         <p class="mag-label">${t('이번 호')} · ${esc(monthName(k))}${iss.title ? ' · ' + esc(iss.title) : ''}</p>
         <ol class="toc">${issue.map((c, i) => `<li><button data-jump="art-${esc(c.id)}"><em>${String(i + 1).padStart(2, '0')}</em><span><small>${KICK[Math.min(i, KICK.length - 1)]}</small><b>${esc(name(c))}</b><i>${esc(c.artist || '')} · ${readMin(c)}${t('분')}${linksFor(c, k).length ? ' · ' + t('영상·기사') + ' ' + linksFor(c, k).length : ''}</i></span></button></li>`).join('')}
@@ -307,7 +314,7 @@ const screens = {
         ${c.summary ? `<p class="art-body">${esc(c.summary)}</p>` : ''}
         ${linksHTML(c, k)}
         <p class="art-play"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M4 9c-1 2-1 4 0 6M20 9c1 2 1 4 0 6"/></svg>${esc(p.how)}</p>
-        <div class="art-cta"><button class="like${isLiked(c.id) ? ' on' : ''}" data-like="${esc(c.id)}" aria-label="${t('좋아요')}">${heart(isLiked(c.id))}</button><button class="btn black" data-open="${esc(c.id)}">${t('이 행성에 착륙하기')} →</button></div>
+        <div class="art-cta"><button class="like${isLiked(c.id) ? ' on' : ''}" data-like="${esc(c.id)}" aria-label="${t('좋아요')}" aria-pressed="${isLiked(c.id)}">${heart(isLiked(c.id))}</button><button class="btn black" data-open="${esc(c.id)}">${t('이 행성에 착륙하기')} →</button></div>
       </article>`; }).join('')}
 
       <section class="mag-sec mag-quote" id="mag-quote" style="--c:${esc(f.color || '#9db8ff')}">
@@ -319,7 +326,7 @@ const screens = {
         <p class="mag-label">${t('에디터의 편지')}</p>
         ${iss.letter ? String(iss.letter).split(/\n+/).map((x) => `<p>${esc(x)}</p>`).join('') : `<p>${esc(t('이번 달에도 행성 {n}곳이 궤도에 올랐습니다.').replace('{n}', issue.length))}</p>
         <p>${esc(t('하루의 작은 고민에서 잠시 고개를 들어, 더 큰 것을 바라보는 시간. 한 행성에 머무는 몇 분이 생각과 마음의 폭을 조금 넓혀 주기를 바랍니다.'))}</p>`}
-        <p class="sign">— VALIX ${t('편집실')}</p>
+        <p class="sign">— NEBULA ${t('편집실')}</p>
       </section>
 
       <section class="mag-sec mag-next">
@@ -327,16 +334,16 @@ const screens = {
         <p class="next-date">${esc(monthName(nextKey(k)))}</p>
         ${soon.length ? `<div class="hscroll">${soon.map((c) => `<button class="card" data-detail="${esc(c.id)}">${poster(c)}<p class="ct">${esc(name(c))}</p></button>`).join('')}</div>` : `<p class="small">${t('다음 호에서 새로운 행성을 만나요.')}</p>`}
         <button class="btn line" data-all style="margin-top:22px">${t('전체 행성')}</button>
-        <p class="colophon">VALIX LAB · MONTHLY PLANET No.${n} · ${esc(monthName(k))}</p>
+        <p class="colophon">NEBULA · MONTHLY PLANET No.${n} · ${esc(monthName(k))}</p>
       </section>`;
   },
   play() {
     const open = cells.filter(isOpen).slice().reverse();
     const wk = (Date.now() - monday(Date.now())) / (7 * DAY);
-    return `<header class="page-h"><h1>PLAY</h1><div class="icons">${bell()}</div></header>
+    return `<header class="page-h"><div><small class="nb-page-kicker">NEBULA · EXPERIENCE</small><h1>${t('플레이')}</h1></div><div class="icons">${bell()}</div></header>
       <div class="plays">${open.map((c) => { const p = playOf(c); return `
         <div class="play" style="--c:${esc(c.color || '#9db8ff')}">
-          <div class="art" data-detail="${esc(c.id)}"><img class="pl" data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt="" draggable="false"><span class="timer" data-left="${esc(c.id)}">${left(c)}</span></div>
+          <button class="art" data-detail="${esc(c.id)}" aria-label="${esc(name(c) + ' · ' + t('체험 방법'))}"><img class="pl" data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt="" draggable="false"><span class="timer" data-left="${esc(c.id)}">${left(c)}</span></button>
           <div class="body"><p class="who">${esc(c.code)} · ${esc(c.artist || '')}</p><h3>${br(p.q)}</h3><p class="how">${esc(p.how)}</p>
             <div class="bar"><i style="--w:${Math.round(wk * 100)}%"></i></div>
             <div class="two"><button data-how="${esc(c.id)}">${t('체험 방법')}</button><button class="w" data-open="${esc(c.id)}">${t('입장하기')}</button></div></div>
@@ -347,8 +354,9 @@ const screens = {
     const base = Math.floor(curW / 6) * 6;
     const books = Array.from({ length: 6 }, (_, i) => { const w = base + i, hit = weekHas(w), c = hit && cells.find((x) => x.id === hit.id);
       return `<div class="book${hit ? ' done' : ''}${w === curW ? ' now' : ''}" style="--c:${esc((c && c.color) || '#8a3a3a')};--i:${i}"><i>${hit ? `<b>Vol. ${vol() - (curW - w)}</b>` : ''}</i><span>${t('n주차', w + 1)}</span></div>`; }).join('');
-    const v = visits(), thisWeek = [...new Set(v.filter((x) => monday(x.at).getTime() === monday(Date.now()).getTime()).map((x) => x.id))];
-    return `<header class="page-h"><h1>REWARDS</h1><button class="txt" data-guide>${t('참여 안내')}</button></header>
+    const v = visits(), thisWeek = [...new Set(v.filter((x) => monday(x.at).getTime() === monday(Date.now()).getTime() && cells.some((cell) => cell.id === x.id)).map((x) => x.id))];
+    return `<header class="page-h"><div><small class="nb-page-kicker">NEBULA · VOYAGE</small><h1>${t('리워드')}</h1></div><button class="txt" data-guide>${t('참여 안내')}</button></header>
+      <section class="nb-week-card"><div><small>${t('이번 주의 궤도')}</small><strong>${Math.min(3, thisWeek.length)}<em> / 3</em></strong></div><p>${t(thisWeek.length >= 3 ? '이번 주 스탬프 완성!' : '목표까지 {n}곳').replace('{n}', Math.max(0, 3 - thisWeek.length))}</p><div class="nb-week-track"><i style="--w:${Math.min(100, thisWeek.length / 3 * 100)}%"></i></div></section>
       <p class="rw-h">${t('n주차, 함께 시작해요!', curW + 1)}</p>
       <div class="shelf">${books}<div class="book sp" style="--i:6"><i><b>SPECIAL</b></i><span>Special</span></div></div>
       <button class="lockcard${streak >= 3 ? ' open' : ''}" data-report>${lock}<div>${streak >= 3 ? `<em>${t('항해 리포트가 열렸어요')}</em>` : t('3주 연속 착륙하면 <em>항해 리포트</em>가 열려요')}<small class="prog"><i style="--w:${Math.min(100, streak / 3 * 100)}%"></i></small><small>${t('연속')} ${streak}/3${t('주')}</small></div></button>
@@ -363,7 +371,7 @@ const screens = {
     const total = seen.reduce((s, [, x]) => s + (x.time || 0), 0), lk = likes().map((id) => cells.find((c) => c.id === id)).filter(Boolean);
     const { streak } = streakInfo();
     const avatar = `<svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="30" cy="25" r="15"/><rect x="21" y="19" width="18" height="12" rx="6" fill="#1c2240" stroke="none"/><path d="M24 22c1.5-1 3-1 4 0" stroke="#ffd68c"/><path d="M10 58c2-9 10-14 20-14s18 5 20 14"/></svg>`;
-    return `<header class="page-h"><h1>MY</h1><div class="icons">${clock}</div></header>
+    return `<header class="page-h"><div><small class="nb-page-kicker">NEBULA · MY ORBIT</small><h1>${t('내 궤도')}</h1></div><div class="icons">${clock}</div></header>
       <div class="me"><span class="avatar">${avatar}</span><div><b>${esc(p.nick)}</b><p class="mesub">${new Date(p.since).toLocaleDateString(lang)} ${t('탑승')} · ${seen.length}${t('곳 착륙')}</p><button data-rename>${t('이름 바꾸기')} ›</button></div></div>
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('나의 기록')}</h2></div>
         <button class="lockcard v${streak >= 3 ? ' open' : ''}" data-report style="margin:18px 0 0">${lock}<div><small>${t('항해 리포트')}</small>${streak >= 3 ? `<em>${t('항해 리포트가 열렸어요')}</em>` : t('3주 연속 착륙하면 <em>항해 리포트</em>가 열려요')}</div></button>
@@ -373,38 +381,105 @@ const screens = {
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('최근 본 전시')}</h2></div>
         ${seen.length ? `<div class="list">${seen.map(([id, x]) => { const c = cells.find((y) => y.id === id); return `<button class="row" data-detail="${esc(id)}">${poster(c)}<div><b>${esc(name(c))}</b><span>${new Date(x.last).toLocaleDateString(lang)}</span></div><span class="v">${fmtTime(x.time || 0)}</span></button>`; }).join('')}</div>` : `<p class="empty">${t('아직 다녀온 행성이 없어요.')}</p>`}</section>
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('언어')}</h2></div><div class="chips">${LANGS.map((l) => `<button data-lang="${l.id}" class="${l.id === lang ? 'on' : ''}">${l.name}</button>`).join('')}</div></section>
+      <section class="sec"><button class="nb-preference" data-motion role="switch" aria-checked="${motionQuery.matches}" ${motionQuery.systemReduced ? 'disabled' : ''}><span><b>${t('모션 줄이기')}</b><small>${t(motionQuery.systemReduced ? '시스템에서 모션 감소를 사용 중이에요.' : '카드 기울기와 장식 애니메이션을 줄여요.')}</small></span><i class="nb-switch" aria-hidden="true"></i></button></section>
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('체험 권한')}</h2></div><p class="small">${t('기울기·흔들기·마이크·카메라·위치는 전시 안에서 체험할 때만 쓰고, 기기 밖으로 저장하거나 보내지 않아요.')}</p></section>
-      <section class="sec list"><button class="row" data-clear><b>${t('관람 기록 지우기')}</b></button><div class="row"><b>${t('버전')}</b><span class="v">VALIX ${VERSION}</span></div></section>`;
+      <section class="sec list"><button class="row" data-clear><b>${t('관람 기록 지우기')}</b></button><div class="row"><b>${t('버전')}</b><span class="v">NEBULA ${VERSION}</span></div></section>`;
   },
 };
 
 const TAB_I = { home: 0, play: 1, reward: 2, my: 3 };
 function go(next, keepScroll) {
-  const prev = tab; tab = next; view.hidden = false; tabsEl.hidden = false;
-  view.className = 'vx-view';
-  view.innerHTML = screens[tab]();
-  // 순서대로 떠오르는 등장 효과
-  let i = 0; view.querySelectorAll('.mc-top, .mc-lines, .mc-foot, .hero, .page-h, .rw-h, .sec-h, .sec-sub, .card, .gcard, .play, .shelf, .lockcard, .mission, .me, .stat2, .row, .chips, .about, .hscroll.mini, .empty').forEach((el) => { el.classList.add('rv'); el.style.animationDelay = `${Math.min(i++, 14) * 45}ms`; });
-  if (tab === 'home') { const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.12 }); view.querySelectorAll('.mag-art > *, .mag-sec > *').forEach((el) => { el.classList.add('rs'); io.observe(el); }); }
-  tabsEl.querySelectorAll('[data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+  if (!Object.hasOwn(screens, next)) return;
+  const previous = tab, oldScroll = scrollY;
+  if (!view.hidden) tabScroll[previous] = oldScroll;
+  stopViewEffects(); applyPendingData(false);
+  tab = next; view.hidden = false; tabsEl.hidden = false;
+  view.className = 'vx-view'; view.innerHTML = screens[tab]();
+  let i = 0;
+  view.querySelectorAll('.mc-top, .mc-lines, .mc-foot, .hero, .page-h, .rw-h, .sec-h, .sec-sub, .card, .gcard, .play, .shelf, .lockcard, .mission, .me, .stat2, .row, .chips, .about, .hscroll.mini, .empty').forEach((el) => {
+    el.classList.add('rv'); el.style.animationDelay = `${Math.min(i++, 14) * 45}ms`;
+  });
+  if (tab === 'home') {
+    const elements = [...view.querySelectorAll('.mag-art > *, .mag-sec > *')];
+    if ('IntersectionObserver' in window && !motionQuery.matches) {
+      revealIO = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => { if (entry.isIntersecting) { entry.target.classList.add('in'); revealIO?.unobserve(entry.target); } });
+      }, { threshold: .12 });
+      elements.forEach((el) => { el.classList.add('rs'); revealIO.observe(el); });
+    } else elements.forEach((el) => el.classList.add('in'));
+  }
+  tabsEl.querySelectorAll('[data-tab]').forEach((button) => {
+    const selected = button.dataset.tab === tab;
+    button.classList.toggle('on', selected); button.setAttribute('aria-current', selected ? 'page' : 'false');
+  });
   tabsEl.querySelector('.ind').style.transform = `translateX(${TAB_I[tab] * 100}%)`;
-  if (!keepScroll || prev !== next) scrollTo(0, 0);
-  clearInterval(ticker);
+  const targetScroll = keepScroll && previous === next ? oldScroll : previous !== next ? tabScroll[next] : 0;
+  scrollTo(0, targetScroll);
   tlx = tly = 9; bindTilt();
-  if (tab === 'play') ticker = setInterval(() => view.querySelectorAll('[data-left]').forEach((el) => { const c = cells.find((x) => x.id === el.dataset.left); el.textContent = left(c); el.classList.toggle('urgent', Math.floor((weekEnd() - Date.now()) / DAY) < 1); }), 1000);
+  countdownNodes = [...view.querySelectorAll('[data-left]')].map((el) => ({ el, cell: cells.find((c) => c.id === el.dataset.left) }));
+  syncRuntime(); syncPreferenceControls();
 }
 
-tabsEl.addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) { if (b.dataset.tab === 'home') { viewMonth = ''; coverIdx = 0; } go(b.dataset.tab); } else if (e.target.closest('[data-orb]')) openExhibit(featured()); });
+tabsEl.addEventListener('click', (e) => {
+  const button = e.target.closest('[data-tab]');
+  if (button) {
+    const next = button.dataset.tab;
+    if (next === tab && !view.hidden && !(next === 'home' && viewMonth)) {
+      scrollTo({ top: 0, behavior: motionQuery.matches ? 'auto' : 'smooth' }); return;
+    }
+    if (next === 'home') { viewMonth = ''; coverIdx = 0; }
+    go(next);
+  } else if (e.target.closest('[data-orb]')) openExhibit(featured());
+});
+
+function tickCountdown() {
+  for (const { el, cell } of countdownNodes) {
+    const value = left(cell);
+    if (el.textContent !== value) el.textContent = value;
+    let end = weekEnd();
+    if (cell?.ends && /^\d{4}-\d{2}-\d{2}$/.test(cell.ends)) end = Math.min(end, new Date(cell.ends + 'T23:59:59').getTime());
+    el.classList.toggle('urgent', end - Date.now() < DAY);
+  }
+}
+function syncRuntime() {
+  const foreground = nativeActive && !document.hidden;
+  const active = foreground && viewer.hidden && ob.hidden && !view.hidden && !sheet.isOpen;
+  document.body.classList.toggle('vx-paused', !foreground || !viewer.hidden || sheet.isOpen);
+  document.body.classList.toggle('exhibit-open', !viewer.hidden);
+  view.inert = tabsEl.inert = !viewer.hidden || sheet.isOpen;
+  ob.inert = !viewer.hidden || sheet.isOpen;
+  if (active) sky.start(); else sky.stop();
+  if (active && tab === 'home' && !motionQuery.matches) scheduleTilt();
+  else { cancelAnimationFrame(tiltRaf); tiltRaf = 0; }
+  if (active && tab === 'play') {
+    if (!ticker) { tickCountdown(); ticker = setInterval(tickCountdown, 1000); }
+  } else { clearInterval(ticker); ticker = 0; }
+  landing.setActive(foreground);
+  const watching = foreground && current && !viewer.hidden && $('#landing').hidden;
+  if (watching) { if (!enteredAt) enteredAt = Date.now(); }
+  else flushWatchTime();
+}
+
 
 // 화면·시트 공통 버튼
 function onAction(e) {
-  const q = (s) => e.target.closest(s), byId = (id) => cells.find((x) => x.id === id);
+  const q = (selector) => { const candidate = e.target.closest(selector); return candidate && e.currentTarget.contains(candidate) ? candidate : null; };
+  const byId = (id) => cells.find((x) => x.id === id);
   let b;
-  if ((b = q('[data-land]'))) { const c = byId(b.dataset.land); sheet.close(); setTimeout(() => openExhibit(c), 200); return true; }
-  if ((b = q('[data-open]'))) { const c = byId(b.dataset.open); if (c && isOpen(c)) { if (sheet.isOpen) sheet.close(); openExhibit(c); } return true; }
+  if ((b = q('[data-land]'))) { const c = byId(b.dataset.land); sheet.close({ restoreFocus: false }); openExhibit(c); return true; }
+  if ((b = q('[data-open]'))) { const c = byId(b.dataset.open); if (c && isOpen(c)) { if (sheet.isOpen) sheet.close({ restoreFocus: false }); openExhibit(c); } return true; }
   if ((b = q('[data-detail]'))) { const c = byId(b.dataset.detail); if (c) detailSheet(c); return true; }
-  if ((b = q('[data-like]'))) { const on = toggleLike(b.dataset.like); b.classList.toggle('on', on); b.innerHTML = heart(on); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); if (tab === 'my') go('my', true); return true; }
-  if ((b = q('[data-jump]'))) { const el = document.getElementById(b.dataset.jump); if (el) scrollTo({ top: el.getBoundingClientRect().top + scrollY - 20, behavior: 'smooth' }); return true; }
+  if ((b = q('[data-like]'))) {
+    toggleLike(b.dataset.like); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+    if (tab === 'my') go('my', true); return true;
+  }
+  if ((b = q('[data-share]'))) { const cell = byId(b.dataset.share); if (cell) exhibitShare.share(cell); return true; }
+  if ((b = q('[data-cover]'))) { changeCover(Number(b.dataset.cover), null, b.dataset.cover); return true; }
+  if ((b = q('[data-cover-index]'))) { changeCover(0, Number(b.dataset.coverIndex), 'index:' + b.dataset.coverIndex); return true; }
+  if (q('[data-search]')) { discover.open('all', true); return true; }
+  if (q('[data-saved]')) { discover.open('liked'); return true; }
+  if (q('[data-motion]')) { motionQuery.setReduced(!motionQuery.requested); syncPreferenceControls(); return true; }
+  if ((b = q('[data-jump]'))) { const el = document.getElementById(b.dataset.jump); if (el) scrollTo({ top: el.getBoundingClientRect().top + scrollY - 20, behavior: motionQuery.matches ? 'auto' : 'smooth' }); return true; }
   if (q('[data-noti]')) { notiSheet(); return true; }
   if (q('[data-read]')) { store.set('valix-noti', vol()); sheet.close(); go(tab, true); return true; }
   if (q('[data-recent]')) {
@@ -420,11 +495,14 @@ function onAction(e) {
     mountVideos(sh); playVideo(sh.querySelector('.vx-v'));
     return true;
   }
-  if (q('[data-all]')) {
-    sheet.open(`<div class="sh-h"><h3>${t('전체 행성')}</h3></div><div class="grid2">${cells.map((c) => `<button class="gcard" data-detail="${esc(c.id)}">${poster(c)}<p class="ct">${esc(name(c))}</p><p class="ga">${esc(c.artist || '')}</p></button>`).join('')}</div>`);
+  if (q('[data-all]')) { discover.open('all'); return true; }
+
+  if ((b = q('[data-how]'))) {
+    detailSheet(byId(b.dataset.how));
+    const target = sheet.el.querySelector('.dt-how');
+    setTimeout(() => { if (target?.isConnected && sheet.isOpen && sheet.el.contains(target)) sheet.el.scrollTo({ top: target.offsetTop - 40, behavior: motionQuery.matches ? 'auto' : 'smooth' }); }, 380);
     return true;
   }
-  if ((b = q('[data-how]'))) { detailSheet(byId(b.dataset.how)); setTimeout(() => { const h = sheet.el.querySelector('.dt-how'); if (h) sheet.el.scrollTo({ top: h.offsetTop - 40, behavior: 'smooth' }); }, 380); return true; }
   if (q('[data-guide]')) {
     sheet.open(`<div class="sh-h"><h3>${t('참여 방법')}</h3></div><ol class="guide">${['매주 월요일 새 Vol.이 열려요.', '그 주에 행성 한 곳 이상 착륙하면 그 주의 책이 채워져요.', '한 주에 서로 다른 행성 3곳에 착륙하면 스탬프가 완성돼요.', '3주 연속으로 책을 채우면 항해 리포트가 열려요.'].map((s, i) => `<li><em>${i + 1}</em>${t(s)}</li>`).join('')}</ol><p class="small" style="padding:0 24px">${t('스탬프와 기록은 이 기기에만 저장돼요.')}</p><div style="padding:20px 24px 0"><button class="btn line" data-close>${t('닫기')}</button></div>`);
     return true;
@@ -438,7 +516,13 @@ function onAction(e) {
   }
   if (q('[data-rename]')) { showOB('nick'); return true; }
   if ((b = q('[data-lang]'))) { if (b.dataset.lang !== lang) { try { localStorage.setItem('xpace-lang', b.dataset.lang); } catch (er) {} location.reload(); } return true; }
-  if (q('[data-clear]')) { store.set('valix-history', {}); store.set('valix-visits', []); toast(t('기록을 지웠어요.')); go(tab, true); return true; }
+  if (q('[data-clear]')) {
+    sheet.open(`<div class="sh-h"><h3>${t('관람 기록을 지울까요?')}</h3></div><div class="nb-danger"><p>${t('항해명과 좋아요는 유지돼요. 관람 시간과 스탬프만 삭제됩니다.')}</p><div class="nb-confirm-actions"><button class="btn line" data-close>${t('취소')}</button><button class="btn black" data-confirm-clear>${t('기록 삭제')}</button></div></div>`, 'confirm');
+    return true;
+  }
+  if (q('[data-confirm-clear]') && sheet.el.classList.contains('confirm')) {
+    store.set('valix-history', {}); store.set('valix-visits', []); sheet.close(); toast(t('기록을 지웠어요.')); go(tab, true); return true;
+  }
   return false;
 }
 view.addEventListener('click', onAction);
@@ -446,35 +530,70 @@ sheet.el.addEventListener('click', onAction);
 
 /* ---------- 전시 보기 ---------- */
 const viewer = $('#viewer'), frame = $('#frame');
-let current = null, enteredAt = 0;
+let current = null, enteredAt = 0, frameRaf = 0, waitingForBack = false, queuedExhibit = null;
+function flushWatchTime() {
+  if (!current || !enteredAt) return;
+  const seconds = Math.max(0, Date.now() - enteredAt) / 1000;
+  enteredAt = 0;
+  const h = hist(), record = h[current.id] || {};
+  record.time = (record.time || 0) + seconds; record.last = Date.now(); h[current.id] = record;
+  store.set('valix-history', h);
+}
+function replaceFrame(url) {
+  try { frame.contentWindow.location.replace(url); }
+  catch { frame.src = url; }
+}
+function loadExhibitFrame(c) {
+  cancelAnimationFrame(frameRaf); replaceFrame('about:blank');
+  frameRaf = requestAnimationFrame(() => { frameRaf = 0; if (current === c && !viewer.hidden) replaceFrame(href(c)); });
+}
 function openExhibit(c) {
-  if (!c) return;
-  current = c; enteredAt = Date.now();
+  if (!c || !isOpen(c) || !viewer.hidden) return;
+  if (waitingForBack) { queuedExhibit = c; return; }
+  stopVideos(); current = c; enteredAt = 0;
   const h = hist(); h[c.id] = { ...(h[c.id] || {}), last: Date.now(), visits: ((h[c.id] && h[c.id].visits) || 0) + 1 }; store.set('valix-history', h);
   const v = visits(); v.push({ id: c.id, at: Date.now() }); store.set('valix-visits', v.slice(-500));
-  $('#toast').hidden = true; landing.start(c); viewer.hidden = false; frame.src = 'about:blank'; sky.stop();
-  requestAnimationFrame(() => { frame.src = href(c); });
-  history.pushState({ viewer: true }, '');
+  $('#toast').hidden = true; viewer.hidden = false; landing.start(c); loadExhibitFrame(c);
+  history.pushState({ viewer: true }, ''); syncRuntime();
 }
-function closeExhibit(fromPop) {
+function closeExhibit(fromPop = false) {
   if (viewer.hidden) return;
-  if (current) { const h = hist(); const r = h[current.id] || {}; r.time = (r.time || 0) + Math.round((Date.now() - enteredAt) / 1000); r.last = Date.now(); h[current.id] = r; store.set('valix-history', h); }
-  landing.stop(); viewer.hidden = true; frame.src = 'about:blank'; current = null; sky.start();
-  if (!fromPop && history.state && history.state.viewer) history.back();
+  flushWatchTime(); cancelAnimationFrame(frameRaf); frameRaf = 0;
+  landing.stop(); viewer.hidden = true; replaceFrame('about:blank'); current = null;
+  if (!fromPop && history.state?.viewer) { waitingForBack = true; history.back(); }
   go(tab, true);
 }
 $('#close').addEventListener('click', () => closeExhibit());
-addEventListener('popstate', () => closeExhibit(true));
+$('#land-cancel').addEventListener('click', () => closeExhibit());
+addEventListener('popstate', () => {
+  if (waitingForBack) {
+    waitingForBack = false;
+    const next = queuedExhibit; queuedExhibit = null;
+    if (next) openExhibit(next);
+  } else closeExhibit(true);
+});
 frame.addEventListener('load', () => {
   if (!current) return;
   let path = '', full = '';
   try { full = frame.contentWindow.location.href; path = frame.contentWindow.location.pathname; } catch (e) {}
   if (!full || full === 'about:blank') return;
-  if (/\/(index\.html)?$/.test(path) || path.endsWith('/app.html')) { closeExhibit(); return; } // 전시 안 NEBULA 로고 → 앱 홈
+  if (/\/(index\.html)?$/.test(path) || path.endsWith('/app.html')) { closeExhibit(); return; }
   landing.loaded();
 });
-const CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
-if (CapApp) CapApp.addListener('backButton', () => { if (sheet.isOpen) sheet.close(); else if (!viewer.hidden) closeExhibit(); else if (!ob.hidden) showOB('login'); else if (tab !== 'home') go('home'); else CapApp.exitApp(); });
+const CapApp = window.Capacitor?.Plugins?.App;
+if (CapApp) {
+  CapApp.addListener('backButton', () => {
+    if (sheet.isOpen) sheet.close(); else if (!viewer.hidden) closeExhibit();
+    else if (!ob.hidden) showOB('login'); else if (tab !== 'home') go('home'); else CapApp.exitApp();
+  });
+  CapApp.addListener('appStateChange', ({ isActive }) => {
+    nativeActive = isActive; syncRuntime(); if (isActive) applyPendingData();
+  });
+}
+document.addEventListener('visibilitychange', () => { syncRuntime(); if (!document.hidden) applyPendingData(); });
+addEventListener('pagehide', () => { nativeActive = false; syncRuntime(); });
+addEventListener('pageshow', () => { nativeActive = true; syncRuntime(); applyPendingData(); });
+
 
 
 /* ---------- 매거진 도우미 ---------- */
@@ -515,7 +634,7 @@ function issueSheet() {
   const keys = []; for (let k = thisMonth(); issueNo(k) >= 1; k = prevKey(k)) keys.push(k);
   const cur = viewMonth || thisMonth();
   sheet.open(`<div class="sh-h"><h3>${t('지난 호')}</h3></div><div class="vols">${keys.map((k) => { const P = picksFor(k), f = P[0];
-    return `<button class="vrow${cur === k ? ' on' : ''}" data-month="${k}">${f ? `<img data-pl="${esc(planetKey(f))}" src="${planetSrc(f)}" decoding="async" alt="">` : '<span class="ph"></span>'}<span><b>No.${issueNo(k)} · ${esc(monthName(k))}</b><small>${ISSUES[k] && ISSUES[k].title ? esc(ISSUES[k].title) + ' · ' : ''}${P.map(name).join(' · ') || '—'}</small></span>${k === thisMonth() ? `<em>${t('진행 중')}</em>` : ''}</button>`; }).join('')}</div>`);
+    return `<button class="vrow${cur === k ? ' on' : ''}" data-month="${k}">${f ? `<img data-pl="${esc(planetKey(f))}" src="${planetSrc(f)}" decoding="async" alt="">` : '<span class="ph"></span>'}<span><b>No.${issueNo(k)} · ${esc(monthName(k))}</b><small>${ISSUES[k] && ISSUES[k].title ? esc(ISSUES[k].title) + ' · ' : ''}${P.map((cell) => esc(name(cell))).join(' · ') || '—'}</small></span>${k === thisMonth() ? `<em>${t('진행 중')}</em>` : ''}</button>`; }).join('')}</div>`);
 }
 const blocksOf = (c) => { const ids = c.rooms ? c.rooms.map((r) => r.id) : [c.id]; return blocks.filter((b) => ids.includes(b.cell_id)); };
 const pullQuote = (c) => blocksOf(c).find((b) => b.type === 'quote' && b.body);
@@ -536,144 +655,192 @@ const T4 = {
 Object.keys(T4).forEach((l) => Object.assign(T[l], T4[l]));
 
 const tilt = { x: 0, y: 0, px: 0, py: 0 }; window.__vxTilt = tilt;
-addEventListener('pointermove', (e) => { if (!IS_MOBILE) { tilt.px = (e.clientX / innerWidth - 0.5) * 2; tilt.py = (e.clientY / innerHeight - 0.5) * 2; } }, { passive: true });
+addEventListener('pointermove', (e) => {
+  if (!IS_MOBILE && tab === 'home' && viewer.hidden && !sheet.isOpen && !motionQuery.matches) {
+    tilt.px = (e.clientX / innerWidth - .5) * 2; tilt.py = (e.clientY / innerHeight - .5) * 2; scheduleTilt();
+  }
+}, { passive: true });
 // iPhone은 탭 안에서만 센서 권한을 물을 수 있음 → 첫 탭에서 켬
-addEventListener('click', function once() { if (!IS_MOBILE) return; removeEventListener('click', once, true); sensor.enable().then((ok) => { if (ok) document.body.classList.add('sensing'); }); }, true);
-// 흔들면 다음 표지 (홈 표지가 보일 때)
+addEventListener('click', function once() {
+  if (IS_MOBILE && motionQuery.matches) return;
+  removeEventListener('click', once, true);
+  if (IS_MOBILE) sensor.enable().then((ok) => { if (ok) { document.body.classList.add('sensing'); scheduleTilt(); } });
+}, true);
+// Buttons, a deliberate horizontal swipe and shake use the same cover transition.
+function changeCover(step, index = null, restore = '') {
+  if (tab !== 'home' || view.hidden || !viewer.hidden || sheet.isOpen || document.hidden || !nativeActive || coverChanging) return;
+  const cover = view.querySelector('.mag-cover'), list = picksFor(viewMonth || thisMonth());
+  if (!cover || list.length < 2) return;
+  const next = index == null ? (coverIdx + step + list.length) % list.length : index;
+  if (!Number.isInteger(next) || next < 0 || next >= list.length || next === coverIdx) return;
+  const month = viewMonth, target = next;
+  function apply() {
+    coverChanging = false;
+    if (tab !== 'home' || view.hidden || !viewer.hidden || sheet.isOpen || document.hidden || !cover.isConnected || viewMonth !== month) return;
+    coverIdx = target; go('home', true);
+    const freshCover = view.querySelector('.mag-cover');
+    if (!motionQuery.matches) freshCover?.classList.add('flip-in');
+    const control = restore.startsWith('index:') ? `[data-cover-index="${restore.slice(6)}"]` : restore ? `[data-cover="${restore}"]` : '';
+    if (control) view.querySelector(control)?.focus({ preventScroll: true });
+  }
+  if (motionQuery.matches) apply();
+  else { coverChanging = true; cover.classList.add('flip-out'); setTimeout(apply, 220); }
+}
 sensor.onShake(() => {
-  if (tab !== 'home' || !viewer.hidden || sheet.isOpen) return;
-  const cov = view.querySelector('.mag-cover'); if (!cov || cov.getBoundingClientRect().bottom < innerHeight * 0.4) return;
-  const n = picksFor(viewMonth || thisMonth()).length; if (n < 2) return;
-  coverIdx = (coverIdx + 1) % n; sensor.vibrate([15, 40, 25]);
-  cov.classList.add('flip-out');
-  setTimeout(() => { go('home', true); const c2 = view.querySelector('.mag-cover'); c2 && c2.classList.add('flip-in'); }, 260);
+  if (motionQuery.matches) return;
+  const cover = view.querySelector('.mag-cover');
+  if (cover && cover.getBoundingClientRect().bottom >= innerHeight * .4) { changeCover(1); sensor.vibrate([15, 40, 25]); }
 });
+let coverTouch = null;
+view.addEventListener('touchstart', (event) => {
+  coverTouch = event.touches.length === 1 && event.target.closest('.mc-stage') ? { x: event.touches[0].clientX, y: event.touches[0].clientY, at: performance.now() } : null;
+}, { passive: true });
+view.addEventListener('touchmove', (event) => {
+  if (event.touches.length !== 1) coverTouch = null;
+}, { passive: true });
+view.addEventListener('touchend', (event) => {
+  const start = coverTouch; coverTouch = null;
+  if (!start || !event.changedTouches.length || performance.now() - start.at > 1000) return;
+  const dx = event.changedTouches[0].clientX - start.x, dy = event.changedTouches[0].clientY - start.y;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.8) changeCover(dx < 0 ? 1 : -1);
+}, { passive: true });
+view.addEventListener('touchcancel', () => { coverTouch = null; });
+
+
 // 홈 화면을 그릴 때 움직일 요소를 한 번만 찾아 두고, 화면에 보이는 것만 움직임
-let tiltZones = [], tiltIO = null;
+let tiltZones = [], tiltIO = null, tiltRaf = 0, tiltLastDraw = 0, tiltDirty = true, coverChanging = false;
 function bindTilt() {
-  if (tiltIO) tiltIO.disconnect(); tiltZones = [];
-  if (tab !== 'home') return;
-  tiltIO = new IntersectionObserver((es) => es.forEach((e) => { const z = tiltZones.find((q) => q.el === e.target); if (z) z.vis = e.isIntersecting; }));
+  tiltIO?.disconnect(); tiltIO = null; tiltZones = []; tiltDirty = true;
+  if (tab !== 'home' || motionQuery.matches) return;
+  const zoneMap = new Map();
+  if ('IntersectionObserver' in window) tiltIO = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      const zone = zoneMap.get(entry.target);
+      if (zone) { zone.visible = entry.isIntersecting; tiltDirty = true; }
+    }
+    scheduleTilt();
+  });
   view.querySelectorAll('[data-tiltzone], [data-tiltcard]').forEach((el) => {
     const card = el.hasAttribute('data-tiltcard');
-    tiltZones.push({ el, card, vis: false, depth: [...el.querySelectorAll('[data-depth]')].map((d) => [d, +d.dataset.depth * (card ? 0.6 : 1)]), gloss: el.querySelector('[data-gloss]') });
-    tiltIO.observe(el);
+    const zone = { el, card, visible: !tiltIO,
+      depth: [...el.querySelectorAll('[data-depth]')].map((item) => [item, +item.dataset.depth * (card ? .6 : 1)]), gloss: el.querySelector('[data-gloss]') };
+    tiltZones.push(zone); zoneMap.set(el, zone); tiltIO?.observe(el);
   });
 }
 let tlx = 9, tly = 9;
-(function tiltLoop() {
-  requestAnimationFrame(tiltLoop);
-  if (tab !== 'home' || view.hidden || !viewer.hidden || document.hidden || !tiltZones.length) return;
-  const on = IS_MOBILE && sensor.on;
-  const tx = on ? sensor.tiltX : tilt.px, ty = on ? sensor.tiltY : tilt.py;
-  tilt.x += (tx - tilt.x) * 0.12; tilt.y += (ty - tilt.y) * 0.12;
-  if (Math.abs(tilt.x - tlx) < 0.002 && Math.abs(tilt.y - tly) < 0.002) return; // 거의 안 움직이면 쉼
-  tlx = tilt.x; tly = tilt.y;
-  for (const z of tiltZones) {
-    if (!z.vis) continue;
-    for (const [el, d] of z.depth) el.style.translate = `${(tilt.x * d).toFixed(1)}px ${(tilt.y * d).toFixed(1)}px`;
-    if (z.gloss) { z.gloss.style.setProperty('--gx', `${(50 + tilt.x * 45).toFixed(1)}%`); z.gloss.style.setProperty('--gy', `${(40 + tilt.y * 40).toFixed(1)}%`); }
-    if (z.card) z.el.style.transform = `perspective(900px) rotateY(${(tilt.x * 7).toFixed(2)}deg) rotateX(${(-tilt.y * 6).toFixed(2)}deg)`;
+function canTilt() {
+  return nativeActive && !document.hidden && tab === 'home' && !view.hidden && viewer.hidden && !sheet.isOpen && !motionQuery.matches && tiltZones.some((zone) => zone.visible);
+}
+function scheduleTilt() { if (!tiltRaf && canTilt()) tiltRaf = requestAnimationFrame(tiltLoop); }
+function tiltLoop(now) {
+  tiltRaf = 0;
+  if (!canTilt()) return;
+  if (now - tiltLastDraw < 1000 / 30) { scheduleTilt(); return; }
+  tiltLastDraw = now;
+  const usingSensor = IS_MOBILE && sensor.on;
+  const tx = usingSensor ? sensor.tiltX : tilt.px, ty = usingSensor ? sensor.tiltY : tilt.py;
+  tilt.x += (tx - tilt.x) * .20; tilt.y += (ty - tilt.y) * .20;
+  const changed = tiltDirty || Math.abs(tilt.x - tlx) >= .002 || Math.abs(tilt.y - tly) >= .002;
+  if (changed) {
+    tiltDirty = false; tlx = tilt.x; tly = tilt.y;
+    for (const zone of tiltZones) {
+      if (!zone.visible) continue;
+      for (const [el, depth] of zone.depth) el.style.translate = `${(tilt.x * depth).toFixed(1)}px ${(tilt.y * depth).toFixed(1)}px`;
+      if (zone.gloss) { zone.gloss.style.setProperty('--gx', `${(50 + tilt.x * 45).toFixed(1)}%`); zone.gloss.style.setProperty('--gy', `${(40 + tilt.y * 40).toFixed(1)}%`); }
+      if (zone.card) zone.el.style.transform = `perspective(900px) rotateY(${(tilt.x * 7).toFixed(2)}deg) rotateX(${(-tilt.y * 6).toFixed(2)}deg)`;
+    }
   }
-})();
+  if (usingSensor || Math.abs(tx - tilt.x) >= .002 || Math.abs(ty - tilt.y) >= .002) scheduleTilt();
+}
+motionQuery.addEventListener('change', () => {
+  revealIO?.disconnect(); revealIO = null;
+  view.querySelectorAll('.rs').forEach((el) => el.classList.add('in'));
+  tilt.x = tilt.y = tilt.px = tilt.py = 0;
+  for (const zone of tiltZones) {
+    for (const [el] of zone.depth) el.style.translate = '';
+    if (zone.card) zone.el.style.transform = '';
+    zone.gloss?.style.removeProperty('--gx'); zone.gloss?.style.removeProperty('--gy');
+  }
+  bindTilt(); syncRuntime(); syncPreferenceControls();
+  const hint = view.querySelector('[data-sensor-hint] span');
+  if (hint) hint.textContent = t(motionQuery.matches ? '읽기와 탐색' : IS_MOBILE ? '기울이면 표지가 빛나요 · 옆으로 밀면 다음 표지' : '마우스를 움직이면 표지가 빛나요');
+});
 
 /* ---------- 착륙 로딩 화면 ---------- */
-const landing = (() => {
-  const el = $('#landing'), cv = $('#land-cv'), x = cv.getContext('2d');
-  let raf = 0, t0 = 0, p = 0, isLoaded = false, loadedAt = 0, c = null, timer = 0, W = 0, H = 0, dpr = 1, stars = [];
-  const MIN = 1600, FIN = 700;
-  function size() { dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0); }
-  function astro(px, py, s, rot) {
-    x.save(); x.translate(px, py); x.rotate(rot); x.scale(s, s);
-    x.fillStyle = '#e9ecf5'; x.strokeStyle = '#5a6280'; x.lineWidth = 3;
-    const rr = (a, b, w, h, r) => { x.beginPath(); x.roundRect(a, b, w, h, r); x.fill(); x.stroke(); };
-    rr(-34, -10, 68, 80, 20); rr(-58, 0, 26, 58, 13); rr(32, -20, 26, 58, 13); rr(-30, 62, 24, 46, 12); rr(6, 62, 24, 46, 12);
-    x.fillStyle = '#d3d8e8'; x.beginPath(); x.roundRect(-30, 10, 60, 40, 10); x.fill();
-    x.fillStyle = '#e9ecf5'; x.beginPath(); x.arc(0, -46, 40, 0, Math.PI * 2); x.fill(); x.stroke();
-    x.fillStyle = '#1c2240'; x.beginPath(); x.ellipse(0, -44, 28, 22, 0, 0, Math.PI * 2); x.fill();
-    x.fillStyle = 'rgba(255,214,140,.8)'; x.beginPath(); x.ellipse(-10, -52, 8, 5, -0.5, 0, Math.PI * 2); x.fill();
-    x.restore();
-  }
-  function surface(cx, cy, R) {
-    const bm = planetBitmap(c), ratio = hasRing(c) ? 0.30 : 0.38, w = (R / ratio);
-    if (bm) { x.drawImage(bm, cx - w / 2, cy - w / 2, w, w); return; }
-    const g = x.createRadialGradient(cx - R * 0.35, cy - R * 0.35, R * 0.1, cx, cy, R); g.addColorStop(0, c.color || '#9db8ff'); g.addColorStop(1, '#0b0c18');
-    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2); x.fill();
-  }
-  function frame(now) {
-    const el2 = now - t0;
-    const target = isLoaded && el2 > MIN ? Math.min(1, .82 + .18 * Math.min(1, (now - Math.max(loadedAt, t0 + MIN)) / FIN)) : Math.min(.82, el2 / MIN * .82);
-    p += (target - p) * .12; if (target === 1 && p > .995) p = 1;
-    const e = p * p * (3 - 2 * p);
-    x.fillStyle = '#05060c'; x.fillRect(0, 0, W, H);
-    const cx = W / 2, cy = H * .4;
-    stars.forEach((s) => { const k = 1 + e * 1.6 * s.z; x.fillStyle = `rgba(255,255,255,${.3 + .35 * s.z / 2.3})`; x.fillRect(cx + (s.x - cx) * k, cy + (s.y - cy) * k, s.z * .9, s.z * .9); });
-    const R = Math.min(W, H) * .16 + e * e * Math.max(W, H) * 1.1;
-    x.save(); x.globalAlpha = .22; x.fillStyle = c.color || '#9db8ff'; x.beginPath(); x.arc(cx, cy, R * 1.12, 0, Math.PI * 2); x.fill(); x.restore();
-    surface(cx, cy, R);
-    const wait = !isLoaded && p > .8;
-    const orbit = wait ? (now / 1400) : 0;
-    const ax = wait ? cx + Math.cos(orbit) * R * 1.35 : cx - W * .25 * (1 - e);
-    const ay = wait ? cy + Math.sin(orbit) * R * .5 : H * .78 - (H * .78 - cy) * e;
-    const as = (Math.min(W, H) / 600) * (wait ? .35 : 1.1 * (1 - e * .92));
-    if (as > .03) astro(ax, ay, as, -.35 + Math.sin(now / 600) * .08 + e * .8);
-    if (p > .88) { x.fillStyle = `rgba(255,236,190,${(p - .88) / .12})`; x.fillRect(0, 0, W, H); }
-    el.classList.toggle('bright', p > .93);
-    $('#land-state').textContent = p >= 1 ? t('착륙 완료') : `${t('대기권 진입')} ${Math.round(p * 100)}%`;
-    if (p >= 1) { el.classList.add('out'); setTimeout(() => { el.hidden = true; }, 600); cancelAnimationFrame(raf); raf = 0; return; }
-    raf = requestAnimationFrame(frame);
-  }
-  addEventListener('resize', () => { if (!el.hidden) size(); });
-  $('#land-retry').addEventListener('click', () => { if (current) { const cc = current; closeExhibit(); openExhibit(cc); } });
-  return {
-    start(cell) {
-      c = cell; size(); stars = [...Array(160)].map(() => ({ x: Math.random() * W, y: Math.random() * H, z: Math.random() * 2 + .3 }));
-      p = 0; isLoaded = false; t0 = performance.now(); el.hidden = false; el.classList.remove('out', 'bright');
-      $('#land-code').textContent = cell.code || ''; $('#land-title').textContent = `${name(cell)} — ${t('착륙하는 중')}`;
-      $('#land-retry').hidden = true; $('#land-retry').textContent = t('다시 시도');
-      clearTimeout(timer); timer = setTimeout(() => { if (!isLoaded) { $('#land-retry').hidden = false; $('#land-title').textContent = t('신호가 약해요. 연결을 확인해 주세요.'); } }, 12000);
-      cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);
-    },
-    loaded() { if (!isLoaded) { isLoaded = true; loadedAt = performance.now(); clearTimeout(timer); $('#land-retry').hidden = true; } },
-    stop() { cancelAnimationFrame(raf); raf = 0; clearTimeout(timer); el.hidden = true; },
-  };
-})();
+const landing = createAppLanding({
+  planetBitmap, hasRing, name, translate: t, motionQuery,
+  onFinished: syncRuntime,
+  onRetry() { if (current) { flushWatchTime(); landing.start(current); loadExhibitFrame(current); syncRuntime(); } },
+});
 
-/* ---------- 시작 ---------- */
-// 지난번 데이터를 기기에 저장해 두었다가 바로 보여주고, 새 데이터는 뒤에서 받아 바뀐 게 있으면 조용히 갱신
-const DKEY = `valix-data2-${lang}`; // 이름 정리(N-001) 뒤 옛 저장 데이터는 버림
-const pack = () => JSON.stringify({ cells, blocks, ISSUES }, (k, v) => (k === 'group' ? undefined : v));
-function unpack(o) { cells = o.cells || []; blocks = o.blocks || []; ISSUES = o.ISSUES || {}; }
-async function fetchFresh() {
-  const [d, iss] = await Promise.all([
-    loadData().catch(() => null),
-    fetch('data/issues.json', { cache: 'no-cache' }).then((r) => r.json()).catch(() => null),
-  ]);
-  return d ? { cells: d.cells, blocks: d.blocks || [], ISSUES: iss || ISSUES || {} } : null;
+/* ---------- 시작: 기기 캐시 → 로컬 데이터 → 뒤에서 CMS 갱신 ---------- */
+const DKEY = `valix-data2-${lang}`;
+const pack = (data = { cells, blocks, ISSUES }) => JSON.stringify(data, (key, value) => key === 'group' ? undefined : value);
+const validData = (data) => data && Array.isArray(data.cells) && data.cells.length > 0 && data.cells.every((cell) => cell && typeof cell.id === 'string');
+function unpack(data) { cells = data.cells.map((cell) => ({ ...cell, artist: String(cell.artist || '').replace(/\bVALIX(?:\s+LAB)?\b/g, 'NEBULA') })); blocks = Array.isArray(data.blocks) ? data.blocks : []; ISSUES = data.ISSUES || {}; }
+let pendingData = null;
+function applyPendingData(redraw = true) {
+  if (!pendingData || !nativeActive || document.hidden || !viewer.hidden || sheet.isOpen || !ob.hidden) return;
+  const data = pendingData; pendingData = null; unpack(data); warm(firstPlanets());
+  if (redraw && !view.hidden) go(tab, true);
 }
-function firstPlanets() { const k = thisMonth(); const p = picksFor(k); return [...p, ...cells.filter((c) => !p.includes(c))]; }
+async function loadIssues() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+  try {
+    const response = await fetch('data/issues.json', { cache: 'no-cache', signal: controller.signal });
+    if (!response.ok) return null;
+    const issues = await response.json();
+    return issues && typeof issues === 'object' && !Array.isArray(issues) ? issues : null;
+  } catch { return null; }
+  finally { clearTimeout(timeout); }
+}
+function firstPlanets() {
+  const picked = picksFor(thisMonth());
+  return [...picked, ...cells.filter((cell) => !picked.includes(cell))];
+}
+function saveData(serialized) {
+  const save = () => { try { localStorage.setItem(DKEY, serialized); } catch {} };
+  if ('requestIdleCallback' in window) requestIdleCallback(save, { timeout: 1000 }); else setTimeout(save, 0);
+}
+function firstValidData(promises) {
+  return new Promise((resolve) => {
+    let remaining = promises.length;
+    promises.forEach((promise) => Promise.resolve(promise).catch(() => null).then((data) => {
+      if (validData(data)) resolve(data);
+      if (--remaining === 0) resolve(null);
+    }));
+  });
+}
 (async () => {
-  const t0 = Date.now();
-  let saved = null; try { saved = JSON.parse(localStorage.getItem(DKEY)); } catch (e) {}
-  const fresh = fetchFresh();
-  if (saved && saved.cells && saved.cells.length) unpack(saved);
-  else { const f = await fresh; if (f) unpack(f); }
-  warm(firstPlanets()); // 표지 행성부터 그림 준비
-  await new Promise((r) => setTimeout(r, Math.max(0, (saved ? 500 : 900) - (Date.now() - t0)))); // 시작 화면은 짧게
-  $('#splash').classList.add('out'); setTimeout(() => $('#splash').remove(), 600);
-  if (!cells.length) { view.hidden = false; view.innerHTML = `<p class="empty" style="padding-top:40vh">${t('전시를 불러오지 못했어요.')}<br><br><button class="btn line" style="width:auto;padding:0 24px;margin:0 auto" onclick="location.reload()">${t('다시 시도')}</button></p>`; return; }
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(DKEY)); } catch {}
+  if (!validData(saved)) saved = null;
+  const issues = loadIssues();
+  const fresh = Promise.all([loadData().catch(() => null), issues]).then(([data, issue]) => data ? { cells: data.cells, blocks: data.blocks || [], ISSUES: issue || saved?.ISSUES || {} } : null);
+  const local = saved ? null : loadLocalData().catch(() => null).then((data) => data ? { cells: data.cells, blocks: data.blocks || [], ISSUES: {} } : null);
+  const initial = saved || await firstValidData([local, fresh]);
+  if (validData(initial)) unpack(initial);
+  const splash = $('#splash'); splash.classList.add('out'); setTimeout(() => splash.remove(), motionQuery.matches ? 0 : 350);
+  if (!cells.length) {
+    view.hidden = false;
+    view.innerHTML = `<p class="empty" style="padding-top:35vh">${t('전시를 불러오지 못했어요.')}<br><br><button class="btn line" style="width:auto;padding:0 24px;margin:0 auto" onclick="location.reload()">${t('다시 시도')}</button></p>`;
+    syncRuntime(); return;
+  }
+  warm(firstPlanets());
   if (!store.get('valix-onboarded', false)) showOB('intro0'); else go('home');
-  const m = location.hash.match(/open=([\w-]+)/); // #open=전시id → 바로 입장 (푸시·공유 링크)
-  if (m) { const c = cells.find((x) => x.id === m[1]); if (c && isOpen(c)) openExhibit(c); }
-  // 뒤에서 받은 새 데이터 반영
-  const f = await fresh;
-  if (f) {
-    const before = saved ? JSON.stringify(saved) : '';
-    const prev = { cells, blocks, ISSUES }; unpack(f);
-    const now = pack();
-    try { localStorage.setItem(DKEY, now); } catch (e) {}
-    if (saved && now !== before) { warm(firstPlanets()); if (viewer.hidden && !sheet.isOpen && ob.hidden && !view.hidden) go(tab, true); }
-    else if (!saved) { /* 처음 받은 데이터 그대로 */ }
-    void prev;
+  const match = location.hash.match(/open=([\w-]+)/);
+  if (match) { const cell = cells.find((item) => item.id === match[1]); if (cell && isOpen(cell)) openExhibit(cell); }
+  if (!saved) saveData(pack());
+  issues.then((issue) => {
+    if (!issue || JSON.stringify(issue) === JSON.stringify(ISSUES)) return;
+    pendingData = { ...(pendingData || { cells, blocks }), ISSUES: issue };
+    applyPendingData();
+  });
+  const data = await fresh;
+  if (validData(data)) {
+    const serialized = pack(data);
+    saveData(serialized);
+    if (serialized !== pack()) { pendingData = data; applyPendingData(); }
   }
 })();
