@@ -1,5 +1,5 @@
-import { CONFIG } from './config.js?v=14';
-import { lang, tr } from './i18n.js?v=3';
+import { CONFIG } from './config.js?v=15';
+import { lang, tr } from './i18n.js?v=4';
 
 // 공개 구글 시트를 gviz JSON 엔드포인트로 읽어 [{col: value}] 배열로 변환
 async function fetchSheet(id) {
@@ -40,7 +40,7 @@ export async function loadData() {
       });
     } catch (e2) {}
   } catch (e) {
-    console.warn('[THE CELL] 드라이브 시트를 읽지 못해 백업 데이터를 사용합니다:', e.message);
+    console.warn('[NEBULA] 드라이브 시트를 읽지 못해 백업 데이터를 사용합니다:', e.message);
     const fb = await (await fetch(CONFIG.fallbackUrl)).json();
     cells = fb.cells; blocks = fb.blocks; source = 'fallback';
   }
@@ -66,9 +66,9 @@ export async function loadData() {
     g.rooms.push(c);
   });
   groups.forEach((g) => g.rooms.sort((a, b) => g.members.indexOf(a.id) - g.members.indexOf(b.id)));
-  // 번호 다시 매기기 (X-001, X-002 …)
+  // 번호 다시 매기기 (N-001, N-002 …)
   top.forEach((c, i) => {
-    const code = 'X-' + String(i + 1).padStart(3, '0');
+    const code = 'N-' + String(i + 1).padStart(3, '0');
     c.code = code;
     const name = String(c.title || '').replace(/^\s*(?:CELL|X)[-\s]?\d+\s*[·:|-]\s*/i, '');
     c.title = `${code} · ${name}`;

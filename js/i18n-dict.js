@@ -1,20 +1,17 @@
-// XPACE 화면 문구 번역 (한국어 문장 = 키). 번역이 없는 문구는 한국어로 보입니다.
+// NEBULA 화면 문구 번역 (한국어 문장 = 키). 번역이 없는 문구는 한국어로 보입니다.
 const T = {
   // ---------- 공통 / 홈 ----------
-  'XPACE 엑스페이스 — 온라인에서 마주하는 무한한 가치의 공간': ['XPACE — A space of infinite value, met online', 'XPACE — 在线相遇的无限价值空间', 'XPACE — オンラインで出会う、無限の価値の空間'],
-  '엑스페이스': ['XPACE', 'XPACE', 'エクスペース'],
-  '온라인에서 마주하는 무한한 가치의 공간.': ['a space of infinite value, met online.', '在线相遇的无限价值空间。', 'オンラインで出会う、無限の価値の空間。'],
+  'NEBULA 네뷸라 — 살아 있는 예술이 태어나는 우주': ["NEBULA — A universe where living art is born", "NEBULA — 鲜活艺术诞生的宇宙", "NEBULA — 生きたアートが生まれる宇宙"],
+  '네뷸라': ['NEBULA', 'NEBULA', 'ネビュラ'],
+  '살아 있는 예술이 태어나는 우주.': ["a universe where living art is born.", "鲜活艺术诞生的宇宙。", "生きたアートが生まれる宇宙。"],
   '행성을 골라 착륙해 보세요.': ['Pick a planet and land.', '选择一颗行星，降落吧。', '惑星を選んで、着陸してみましょう。'],
   '드래그해서 둘러보기 · 행성을 눌러 착륙': ['Drag to look around · Click a planet to land', '拖动浏览 · 点击行星降落', 'ドラッグで見渡す · 惑星をクリックして着陸'],
-  'XPACE(엑스페이스)는 온라인에서 마주하는 무한한 가치의 공간입니다.': ['XPACE is a space of infinite value that you meet online.', 'XPACE 是一个在线相遇的无限价值空间。', 'XPACE（エクスペース）は、オンラインで出会う無限の価値の空間です。'],
+  'NEBULA(네뷸라)는 별이 태어나는 성운처럼, 살아 있는 예술이 태어나는 온라인 공간입니다.': ["Like a nebula where stars are born, NEBULA is an online space where living art is born.", "如同孕育恒星的星云，NEBULA 是鲜活艺术诞生的在线空间。", "星が生まれる星雲のように、NEBULA（ネビュラ）は生きたアートが生まれるオンラインの空間です。"],
   '하루하루의 작은 고민에서 잠시 고개를 들어, 우주와 빛과 소리처럼 더 큰 것을 바라보는 곳. 시야가 넓어지면 생각과 마음의 폭도 함께 넓어진다고 믿습니다.': [
     'A place to look up from the small worries of each day and gaze at something bigger: the universe, light, sound. We believe that when your view widens, your thoughts and your heart widen with it.',
     '在这里，从每天的小烦恼中暂时抬起头，望向宇宙、光与声音这样更宏大的事物。我们相信，视野变宽，思想和心胸也会随之变宽。',
     '日々の小さな悩みからふと顔を上げて、宇宙や光や音のような、もっと大きなものを見つめる場所。視野が広がれば、考えも心の幅も一緒に広がると信じています。'],
-  'VALIX의 X는 아직 정해지지 않은 무한한 가치(Value X)를 뜻합니다. 그 X를 중심으로 전시 하나하나가 행성이 되어 궤도를 돌고, 관람객은 행성에 착륙해 스크롤을 따라 펼쳐지는 인터랙티브 전시를 만납니다.': [
-    'The X in VALIX stands for an infinite value not yet defined: Value X. Around that X, each exhibition becomes a planet in orbit. Land on one, and an interactive exhibition unfolds as you scroll.',
-    'VALIX 中的 X 代表尚未确定的无限价值（Value X）。以这个 X 为中心，每一场展览都化作一颗行星沿轨道运行。降落到行星上，随着滚动展开一场互动展览。',
-    'VALIX の X は、まだ決まっていない無限の価値（Value X）を意味します。その X を中心に、ひとつひとつの展示が惑星となって軌道を回り、観覧者は惑星に着陸して、スクロールとともに広がるインタラクティブな展示に出会います。'],
+  '성운의 가운데에서 전시 하나하나가 행성으로 태어나 궤도를 돌고, 관람객은 행성에 착륙해 스크롤을 따라 펼쳐지는 인터랙티브 전시를 만납니다. 전시는 보는 사람의 손끝과 움직임에 반응하며 살아 움직입니다.': ["At the heart of the nebula, each exhibition is born as a planet and begins to orbit. Land on one, and an interactive exhibition unfolds as you scroll — alive, responding to your touch and movement.", "在星云的中心，每一场展览都诞生为一颗行星并开始运行。降落到行星上，随着滚动展开一场互动展览——它会回应你的指尖与动作，鲜活地流动。", "星雲の中心で、ひとつひとつの展示が惑星として生まれ、軌道を回り始めます。惑星に着陸すると、スクロールに合わせてインタラクティブな展示が広がります。展示は、見る人の指先や動きに応えて生きて動きます。"],
   '아직 빛나지 않은 행성': ['A planet not yet lit', '尚未亮起的行星', 'まだ光っていない惑星'],
   '소리와 함께 입장': ['Enter with sound', '带着声音进入', '音と一緒に入場'],
   '입장하기': ['Enter', '进入', '入場する'],
@@ -25,7 +22,7 @@ const T = {
   // ---------- 기획전 ----------
   '최초의 행성': ['The First Planet', '最初的行星', '最初の惑星'],
   '빛 · 소리 · 우주 — 세 개의 방으로 이루어진 개관 기획전': ['Light · Sound · Universe — an opening exhibition in three rooms', '光 · 声 · 宇宙 — 由三个展厅组成的开馆特展', '光・音・宇宙 — 三つの部屋からなる開館企画展'],
-  'XPACE 기획전': ['XPACE Exhibition', 'XPACE 特展', 'XPACE 企画展'],
+  'NEBULA 기획전': ['NEBULA Exhibition', 'NEBULA 特展', 'NEBULA 企画展'],
 
   // ---------- 전시 페이지 ----------
   '상태: 중첩 (superposition)': ['State: superposition', '状态：叠加 (superposition)', '状態：重ね合わせ (superposition)'],
@@ -75,8 +72,8 @@ const T = {
     'The table, map and mine-shaft scenes are illustrations to aid understanding and do not depict real places or people. Lines marked "exhibition text" are written for this exhibition and are not actual words of victims or bereaved families.',
     '饭桌、简图和矿井通道等场景是帮助理解的插画，并不再现真实的地点或人物。标为“展览文案”的句子为创作文字，并非遇难者或遗属的真实话语。',
     '食卓・略図・鉱山の通路の場面は理解を助けるためのイラストで、実在の場所や人物を再現したものではありません。「展示文」と記した文章は創作であり、犠牲者や遺族の実際の発言ではありません。'],
-  '작품: 진시영 · 김동선, 《빛쌀》, 2026 · 기획: XPACE (VALIX LAB)': ['Artwork: Jin Siyoung · Kim Dongsun, Bitssal, 2026 · Curated by XPACE (VALIX LAB)', '作品：Jin Siyoung · Kim Dongsun，《光之米》，2026 · 策划：XPACE (VALIX LAB)', '作品：Jin Siyoung · Kim Dongsun《光の米》2026 · 企画：XPACE（VALIX LAB）'],
-  '← XPACE 행성계로 돌아가기': ['← Back to the XPACE planets', '← 返回 XPACE 行星系', '← XPACE 惑星系にもどる'],
+  '작품: 진시영 · 김동선, 《빛쌀》, 2026 · 기획: NEBULA (VALIX LAB)': ['Artwork: Jin Siyoung · Kim Dongsun, Bitssal, 2026 · Curated by NEBULA (VALIX LAB)', '作品：Jin Siyoung · Kim Dongsun，《光之米》，2026 · 策划：NEBULA (VALIX LAB)', '作品：Jin Siyoung · Kim Dongsun《光の米》2026 · 企画：NEBULA（VALIX LAB）'],
+  '← NEBULA 행성계로 돌아가기': ['← Back to the NEBULA planets', '← 返回 NEBULA 行星系', '← NEBULA 惑星系にもどる'],
   '출처: ': ['Source: ', '出处：', '出典：'],
   '기록': ['RECORD', '记录', '記録'],
   '기록 읽기': ['Read the record', '阅读记录', '記録を読む'],
@@ -110,7 +107,7 @@ const T = {
   '소리 켜짐': ['Sound on', '声音开', 'サウンド オン'],
   '소리 켜기': ['Sound off', '打开声音', 'サウンド オフ'],
   '빛쌀 — 80년의 기억': ['Bitssal — 80 Years of Memory', '光之米 — 80 年的记忆', '光の米 — 80年の記憶'],
-  'X-003 · 진시영 · 김동선': ['X-003 · Jin Siyoung · Kim Dongsun', 'X-003 · Jin Siyoung · Kim Dongsun', 'X-003 · Jin Siyoung · Kim Dongsun'],
+  'N-003 · 진시영 · 김동선': ['N-003 · Jin Siyoung · Kim Dongsun', 'N-003 · Jin Siyoung · Kim Dongsun', 'N-003 · Jin Siyoung · Kim Dongsun'],
   '대구역': ['Daegu Station', '大邱站', '大邱駅'],
   '공회당 · 시투 사무실': ['Public Hall · Strike committee office', '公会堂 · 斗争委员会办公室', '公会堂 · 闘争委員会事務所'],
   '대구부청': ['Daegu City Hall', '大邱府厅', '大邱府庁'],
@@ -156,7 +153,7 @@ const T = {
   'AR 끝내기': ['Exit AR', '退出 AR', 'AR を終了'],
   '카메라를 쓸 수 없어요 (권한을 확인해 주세요)': ['Camera unavailable (check permissions)', '无法使用相机（请检查权限）', 'カメラを使えません（許可を確認してください）'],
   '체험 안내': ['How to play', '体验指南', '体験ガイド'],
-  '휴대폰으로 만나는 XPACE': ['XPACE on your phone', '用手机遇见 XPACE', 'スマホで出会う XPACE'],
+  '휴대폰으로 만나는 NEBULA': ['NEBULA on your phone', '用手机遇见 NEBULA', 'スマホで出会う NEBULA'],
   '나침반': ['Compass', '指南针', 'コンパス'], '기울이기': ['Tilt', '倾斜', '傾ける'], '흔들기': ['Shake', '摇晃', '振る'], '돌리기': ['Twist', '旋转', '回す'],
   '밀기': ['Swipe', '滑动', 'スワイプ'], '두 손가락': ['Two fingers', '双指', '二本指'], '후 불기': ['Blow', '吹气', '息を吹く'], '엎어 두기': ['Face down', '扣放', '伏せて置く'],
   '폰을 들고 몸을 돌리면 행성계가 방위를 따라 돌아요.': ['Hold the phone and turn around; the solar system turns with the compass.', '拿着手机转身，行星系会跟着方位转动。', 'スマホを持って体の向きを変えると、惑星系が方位に合わせて回ります。'],

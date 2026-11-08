@@ -1,4 +1,4 @@
-// XPACE 모바일 센서: 기울기 · 나침반 · 흔들기 · 진동 · 카메라
+// NEBULA 모바일 센서: 기울기 · 나침반 · 흔들기 · 진동 · 카메라
 // PC에서는 아무것도 하지 않습니다. iPhone은 사용자의 탭(입장 버튼 등) 안에서 enable()을 불러야 권한을 물을 수 있습니다.
 
 export const IS_MOBILE = matchMedia('(hover: none) and (pointer: coarse)').matches || (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && innerWidth < 1100);

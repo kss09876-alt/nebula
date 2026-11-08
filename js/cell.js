@@ -1,6 +1,6 @@
-import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=17';
-import { tr, langSwitcher } from './i18n.js?v=3';
-import { IS_MOBILE, sensor, keepAwake } from './sensors.js?v=2';
+import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=18';
+import { tr, langSwitcher } from './i18n.js?v=4';
+import { IS_MOBILE, sensor, keepAwake } from './sensors.js?v=3';
 import { videoHTML, mountVideos } from './video.js?v=2';
 
 const story = document.getElementById('story');
@@ -231,7 +231,7 @@ langSwitcher(document.querySelector('.topbar'));
 // 모바일: 첫 탭에서 기울기 권한 · 흔들면 화면에 보이는 양자 실험을 관측
 if (IS_MOBILE) {
   document.body.classList.add('is-mobile');
-  import('./cell-mobile.js?v=2');
+  import('./cell-mobile.js?v=3');
   addEventListener('click', function once() { removeEventListener('click', once, true); sensor.enable(); keepAwake(); }, true);
   sensor.onShake(() => {
     const q = [...document.querySelectorAll('.q-stage')].find((el) => { const r = el.getBoundingClientRect(); return r.top < innerHeight * 0.7 && r.bottom > innerHeight * 0.3; });
@@ -256,7 +256,7 @@ if (IS_MOBILE) {
     return finish('#7ee0d0');
   }
   if (cell.url) { location.replace(cell.url); return; }
-  document.title = `${cell.title} — XPACE`;
+  document.title = `${cell.title} — NEBULA`;
   document.documentElement.style.setProperty('--accent', cell.color || '#7ee0d0');
   const lab = document.getElementById('cell-label');
   if (cell.group) lab.innerHTML = `<a href="${esc(cell.group.url)}">${esc(cell.group.title)}</a> · ROOM ${String(cell.room).padStart(2, '0')} — ${esc(cell.short)}`;
@@ -294,7 +294,7 @@ function setupAll(color) {
 
 // ---------- 기획전: 방 1 → 2 → 3 을 하나의 흐름으로 ----------
 function renderGroup(g, blocks) {
-  document.title = `${g.title} — XPACE`;
+  document.title = `${g.title} — NEBULA`;
   const rooms = g.rooms;
   document.documentElement.style.setProperty('--accent', rooms[0]?.color || g.color);
   const lab = document.getElementById('cell-label');
@@ -1146,7 +1146,7 @@ function setupListen() {
   });
 }
 
-// ================= X-005 빛쌀 인터랙션 =================
+// ================= N-005 빛쌀 인터랙션 =================
 // --- 커버: 어둠 속 한 톨의 쌀알이 커서를 따라 움직임 ---
 function riceGrain(g, x, y, len, rot, alpha = 1, glow = 18) {
   g.save(); g.translate(x, y); g.rotate(rot);

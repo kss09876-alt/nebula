@@ -1,6 +1,6 @@
-// XPACE 다국어: 한국어(기본) · English · 简体中文 · 日本語
+// NEBULA 다국어: 한국어(기본) · English · 简体中文 · 日本語
 // 언어 결정 순서: 주소의 ?lang= → 지난번 선택(localStorage) → 브라우저 언어 → 한국어
-import { DICT } from './i18n-dict.js?v=3';
+import { DICT } from './i18n-dict.js?v=4';
 
 export const LANGS = [
   { id: 'ko', short: 'KO', name: '한국어' },

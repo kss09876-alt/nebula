@@ -274,11 +274,10 @@ figcaption, .caption { margin-top: 14px; font-size: 13px; color: var(--muted); l
 .listen-btn { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 16px 28px; border-radius: 999px; background: var(--accent); color: #0e0808; font-weight: 800; font-size: 16px; transition: top .4s, transform .4s; }
 .listen-btn.on { top: auto; bottom: 16px; transform: translateX(-50%); background: rgba(14,8,8,.8); color: var(--fg); border: 1px solid var(--accent); font-size: 13px; padding: 10px 18px; }
 
-/* ===== XPACE 브랜드 · 행성 ===== */
-.logo-x { position: relative; width: 14px; height: 14px; }
-.logo-x::before, .logo-x::after { content: ''; position: absolute; left: 50%; top: 50%; width: 18px; height: 2px; background: currentColor; }
-.logo-x::before { transform: translate(-50%, -50%) rotate(45deg); }
-.logo-x::after { transform: translate(-50%, -50%) rotate(-45deg); }
+/* ===== NEBULA 브랜드 · 행성 ===== */
+/* NEBULA 표시: 빛나는 점 + 비스듬한 궤도 (성운 가운데의 별) */
+.logo-x { position: relative; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle, #fff 0 22%, rgba(255,214,160,.85) 34%, rgba(150,120,255,.35) 60%, rgba(0,0,0,0) 72%); }
+.logo-x::before { content: ''; position: absolute; left: 50%; top: 50%; width: 22px; height: 8px; border: 1.2px solid currentColor; border-radius: 50%; transform: translate(-50%, -50%) rotate(-24deg); opacity: .8; }
 .hero-copy .lede strong { color: var(--fg); font-weight: 700; }
 .labels { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
 .p-label { position: absolute; left: 0; top: 0; pointer-events: auto; display: inline-flex; align-items: center; gap: 8px; padding: 5px 10px 5px 8px; border-radius: 999px; background: rgba(5,6,11,.55); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(4px); font-size: 12px; white-space: nowrap; transition: opacity .3s, border-color .2s, background .2s; will-change: transform; }
@@ -312,7 +311,7 @@ figcaption, .caption { margin-top: 14px; font-size: 13px; color: var(--muted); l
 .so-planet { position: absolute; left: calc(50% + 50% * cos(var(--a))); top: calc(50% + 50% * sin(var(--a))); width: 9%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff, var(--accent) 45%, #000 100%); box-shadow: 0 0 24px var(--accent); z-index: 3; }
 @media (max-width: 720px) { .spin-orbit { --s: 70vw; } }
 
-/* ===== X-005 빛쌀 ===== */
+/* ===== N-005 빛쌀 ===== */
 .b-cover.is-rice { background: #050505; }
 .rice-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .b-cover.is-rice .cover-text { margin-top: 30vh; }
@@ -437,7 +436,7 @@ figcaption, .caption { margin-top: 14px; font-size: 13px; color: var(--muted); l
 .cell-list .rooms .m { grid-column: 2; font-size: 12px; opacity: .6; }
 .cell-label a { text-decoration: underline; text-underline-offset: 3px; }
 
-/* ---------- X-001 최초의 행성 (기획전 허브) ---------- */
+/* ---------- N-001 최초의 행성 (기획전 허브) ---------- */
 .first-page { background: #04050a; }
 #fp-stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
 .fp-labels { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
