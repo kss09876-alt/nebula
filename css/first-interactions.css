@@ -1,0 +1,302 @@
+/* N-001 interaction layer: instruments embedded in the story, never cards. */
+body.first-journey .journey-mode-label {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 18px;
+  color: var(--journey-gold);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: 0.14em;
+  overflow-wrap: anywhere;
+}
+
+body.first-journey .journey-mode-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 44px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid var(--journey-hairline);
+  border-radius: 0;
+  color: var(--journey-sage);
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: left;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+body.first-journey .journey-sensor-intro {
+  width: min(100%, 590px);
+  margin-top: 32px;
+  padding-top: 15px;
+  border-top: 1px solid var(--journey-hairline);
+  color: var(--journey-copy);
+  font-size: 13px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+body.first-journey .journey-sensor-intro p {
+  max-width: 54ch;
+  margin: 8px 0 0;
+}
+
+body.first-journey .journey-sensor-status {
+  color: var(--journey-muted);
+  font-size: 12px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+body.first-journey .journey-interaction {
+  --interaction-accent: #b5c8b6;
+  --interaction-glow: rgba(181, 200, 182, 0.12);
+  width: min(100%, 590px);
+  min-width: 0;
+  margin-top: clamp(40px, 5vw, 64px);
+  color: var(--journey-copy);
+}
+
+body.first-journey .journey-interaction[data-experience="gather"] {
+  --interaction-accent: #d6ba83;
+  --interaction-glow: rgba(214, 186, 131, 0.14);
+}
+
+body.first-journey .journey-interaction[data-experience="breath"] {
+  --interaction-accent: #b6d0c9;
+  --interaction-glow: rgba(151, 196, 185, 0.13);
+}
+
+body.first-journey .journey-interaction[data-experience="pause"] {
+  --interaction-accent: #c8cfbd;
+  --interaction-glow: rgba(193, 204, 183, 0.1);
+}
+
+body.first-journey .interaction-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px 18px;
+  margin-bottom: 15px;
+}
+
+body.first-journey .interaction-heading p {
+  flex: 1 1 200px;
+  min-width: 0;
+  margin: 0;
+  color: var(--journey-copy);
+  font-size: 13px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+body.first-journey .interaction-step {
+  flex: 0 0 auto;
+  color: var(--interaction-accent);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.7;
+  letter-spacing: 0.12em;
+}
+
+/* A generous pointer/keyboard surface that still permits native vertical scroll
+   and pinch zoom. The rings are decoration, not the sole instruction. */
+body.first-journey .interaction-surface {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+  min-height: clamp(230px, 25vw, 320px);
+  padding: 30px clamp(20px, 4vw, 52px);
+  border: 0;
+  border-top: 1px solid var(--journey-hairline);
+  border-bottom: 1px solid var(--journey-hairline);
+  border-radius: 0;
+  background: radial-gradient(ellipse at 29% 50%, var(--interaction-glow), transparent 53%);
+  color: var(--journey-copy);
+  cursor: crosshair;
+  touch-action: pan-y pinch-zoom;
+  scroll-margin-top: calc(var(--journey-header-height) + env(safe-area-inset-top, 0px) + 20px);
+  scroll-margin-bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+}
+
+body.first-journey .interaction-orb {
+  position: relative;
+  display: block;
+  justify-self: center;
+  width: clamp(104px, 12vw, 148px);
+  aspect-ratio: 1;
+  border: 1px solid var(--interaction-accent);
+  border-radius: 50%;
+  background: radial-gradient(circle at center, var(--interaction-glow) 0, transparent 64%);
+  pointer-events: none;
+}
+
+body.first-journey .interaction-orb::before,
+body.first-journey .interaction-orb::after {
+  content: "";
+  position: absolute;
+  border: 1px solid var(--interaction-accent);
+  border-radius: 50%;
+  opacity: 0.36;
+}
+
+body.first-journey .interaction-orb::before {
+  inset: 17%;
+}
+
+body.first-journey .interaction-orb::after {
+  inset: -12%;
+  opacity: 0.16;
+}
+
+body.first-journey .interaction-orb i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: var(--interaction-accent);
+  box-shadow: 0 0 18px 4px var(--interaction-glow);
+}
+
+body.first-journey .interaction-surface-label {
+  max-width: 23ch;
+  color: var(--journey-copy);
+  font-size: 12px;
+  line-height: 1.8;
+  letter-spacing: 0.025em;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+
+body.first-journey .interaction-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 24px;
+  margin-top: 14px;
+}
+
+body.first-journey :is(.interaction-actions button, #sensor-toggle) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 44px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 9px 0;
+  border: 0;
+  border-bottom: 1px solid rgba(181, 200, 182, 0.48);
+  border-radius: 0;
+  color: var(--journey-sage);
+  background: transparent;
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  scroll-margin-top: calc(var(--journey-header-height) + env(safe-area-inset-top, 0px) + 20px);
+  scroll-margin-bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+}
+
+body.first-journey :is(#birth-button, #breath-button, #quiet-button) {
+  color: var(--interaction-accent, var(--journey-gold));
+  border-bottom-color: currentColor;
+}
+
+body.first-journey :is(.interaction-actions button, #sensor-toggle)[aria-pressed="true"] {
+  color: var(--journey-ink);
+  border-bottom-color: var(--journey-gold);
+  background: linear-gradient(to top, rgba(214, 186, 131, 0.12), transparent 55%);
+}
+
+body.first-journey :is(.interaction-actions button, #sensor-toggle, #trace-add, #trace-reset):disabled {
+  color: var(--journey-muted);
+  border-bottom-color: rgba(168, 180, 170, 0.22);
+  background: transparent;
+  cursor: not-allowed;
+}
+
+body.first-journey :is(.interaction-status, .interaction-note) {
+  max-width: 54ch;
+  margin: 12px 0 0;
+  color: var(--journey-muted);
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+body.first-journey .interaction-status:not(:empty) {
+  min-height: 1.8em;
+  color: var(--journey-copy);
+}
+
+body.first-journey :is(.journey-sensor-status, .interaction-status)[data-sensor-state="active"],
+body.first-journey[data-sensor-state="active"] .journey-sensor-status,
+body.first-journey [data-sensor-state="active"] :is(.journey-sensor-status, .interaction-status) {
+  color: #c7dfc8;
+}
+
+body.first-journey :is(.journey-sensor-status, .interaction-status):is([data-sensor-state="denied"], [data-sensor-state="error"], [data-sensor-state="unavailable"], [data-sensor-state="unsupported"]),
+body.first-journey:is([data-sensor-state="denied"], [data-sensor-state="error"], [data-sensor-state="unavailable"], [data-sensor-state="unsupported"]) .journey-sensor-status,
+body.first-journey :is([data-sensor-state="denied"], [data-sensor-state="error"], [data-sensor-state="unavailable"], [data-sensor-state="unsupported"]) :is(.journey-sensor-status, .interaction-status) {
+  color: #dfc8a2;
+}
+
+body.first-journey :is(.interaction-surface, .journey-trace-surface, .journey-mode-switch, .interaction-actions button, #sensor-toggle, #trace-add, #trace-reset):focus-visible {
+  outline: 2px solid var(--journey-gold);
+  outline-offset: 4px;
+}
+
+@media (hover: hover) {
+  body.first-journey .interaction-surface:hover {
+    border-color: rgba(214, 186, 131, 0.6);
+  }
+
+  body.first-journey :is(.journey-mode-switch, .interaction-actions button, #sensor-toggle):not(:disabled):hover {
+    color: var(--journey-ink);
+    border-bottom-color: var(--journey-gold);
+  }
+}
+
+@media (min-width: 901px) {
+  body.first-journey:not(.first-app) .journey-interaction {
+    width: min(590px, calc(100% - clamp(0px, 3vw, 42px)));
+    margin-left: clamp(0px, 3vw, 42px);
+  }
+}
+
+@media (max-width: 480px) {
+  body.first-journey .interaction-surface {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 18px;
+    padding: 30px 20px 24px;
+    text-align: center;
+  }
+
+  body.first-journey .interaction-surface-label {
+    max-width: 30ch;
+  }
+}
+
+/* The host app's close button occupies the bottom-right corner. */
+body.first-journey.is-embedded .journey-progress {
+  right: calc(82px + env(safe-area-inset-right, 0px));
+}
