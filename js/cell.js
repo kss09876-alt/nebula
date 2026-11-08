@@ -1,4 +1,4 @@
-import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=21';
+import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=19';
 import { tr, langSwitcher } from './i18n.js?v=4';
 import { IS_MOBILE, sensor, keepAwake } from './sensors.js?v=3';
 import { videoHTML, mountVideos } from './video.js?v=2';
@@ -6,13 +6,6 @@ import { videoHTML, mountVideos } from './video.js?v=2';
 const story = document.getElementById('story');
 const wipe = document.getElementById('wipe');
 const id = new URLSearchParams(location.search).get('id');
-const firstAlias = ['g001', 'c001', 'c002', 'c003'].includes(id);
-if (firstAlias) {
-  const target = new URL(IS_MOBILE ? 'first-app.html' : 'first.html', location.href);
-  target.search = location.search; target.searchParams.delete('id');
-  target.hash = /^#room-/.test(location.hash) ? '' : location.hash;
-  location.replace(target.pathname + target.search + target.hash);
-}
 
 const media = (src, alt = '') => src
   ? `<img src="${esc(imageUrl(src))}" alt="${esc(alt)}" loading="lazy" referrerpolicy="no-referrer" />`
@@ -249,7 +242,6 @@ if (IS_MOBILE) {
   });
 }
 (async () => {
-  if (firstAlias) return;
   const { cells: top, all: cells, groups, blocks } = await loadData();
   TOP = top;
   // 기획전 행성: 방들을 한 페이지에 이어서 보여줌

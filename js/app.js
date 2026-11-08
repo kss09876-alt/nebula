@@ -1,9 +1,7 @@
 // NEBULA 앱 화면 — 시작 화면 → 소개 → 로그인 → 닉네임 → 탭(전시·플레이·리워드·마이)
 // 전시 내용은 기존 NEBULA 페이지(cell.html, bitssal.html)를 같은 주소에서 그대로 불러옵니다.
 // 데이터는 기존 data.js(구글 시트 → 백업 JSON)를 그대로 씁니다. 개인 기록은 기기 안(localStorage)에만 저장합니다.
-import { loadData, loadLocalData, normalizeFirstData, esc } from './data.js?v=21';
-import { FIRST_IDS, getFirstStory } from './first-story.js?v=2';
-import { getAppExperienceCopy } from './first-device-copy.js?v=2';
+import { loadData, loadLocalData, esc } from './data.js?v=19';
 import { lang, LANGS } from './i18n.js?v=4';
 import { hasRing } from './planets.js?v=4';
 import { planetSrc, planetKey, onPlanet, planetBitmap, warm } from './planet-store.js?v=2';
@@ -72,7 +70,7 @@ function fmtTime(sec) { const m = Math.round(sec / 60); return m < 60 ? `${m}${t
 /* ---------- 전시 도우미 ---------- */
 let cells = [];
 const name = (c) => String(c.title || '').replace(/^\s*(?:(?:CELL|X|N)\s*-?\s*\d+\s*[·:|–-]\s*)+/i, '');
-const href = (c) => c.singleJourney ? `first-app.html?lang=${encodeURIComponent(lang)}` : c.url || `cell.html?id=${encodeURIComponent(c.id)}`;
+const href = (c) => c.url || `cell.html?id=${encodeURIComponent(c.id)}`;
 const isOpen = (c) => c.status === 'open';
 const ringFx = (c) => ['prism', 'trio', 'stars'].includes(c.fx);
 const poster = (c, cls = '') => `<span class="poster ${cls}" style="--c:${esc(c.color || '#9db8ff')}"><img class="pl" data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt="" draggable="false"><span class="pc">${esc(c.code || '')}</span><span class="pt">${esc(name(c))}</span></span>`;
@@ -81,7 +79,7 @@ const featured = () => { const o = cells.filter(isOpen); return o[o.length - 1] 
 
 // 플레이 카드에 쓰는 체험 안내 (전시 id 기준, 없으면 기본 문구)
 const PLAYS = {
-  g001: { ...Object.fromEntries(['ko', 'en', 'zh', 'ja'].map((language) => { const story = getFirstStory(language); return [language, [story.playText, getAppExperienceCopy(language)]]; })), glyph: 'M12 3v4M12 17v4M3 12h4M17 12h4M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0' },
+  g001: { ko: ['흔들면 우주가 관측돼요.\n당신이 보는 순간, 무엇이 정해질까요?', '흔들어 양자 관측 · 기울여 프리즘과 그림자 빛'], en: ['Shake to observe the universe.\nWhat is decided the moment you look?', 'Shake to observe · tilt for prism and shadow light'], zh: ['摇一摇，观测宇宙。\n你看的那一刻，什么被决定了？', '摇晃观测量子 · 倾斜看棱镜与影子'], ja: ['振ると宇宙が観測されます。\n見た瞬間、何が決まるのでしょう？', '振って量子を観測 · 傾けてプリズムと影の光'], glyph: 'M12 3v4M12 17v4M3 12h4M17 12h4M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0' },
   c005: { ko: ['한 톨의 쌀은\n누구의 삶이었을까요?', '기울이면 쌀이 쏟아지고, 엎어두면 묵념이 돼요'], en: ['Whose life was\na single grain of rice?', 'Tilt to pour rice · lay your phone face down to observe silence'], zh: ['一粒米，\n曾是谁的人生？', '倾斜让米流下 · 手机朝下放置即为默哀'], ja: ['一粒の米は\n誰の人生だったのでしょう？', '傾けると米がこぼれ、伏せると黙祷になります'], glyph: 'M12 4c3 4 3 12 0 16c-3-4-3-12 0-16z' },
   c006: { ko: ['오늘, 아무것도 하지 않아도\n괜찮을까요?', '앞으로 기울이면 걷고, 몸을 돌려 둘러보고, 앉아서 엎어 두면 좌선'], en: ['Is it alright\nto do nothing today?', 'Tilt forward to walk, turn to look around, sit and lay the phone down to meditate'], zh: ['今天，什么都不做\n也可以吗？', '向前倾斜行走，转身环顾，坐下后把手机朝下放即坐禅'], ja: ['今日は、何もしなくても\nいいですか？', '前に傾けて歩き、体を回して見渡し、座って伏せると坐禅'] },
   c004: { ko: ['소음과 음악,\n그 경계는 어디일까요?', '소리를 듣고, 건반을 직접 눌러 보세요'], en: ['Noise and music —\nwhere is the line?', 'Listen, then play the keys yourself'], zh: ['噪音与音乐，\n界线在哪里？', '聆听，然后亲手弹奏'], ja: ['ノイズと音楽、\nその境界はどこでしょう？', '音を聴いて、鍵盤を押してみましょう'], glyph: 'M4 12h2l2-5 3 10 3-8 2 3h4' },
@@ -208,10 +206,10 @@ function detailSheet(c) {
       <p class="dt-meta">${esc(c.artist || '')}${c.period ? ' · ' + esc(c.period) : ''}</p>
       ${c.summary ? `<p class="dt-sum">${esc(c.summary)}</p>` : ''}
       ${c.rooms && c.rooms.length ? `<div class="dt-rooms"><h4>${t('방')}</h4>${c.rooms.map((r, i) => `<div><em>${String(i + 1).padStart(2, '0')}</em><span><b>${esc(r.short || name(r))}</b><small>${esc(r.subtitle || '')}</small></span></div>`).join('')}</div>` : ''}
-      <div class="dt-how"><h4>${t('이렇게 체험해요')}</h4><p>${esc(p.how)}</p><p class="small">${c.singleJourney ? esc(getFirstStory(lang).ui.quiet) : t('휴대폰을 기울이고, 흔들고, 엎어 보세요. 권한은 입장할 때 한 번 물어봐요.')}</p></div>
+      <div class="dt-how"><h4>${t('이렇게 체험해요')}</h4><p>${esc(p.how)}</p><p class="small">${t('휴대폰을 기울이고, 흔들고, 엎어 보세요. 권한은 입장할 때 한 번 물어봐요.')}</p></div>
     </div>
     <div class="dt-cta"><button class="like${liked ? ' on' : ''}" data-like="${esc(c.id)}" aria-label="${t('좋아요')}" aria-pressed="${liked}">${heart(liked)}</button><button class="nb-share" data-share="${esc(c.id)}" aria-label="${t('공유하기')}">${shareIcon}</button><button class="btn black" data-land="${esc(c.id)}" ${isOpen(c) ? '' : 'disabled'}>${t(isOpen(c) ? '착륙하기' : '준비 중')}</button></div>`, 'detail');
-    return el;
+  return el;
 }
 
 onPlanet((k, u) => { document.querySelectorAll('img[data-pl]').forEach((im) => { if (im.dataset.pl === k) im.src = u; }); });
@@ -293,7 +291,7 @@ const screens = {
           <button class="mc-read" data-jump="mag-toc">${t('읽기 시작')} ↓</button>
           <button class="mc-land" data-open="${esc(f.id)}">${t('착륙하기')} →</button>
         </div>
-        <button type="button" class="mc-hint" data-sensor-hint style="border:0;background:none;padding:0;text-align:left"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2" transform="rotate(-12 12 12)"/></svg><span>${t(motionQuery.matches ? '읽기와 탐색' : IS_MOBILE ? '기울이면 표지가 빛나요 · 옆으로 밀면 다음 표지' : '마우스를 움직이면 표지가 빛나요')}</span></button>
+        <p class="mc-hint" data-sensor-hint><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2" transform="rotate(-12 12 12)"/></svg><span>${t(motionQuery.matches ? '읽기와 탐색' : IS_MOBILE ? '기울이면 표지가 빛나요 · 옆으로 밀면 다음 표지' : '마우스를 움직이면 표지가 빛나요')}</span></p>
       </section>
 
       <div class="nb-home-tools"><button data-all>${t('전시 탐색')} ↗</button><button data-saved>${t('좋아요 모아보기')} <span>${likes().length}</span></button></div>
@@ -445,7 +443,6 @@ function tickCountdown() {
 }
 function syncRuntime() {
   const foreground = nativeActive && !document.hidden;
-  notifyFirstViewer(foreground);
   const active = foreground && viewer.hidden && ob.hidden && !view.hidden && !sheet.isOpen;
   document.body.classList.toggle('vx-paused', !foreground || !viewer.hidden || sheet.isOpen);
   document.body.classList.toggle('exhibit-open', !viewer.hidden);
@@ -534,10 +531,6 @@ sheet.el.addEventListener('click', onAction);
 /* ---------- 전시 보기 ---------- */
 const viewer = $('#viewer'), frame = $('#frame');
 let current = null, enteredAt = 0, frameRaf = 0, waitingForBack = false, queuedExhibit = null;
-function notifyFirstViewer(active = nativeActive && !document.hidden) {
-  if (!current?.singleJourney || !frame.contentWindow) return;
-  frame.contentWindow.postMessage({ type: 'nebula:first-active', active }, location.origin);
-}
 function flushWatchTime() {
   if (!current || !enteredAt) return;
   const seconds = Math.max(0, Date.now() - enteredAt) / 1000;
@@ -565,7 +558,6 @@ function openExhibit(c) {
 }
 function closeExhibit(fromPop = false) {
   if (viewer.hidden) return;
-  notifyFirstViewer(false);
   flushWatchTime(); cancelAnimationFrame(frameRaf); frameRaf = 0;
   landing.stop(); viewer.hidden = true; replaceFrame('about:blank'); current = null;
   if (!fromPop && history.state?.viewer) { waitingForBack = true; history.back(); }
@@ -586,7 +578,6 @@ frame.addEventListener('load', () => {
   try { full = frame.contentWindow.location.href; path = frame.contentWindow.location.pathname; } catch (e) {}
   if (!full || full === 'about:blank') return;
   if (/\/(index\.html)?$/.test(path) || path.endsWith('/app.html')) { closeExhibit(); return; }
-  notifyFirstViewer();
   landing.loaded();
 });
 const CapApp = window.Capacitor?.Plugins?.App;
@@ -669,16 +660,11 @@ addEventListener('pointermove', (e) => {
     tilt.px = (e.clientX / innerWidth - .5) * 2; tilt.py = (e.clientY / innerHeight - .5) * 2; scheduleTilt();
   }
 }, { passive: true });
-// Request motion only for an explicit cover-tilt gesture or a sensor-based exhibit.
-// Opening search, reading, or entering the first single journey never requests permission.
-addEventListener('click', function enableForGesture(event) {
-  if (!IS_MOBILE || motionQuery.matches || document.body.classList.contains('sensing')) return;
-  const target = event.target.closest('[data-sensor-hint], [data-land], [data-open]');
-  if (!target) return;
-  const id = target.dataset.land || target.dataset.open;
-  if (id && cells.find((cell) => cell.id === id)?.singleJourney) return;
-  if (!id && (!viewer.hidden || sheet.isOpen)) return;
-  sensor.enable().then((ok) => { if (ok) { document.body.classList.add('sensing'); scheduleTilt(); } });
+// iPhone은 탭 안에서만 센서 권한을 물을 수 있음 → 첫 탭에서 켬
+addEventListener('click', function once() {
+  if (IS_MOBILE && motionQuery.matches) return;
+  removeEventListener('click', once, true);
+  if (IS_MOBILE) sensor.enable().then((ok) => { if (ok) { document.body.classList.add('sensing'); scheduleTilt(); } });
 }, true);
 // Buttons, a deliberate horizontal swipe and shake use the same cover transition.
 function changeCover(step, index = null, restore = '') {
@@ -791,25 +777,7 @@ const landing = createAppLanding({
 const DKEY = `valix-data2-${lang}`;
 const pack = (data = { cells, blocks, ISSUES }) => JSON.stringify(data, (key, value) => key === 'group' ? undefined : value);
 const validData = (data) => data && Array.isArray(data.cells) && data.cells.length > 0 && data.cells.every((cell) => cell && typeof cell.id === 'string');
-function normalizeFirstIssues(value) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
-  const story = getFirstStory(lang);
-  return Object.fromEntries(Object.entries(value).map(([key, issue]) => {
-    if (!issue || typeof issue !== 'object' || Array.isArray(issue)) return [key, issue];
-    const picks = Array.isArray(issue.picks) ? [...new Set(issue.picks.map((id) => FIRST_IDS.includes(id) ? 'g001' : id))] : [];
-    const oldLinks = Array.isArray(issue.links) ? issue.links : [];
-    const links = oldLinks.filter((link) => !FIRST_IDS.includes(link.cell));
-    if (picks.includes('g001') || oldLinks.some((link) => FIRST_IDS.includes(link.cell))) {
-      links.push(...story.references.map((reference) => ({ cell: 'g001', type: 'article', url: reference.url, title: reference.title, source: 'NASA' })));
-    }
-    return [key, { ...issue, picks, links }];
-  }));
-}
-function unpack(data) {
-  const normalized = normalizeFirstData(data.cells, Array.isArray(data.blocks) ? data.blocks : [], lang);
-  cells = normalized.cells.map((cell) => ({ ...cell, artist: String(cell.artist || '').replace(/\bVALIX(?:\s+LAB)?\b/g, 'NEBULA') }));
-  blocks = normalized.blocks; ISSUES = normalizeFirstIssues(data.ISSUES);
-}
+function unpack(data) { cells = data.cells.map((cell) => ({ ...cell, artist: String(cell.artist || '').replace(/\bVALIX(?:\s+LAB)?\b/g, 'NEBULA') })); blocks = Array.isArray(data.blocks) ? data.blocks : []; ISSUES = data.ISSUES || {}; }
 let pendingData = null;
 function applyPendingData(redraw = true) {
   if (!pendingData || !nativeActive || document.hidden || !viewer.hidden || sheet.isOpen || !ob.hidden) return;
@@ -862,7 +830,7 @@ function firstValidData(promises) {
   warm(firstPlanets());
   if (!store.get('valix-onboarded', false)) showOB('intro0'); else go('home');
   const match = location.hash.match(/open=([\w-]+)/);
-  if (match) { const id = FIRST_IDS.includes(match[1]) ? 'g001' : match[1]; const cell = cells.find((item) => item.id === id); if (cell && isOpen(cell)) openExhibit(cell); }
+  if (match) { const cell = cells.find((item) => item.id === match[1]); if (cell && isOpen(cell)) openExhibit(cell); }
   if (!saved) saveData(pack());
   issues.then((issue) => {
     if (!issue || JSON.stringify(issue) === JSON.stringify(ISSUES)) return;
