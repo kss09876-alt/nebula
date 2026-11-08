@@ -1,4 +1,4 @@
-import { lang } from './i18n.js?v=4';
+import { lang } from './i18n.js?v=5';
 
 const WORDS = {
   ko: { explore: '전시 둘러보기', orbit: '지금, 궤도 위에서', land: '착륙하기', landing: '당신의 궤도로 들어갑니다.', indexIntro: '당신의 다음 행성을 찾아보세요.', motion: '모션 줄이기', resume: '모션 다시 켜기', system: '모션 최소화 · 기기 설정', close: '닫기', choose: '행성 선택', select: '선택한 전시에 착륙' },

@@ -1,10 +1,10 @@
 // NEBULA — 메인: 성운 가운데에서 태어난 전시 행성계
 import * as THREE from 'three';
-import { loadData, imageUrl, esc } from './data.js?v=19';
+import { loadData, imageUrl, esc } from './data.js?v=22';
 import { hsound } from './home-sound.js?v=6';
-import { tr, lang, langSwitcher } from './i18n.js?v=4';
+import { tr, lang, langSwitcher } from './i18n.js?v=5';
 import { IS_MOBILE } from './sensors.js?v=3';
-import { initHomeInterface } from './home-interface.js?v=2';
+import { initHomeInterface } from './home-interface.js?v=3';
 const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
 let calm = motionQuery.matches;
 try { calm ||= localStorage.getItem('nebula-calm') === 'true'; } catch (e) {}
@@ -230,7 +230,7 @@ function makePlanet(cell, i, total) {
       l.userData.k = k; group.add(l); return l;
     });
   }
-  if (fx === 'trio' && cell.rooms) { // 세 개의 방 = 세 개의 위성
+  if (fx === 'trio' && cell.rooms && !cell.single) { // 세 개의 방 = 세 개의 위성
     extra.moons = cell.rooms.map((r, k) => {
       const mm = new THREE.Mesh(sphereGeo, new THREE.MeshStandardMaterial({ color: r.color || '#ffffff', emissive: new THREE.Color(r.color || '#ffffff'), emissiveIntensity: 0.55, roughness: 0.7 }));
       mm.scale.setScalar(radius * 0.22);
@@ -329,7 +329,7 @@ function setHover(p) {
     card.querySelector('.hc-no').textContent = code(p.i);
     card.querySelector('.hc-title').textContent = p.open ? shortTitle(c.title) : 'Coming soon';
     card.querySelector('.hc-sub').textContent = p.open ? c.subtitle || '' : tr('아직 빛나지 않은 행성');
-    card.querySelector('.hc-meta').textContent = c.rooms ? `ROOMS · ${c.rooms.map((r) => r.short).join(' · ')}` : [c.artist, c.period].filter(Boolean).join(' · ');
+    card.querySelector('.hc-meta').textContent = c.rooms && !c.single ? `ROOMS · ${c.rooms.map((r) => r.short).join(' · ')}` : [c.artist, c.period].filter(Boolean).join(' · ');
     card.style.setProperty('--accent', c.color || '#7ee0d0');
     const fromDock = state.uiHover || state.dockFocus;
     card.classList.toggle('on', !fromDock);
@@ -555,11 +555,11 @@ document.querySelector('.orbit-dock').setAttribute('aria-busy', 'true');
         <span class="t">${esc(shortTitle(c.title) || 'Coming soon')}</span>
         <span class="m">${esc([c.artist, c.period].filter(Boolean).join(' · '))}</span>
       ${c.status === 'open' ? '</a>' : '</div>'}
-      ${c.rooms ? `<ol class="rooms">${c.rooms.map((r, k) => `<li style="--accent:${esc(r.color || '#fff')}"><a href="cell.html?id=${encodeURIComponent(c.id)}#room-${k + 1}"><span class="no">ROOM ${String(k + 1).padStart(2, '0')}</span><span class="t">${esc(r.short)}</span><span class="m">${esc(r.subtitle || '')}</span></a></li>`).join('')}</ol>` : ''}
+      ${c.rooms && !c.single ? `<ol class="rooms">${c.rooms.map((r, k) => `<li style="--accent:${esc(r.color || '#fff')}"><a href="cell.html?id=${encodeURIComponent(c.id)}#room-${k + 1}"><span class="no">ROOM ${String(k + 1).padStart(2, '0')}</span><span class="t">${esc(r.short)}</span><span class="m">${esc(r.subtitle || '')}</span></a></li>`).join('')}</ol>` : ''}
     </li>`).join('');
   resize();
   last = performance.now();
-  if (IS_MOBILE) { const { initHomeMobile } = await import('./home-mobile.js?v=3'); initHomeMobile(Object.assign(M, { state, planets, world, camera, THREE, enter, hsound, code, shortTitle, canvas })); }
+  if (IS_MOBILE) { const { initHomeMobile } = await import('./home-mobile.js?v=5'); initHomeMobile(Object.assign(M, { state, planets, world, camera, THREE, enter, hsound, code, shortTitle, canvas })); }
   document.querySelector('.orbit-dock').setAttribute('aria-busy', 'false');
   document.body.dataset.loaded = 'true';
   autoSound();

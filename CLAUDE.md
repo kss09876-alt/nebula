@@ -21,7 +21,7 @@ NEBULA = 성운, 별이 태어나는 곳. 성운 가운데에서 전시 하나�
 | `js/cell-mobile.js` | 전시 페이지 모바일 전용(휴대폰에서만 불러옴): 지금 블록에서 할 수 있는 동작 안내 칩, 타임라인·단계 진동, 끝 블록 돌리기→다음 행성, 모바일 문구 번역(`WORDS`) |
 | `js/sensors.js` | 모바일 센서 공용: `IS_MOBILE`, `sensor`(tiltX/tiltY/heading/shake/spin/faceDown/blow, onShake/onSpin/onFaceDown/onBlow, vibrate, enable), `startCamera`, `startMic`, `getPosition`/`distanceKm`, `keepAwake`(화면 꺼짐 방지), `onPinch` |
 | `js/data.js` | 데이터 로드: 구글 시트(gviz) → 실패 시 `data/cells.json`. 기획전 묶기, 번호 재부여(N-001…), 다국어 적용 |
-| `js/config.js` | 시트 ID, `groups`(기획전: g001 최초의 행성 = c001·c002·c003) |
+| `js/config.js` | 시트 ID, `groups`: g001 **N-001 최초의 방** = c001 최초의 방 → c002 빛의 단면 → c003 소리의 지도를 **하나의 전시로 이어서** 보여줌(`single: true`: 방 번호·위성·방 목록 없음, 장 사이를 빛줄기 `.room-link`로 이음, 장마다 강조색·배경음만 바뀜). 2026-11-08 '우리는 우주의 방랑자' 재구성은 되돌림 |
 | `js/i18n.js`, `js/i18n-dict.js` | 다국어(ko/en/zh/ja). `tr(한국어문장)`으로 화면 문구 번역, 언어 선택 버튼 |
 | `data/i18n.json` | 전시 본문 번역 (키 `셀ID:순서`). 시트에 `title_en` 같은 칸이 있으면 그게 우선 |
 | `js/bitssal-story.js` | 빛쌀 **순이의 이야기** 본문(가상의 인물·전시 문안, ko/en/zh/ja). 1936년생 순이가 아흔 살(2026)에 들려주는 1인칭 이야기: 대구 밥상 → 굶주림 → 10월 1일 쌀을 달라고 나간 큰오빠 → 감시 → 1950년 보도연맹 예비검속으로 돌아오지 않음 → 해마다 7월 밥 한 그릇 더 → 2009 진실규명, 127명 안에 오빠 이름 없음 → 광주 주먹밥 → 지금. 폭력 장면 없이 기다리는 가족의 자리에서만 말함 |

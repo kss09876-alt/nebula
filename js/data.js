@@ -1,5 +1,5 @@
-import { CONFIG } from './config.js?v=15';
-import { lang, tr } from './i18n.js?v=4';
+import { CONFIG } from './config.js?v=18';
+import { lang, tr } from './i18n.js?v=5';
 
 // 응답 본문을 읽는 동안에도 제한 시간을 유지 (느린 연결에서 시작이 멈추지 않게)
 async function fetchBody(url, type, timeout, label = 'data') {

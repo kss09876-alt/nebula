@@ -4,7 +4,7 @@
 // PC: W A S D / 방향키 · 화면 끌기. 소리는 모두 Web Audio 합성. 센서 정보는 기기 안에서만 씀.
 import * as THREE from 'three';
 import { IS_MOBILE, sensor, keepAwake } from './sensors.js?v=3';
-import { lang } from './i18n.js?v=4';
+import { lang } from './i18n.js?v=5';
 
 /* ---------- 문구 (한국어 = 키) [en, zh, ja] ---------- */
 const W = {

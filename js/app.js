@@ -1,8 +1,8 @@
 // NEBULA 앱 화면 — 시작 화면 → 소개 → 로그인 → 닉네임 → 탭(전시·플레이·리워드·마이)
 // 전시 내용은 기존 NEBULA 페이지(cell.html, bitssal.html)를 같은 주소에서 그대로 불러옵니다.
 // 데이터는 기존 data.js(구글 시트 → 백업 JSON)를 그대로 씁니다. 개인 기록은 기기 안(localStorage)에만 저장합니다.
-import { loadData, loadLocalData, esc } from './data.js?v=19';
-import { lang, LANGS } from './i18n.js?v=4';
+import { loadData, loadLocalData, esc } from './data.js?v=22';
+import { lang, LANGS } from './i18n.js?v=5';
 import { hasRing } from './planets.js?v=4';
 import { planetSrc, planetKey, onPlanet, planetBitmap, warm } from './planet-store.js?v=2';
 import { videoHTML, mountVideos, playVideo, stopVideos } from './video.js?v=2';
@@ -11,7 +11,7 @@ import { createAppSky } from './app-sky.js?v=1';
 import { createAppSheet } from './app-sheet.js?v=2';
 import { createAppLanding } from './app-landing.js?v=1';
 import { createMotionPreference } from './app-preferences.js?v=1';
-import { createAppDiscover } from './app-discover.js?v=1';
+import { createAppDiscover } from './app-discover.js?v=2';
 import { createExhibitShare } from './app-share.js?v=1';
 import { APP_COPY } from './app-copy.js?v=1';
 const motionQuery = createMotionPreference();
@@ -205,7 +205,7 @@ function detailSheet(c) {
       <p class="dt-sub">${esc(c.subtitle || '')}</p>
       <p class="dt-meta">${esc(c.artist || '')}${c.period ? ' · ' + esc(c.period) : ''}</p>
       ${c.summary ? `<p class="dt-sum">${esc(c.summary)}</p>` : ''}
-      ${c.rooms && c.rooms.length ? `<div class="dt-rooms"><h4>${t('방')}</h4>${c.rooms.map((r, i) => `<div><em>${String(i + 1).padStart(2, '0')}</em><span><b>${esc(r.short || name(r))}</b><small>${esc(r.subtitle || '')}</small></span></div>`).join('')}</div>` : ''}
+      ${c.rooms && c.rooms.length && !c.single ? `<div class="dt-rooms"><h4>${t('방')}</h4>${c.rooms.map((r, i) => `<div><em>${String(i + 1).padStart(2, '0')}</em><span><b>${esc(r.short || name(r))}</b><small>${esc(r.subtitle || '')}</small></span></div>`).join('')}</div>` : ''}
       <div class="dt-how"><h4>${t('이렇게 체험해요')}</h4><p>${esc(p.how)}</p><p class="small">${t('휴대폰을 기울이고, 흔들고, 엎어 보세요. 권한은 입장할 때 한 번 물어봐요.')}</p></div>
     </div>
     <div class="dt-cta"><button class="like${liked ? ' on' : ''}" data-like="${esc(c.id)}" aria-label="${t('좋아요')}" aria-pressed="${liked}">${heart(liked)}</button><button class="nb-share" data-share="${esc(c.id)}" aria-label="${t('공유하기')}">${shareIcon}</button><button class="btn black" data-land="${esc(c.id)}" ${isOpen(c) ? '' : 'disabled'}>${t(isOpen(c) ? '착륙하기' : '준비 중')}</button></div>`, 'detail');
@@ -774,7 +774,7 @@ const landing = createAppLanding({
 });
 
 /* ---------- 시작: 기기 캐시 → 로컬 데이터 → 뒤에서 CMS 갱신 ---------- */
-const DKEY = `valix-data2-${lang}`;
+const DKEY = `valix-data3-${lang}`;
 const pack = (data = { cells, blocks, ISSUES }) => JSON.stringify(data, (key, value) => key === 'group' ? undefined : value);
 const validData = (data) => data && Array.isArray(data.cells) && data.cells.length > 0 && data.cells.every((cell) => cell && typeof cell.id === 'string');
 function unpack(data) { cells = data.cells.map((cell) => ({ ...cell, artist: String(cell.artist || '').replace(/\bVALIX(?:\s+LAB)?\b/g, 'NEBULA') })); blocks = Array.isArray(data.blocks) ? data.blocks : []; ISSUES = data.ISSUES || {}; }

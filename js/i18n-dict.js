@@ -21,6 +21,9 @@ const T = {
 
   // ---------- 기획전 ----------
   '최초의 행성': ['The First Planet', '最初的行星', '最初の惑星'],
+  '최초의 방': ['The First Room', '最初的房间', '最初の部屋'],
+  '빛 · 소리 · 우주 — 하나로 이어지는 개관 전시': ['Light · Sound · Universe — one continuous opening exhibition', '光 · 声 · 宇宙 — 连成一体的开馆展览', '光 · 音 · 宇宙 — ひとつにつながる開館展示'],
+  'NEBULA 개관 전시': ['NEBULA opening exhibition', 'NEBULA 开馆展览', 'NEBULA 開館展示'],
   '빛 · 소리 · 우주 — 세 개의 방으로 이루어진 개관 기획전': ['Light · Sound · Universe — an opening exhibition in three rooms', '光 · 声 · 宇宙 — 由三个展厅组成的开馆特展', '光・音・宇宙 — 三つの部屋からなる開館企画展'],
   'NEBULA 기획전': ['NEBULA Exhibition', 'NEBULA 特展', 'NEBULA 企画展'],
 
