@@ -1,9 +1,9 @@
-// XPACE — 메인: 중앙의 X를 도는 전시 행성계
+// NEBULA — 메인: 성운 가운데에서 태어난 전시 행성계
 import * as THREE from 'three';
-import { loadData, imageUrl, esc } from './data.js?v=17';
-import { hsound } from './home-sound.js?v=5';
-import { tr, lang, langSwitcher } from './i18n.js?v=3';
-import { IS_MOBILE } from './sensors.js?v=2';
+import { loadData, imageUrl, esc } from './data.js?v=18';
+import { hsound } from './home-sound.js?v=6';
+import { tr, lang, langSwitcher } from './i18n.js?v=4';
+import { IS_MOBILE } from './sensors.js?v=3';
 const M = {}; // 모바일 전용 기능 연결점 (home-mobile.js가 채움)
 
 const canvas = document.getElementById('stage');
@@ -27,7 +27,7 @@ const world = new THREE.Group();
 scene.add(world);
 
 const shortTitle = (t = '') => t.replace(/^(CELL|X)\s*-?\s*\d+\s*·\s*/i, '');
-const code = (i) => 'X-' + String(i + 1).padStart(3, '0');
+const code = (i) => 'N-' + String(i + 1).padStart(3, '0');
 
 // ---------- 공통 텍스처 ----------
 function canvasTex(w, h, draw) {
@@ -114,19 +114,36 @@ function planetTexture(cell, kind) {
   scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.45, vertexColors: true, transparent: true, opacity: 0.9, map: glow('#ffffff', 1), depthWrite: false, blending: THREE.AdditiveBlending })));
 })();
 
-// ---------- 중앙의 X ----------
+// ---------- 가운데 별과 성운 ----------
 const core = new THREE.Group();
 world.add(core);
 core.add(new THREE.Mesh(new THREE.SphereGeometry(0.75, 48, 48), new THREE.MeshBasicMaterial({ color: '#fff6e6' })));
 core.add(sprite(glow('#ffd9a0', 1), [6, 6], 0.9));
 core.add(sprite(glow('#9db8ff', 0.8), [11, 11], 0.35));
-const armTex = canvasTex(512, 32, (g, w, h) => {
-  const gr = g.createLinearGradient(0, 0, w, 0);
-  gr.addColorStop(0, 'rgba(255,240,220,0)'); gr.addColorStop(0.5, 'rgba(255,248,235,1)'); gr.addColorStop(1, 'rgba(255,240,220,0)');
-  g.fillStyle = gr; g.fillRect(0, h * 0.35, w, h * 0.3);
+// 성운: 가운데 별을 감싼 색 구름 + 나선 팔의 먼지 (별·전시가 태어나는 곳)
+const nebula = new THREE.Group(); world.add(nebula);
+const puffTex = canvasTex(256, 256, (g, w, h) => {
+  for (let k = 0; k < 14; k++) { const x = w * (0.3 + Math.random() * 0.4), y = h * (0.3 + Math.random() * 0.4), r = w * (0.12 + Math.random() * 0.22); const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(255,255,255,.35)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
 });
-const arms = [sprite(armTex, [9, 0.55], 0.95, Math.PI / 4), sprite(armTex, [9, 0.55], 0.95, -Math.PI / 4)];
-arms.forEach((a) => core.add(a));
+const NEB_COL = ['#7a5cff', '#ff6fae', '#4fb7ff', '#ffcf8a', '#9b7bff', '#57e0d1'];
+const puffs = [];
+for (let k = 0; k < 42; k++) {
+  const arm = k % 2, u = (k / 42), ang = arm * Math.PI + u * 5.2 + (Math.random() - 0.5) * 0.6, r = 1.4 + u * 5.2 + Math.random() * 0.8;
+  const m = new THREE.SpriteMaterial({ map: puffTex, color: NEB_COL[k % NEB_COL.length], transparent: true, opacity: 0.07 + Math.random() * 0.1, depthWrite: false, blending: THREE.AdditiveBlending, rotation: Math.random() * 6.28 });
+  const sp = new THREE.Sprite(m); const sz = 2.2 + Math.random() * 3.2; sp.scale.set(sz, sz, 1);
+  sp.position.set(Math.cos(ang) * r, (Math.random() - 0.5) * 0.9, Math.sin(ang) * r); sp.userData = { spin: (Math.random() - 0.5) * 0.15, base: m.opacity, ph: Math.random() * 6.28 };
+  nebula.add(sp); puffs.push(sp);
+}
+{ // 나선 팔의 먼지
+  const n = 2600, pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const arm = i % 2, u = Math.pow(Math.random(), 0.7), ang = arm * Math.PI + u * 5.6 + (Math.random() - 0.5) * (0.5 + u * 0.6), r = 0.9 + u * 7 + (Math.random() - 0.5) * 0.8;
+    pos.set([Math.cos(ang) * r, (Math.random() - 0.5) * (0.25 + u * 0.5), Math.sin(ang) * r], i * 3);
+    const c = new THREE.Color(NEB_COL[Math.floor(Math.random() * NEB_COL.length)]).lerp(new THREE.Color('#ffffff'), 0.35 + Math.random() * 0.4); col.set([c.r, c.g, c.b], i * 3);
+  }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  nebula.add(new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.07, vertexColors: true, map: glow('#ffffff', 1), transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending })));
+}
 
 // ---------- 행성 ----------
 const planets = [];
@@ -308,9 +325,8 @@ function tick(now) {
 
   core.rotation.y += dt * 0.1;
   const pulse = 1 + Math.sin(t * 1.4) * 0.04;
-  arms[0].material.rotation = Math.PI / 4 + Math.sin(t * 0.3) * 0.05;
-  arms[1].material.rotation = -Math.PI / 4 - Math.sin(t * 0.3) * 0.05;
-  arms.forEach((a) => a.scale.set(9 * pulse * (1 + (state.boost || 0) * 0.04), 0.55, 1));
+  nebula.rotation.y += dt * 0.025 * (1 + (state.boost || 0) * 2); // 성운이 천천히 돎
+  for (const sp of puffs) { sp.material.rotation += dt * sp.userData.spin; sp.material.opacity = sp.userData.base * (0.75 + 0.25 * Math.sin(t * 0.4 + sp.userData.ph)) * pulse; }
 
   planets.forEach((p) => {
     p.intro = Math.min(1.6, p.intro + dt * 0.8);
@@ -405,11 +421,11 @@ function sndGate(kicker, title, onStart) {
 // ---------- 언어 ----------
 langSwitcher(document.querySelector('.topbar nav'), { before: document.getElementById('btn-sound') });
 if (lang !== 'ko') {
-  document.title = tr('XPACE 엑스페이스 — 온라인에서 마주하는 무한한 가치의 공간');
-  document.querySelector('.hero-copy .lede').innerHTML = `<strong>${tr('엑스페이스')}</strong> — ${tr('온라인에서 마주하는 무한한 가치의 공간.')}<br />${tr('행성을 골라 착륙해 보세요.')}`;
+  document.title = tr('NEBULA 네뷸라 — 살아 있는 예술이 태어나는 우주');
+  document.querySelector('.hero-copy .lede').innerHTML = `<strong>${tr('네뷸라')}</strong> — ${tr('살아 있는 예술이 태어나는 우주.')}<br />${tr('행성을 골라 착륙해 보세요.')}`;
   document.querySelector('.hint').textContent = tr('드래그해서 둘러보기 · 행성을 눌러 착륙');
   const ap = document.querySelectorAll('#about-panel p');
-  if (ap[0]) ap[0].textContent = tr('XPACE(엑스페이스)는 온라인에서 마주하는 무한한 가치의 공간입니다.');
+  if (ap[0]) ap[0].textContent = tr('NEBULA(네뷸라)는 별이 태어나는 성운처럼, 살아 있는 예술이 태어나는 온라인 공간입니다.');
   if (ap[1]) ap[1].textContent = tr(ap[1].textContent.trim());
   if (ap[2]) ap[2].textContent = tr(ap[2].textContent.trim());
 }
@@ -431,7 +447,7 @@ function autoSound() {
   if (hsound.pref === 'off') return;
   hsound.tryAuto().then((ok) => {
     if (ok) { GEST.forEach((ev) => removeEventListener(ev, firstGesture)); sndUI(); return; }
-    closeGate = sndGate('ONLINE INTERACTIVE EXHIBITION', 'XPACE', (withSound) => {
+    closeGate = sndGate('ONLINE INTERACTIVE EXHIBITION', 'NEBULA', (withSound) => {
       GEST.forEach((ev) => removeEventListener(ev, firstGesture));
       M.onGateEnter && M.onGateEnter();
       if (withSound) hsound.start().then(sndUI); else { hsound.stop(); sndUI(); }
@@ -457,7 +473,7 @@ document.querySelectorAll('.cell-list').forEach((l) => l.addEventListener('point
     </li>`).join('');
   resize();
   t0 = last = performance.now();
-  if (IS_MOBILE) { const { initHomeMobile } = await import('./home-mobile.js?v=2'); initHomeMobile(Object.assign(M, { state, planets, world, camera, THREE, enter, hsound, code, shortTitle, canvas })); }
+  if (IS_MOBILE) { const { initHomeMobile } = await import('./home-mobile.js?v=3'); initHomeMobile(Object.assign(M, { state, planets, world, camera, THREE, enter, hsound, code, shortTitle, canvas })); }
   loader.classList.add('done');
   autoSound();
   requestAnimationFrame(tick);

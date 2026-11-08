@@ -1,7 +1,7 @@
-# XPACE 엑스페이스 — Online Interactive Exhibition
+# NEBULA 네뷸라 — Online Interactive Exhibition
 
-**온라인에서 마주하는 무한한 가치의 공간.**
-VALIX의 X(Value X, 무한한 가치)를 중심으로, 전시 하나하나가 행성이 되어 궤도를 도는 온라인 전시 플랫폼.
+**살아 있는 예술이 태어나는 우주.**
+별이 태어나는 성운처럼, 전시 하나하나가 행성으로 태어나 궤도를 도는 온라인 인터랙티브 전시 플랫폼. 만든 곳: VALIX LAB.
 
 - **프론트엔드**: GitHub Pages (정적 HTML/JS, 빌드 없음, Three.js CDN)
 - **콘텐츠 서버(CMS)**: Google Drive `THE CELL (online exhibition)` 폴더
@@ -15,7 +15,7 @@ VALIX의 X(Value X, 무한한 가치)를 중심으로, 전시 하나하나가 �
 ## 구조
 
 ```
-index.html     메인 — 중앙의 X를 도는 행성계 (행성 클릭 → 전시에 착륙)
+index.html     메인 — 성운 가운데에서 태어난 행성계 (행성 클릭 → 전시에 착륙)
 cell.html      전시 페이지 — ?id=c001
 js/config.js   시트 ID 설정
 js/data.js     드라이브 시트 로더 + 이미지/영상 URL 변환
@@ -32,7 +32,7 @@ data/cells.json  백업 데이터
 | id | 고유 ID (예: c001). 블록 시트의 cell_id와 연결 |
 | order | 그리드 순서 |
 | status | `open` 공개 / `coming` 예정(희미한 행성) / `hidden` 숨김 |
-| title, subtitle, artist, period, summary | 표시 텍스트 (title은 `X-001 · 제목` 형식, 앞의 번호는 화면에서 자동으로 붙음) |
+| title, subtitle, artist, period, summary | 표시 텍스트 (title은 `N-001 · 제목` 형식, 앞의 번호는 화면에서 자동으로 붙음) |
 | color | 행성·포인트 색 (#hex) |
 | thumbnail | 행성 표면 이미지 (드라이브 파일 ID 또는 공유 링크, 가로 2:1 권장) |
 | bgm | 배경음악. Spotify 앨범·트랙·플레이리스트 링크(공식 임베드 플레이어) 또는 **사용 허락을 받은** 오디오 파일(드라이브 링크/mp3 URL), 또는 `ambient:cosmos` / `ambient:light`(브라우저에서 실시간 합성하는 오리지널 앰비언트) |

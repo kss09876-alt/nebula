@@ -1,12 +1,12 @@
-// X-003 · 빛쌀 — 한 톨의 쌀을 따라가는 연속 스크롤 이야기
+// N-003 · 빛쌀 — 한 톨의 쌀을 따라가는 연속 스크롤 이야기
 // 사실 서술 출처: 진실·화해를위한과거사정리위원회 「대구10월사건 관련 민간인 희생 사건」(jinsil.go.kr/KoreanWar/30.do),
 //                「경산 코발트광산 사건」(jinsil.go.kr/KoreanWar/36.do)
-import { sound } from './bitssal-sound.js?v=5';
-import { lang, tr, langSwitcher } from './i18n.js?v=3';
+import { sound } from './bitssal-sound.js?v=6';
+import { lang, tr, langSwitcher } from './i18n.js?v=4';
 import { videoHTML, mountVideos, playVideo, onVideo, stopVideos } from './video.js?v=2';
-import { IS_MOBILE, sensor, startCamera, startMic, getPosition, distanceKm, keepAwake } from './sensors.js?v=2';
-import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=2';
-import { facePoints, drawPortrait } from './bitssal-faces.js?v=1';
+import { IS_MOBILE, sensor, startCamera, startMic, getPosition, distanceKm, keepAwake } from './sensors.js?v=3';
+import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=3';
+import { facePoints, drawPortrait } from './bitssal-faces.js?v=2';
 const SRC1 = tr('진실·화해를위한과거사정리위원회, 「대구10월사건 관련 민간인 희생 사건」');
 const SRC2 = tr('진실·화해를위한과거사정리위원회, 「경산 코발트광산 사건」');
 const RICE = [255, 248, 230], DIM = [92, 86, 76], RED = [200, 56, 47], WARM = [255, 214, 150];
@@ -31,8 +31,8 @@ const CREDITS = `<footer class="bs-credits"><div>
   <p>${NOTE}</p>
   <p>${tr('역사 서술: ')}${SRC1}(jinsil.go.kr/KoreanWar/30.do), ${SRC2}(jinsil.go.kr/KoreanWar/36.do)</p>
   <p>${tr('밥상·약도·광산 통로 장면은 이해를 돕기 위한 일러스트이며 실제 장소나 인물을 재현하지 않습니다. ‘전시 문안’으로 표시된 문장은 창작 문안으로, 희생자나 유족의 실제 발언이 아닙니다.')}</p>
-  <p>${tr('작품: 진시영 · 김동선, 《빛쌀》, 2026 · 기획: XPACE (VALIX LAB)')}</p>
-  <a class="bs-back" href="./">${tr('← XPACE 행성계로 돌아가기')}</a></div></footer>`;
+  <p>${tr('작품: 진시영 · 김동선, 《빛쌀》, 2026 · 기획: NEBULA (VALIX LAB)')}</p>
+  <a class="bs-back" href="./">${tr('← NEBULA 행성계로 돌아가기')}</a></div></footer>`;
 
 // ---------------- DOM 구성 ----------------
 const story = document.getElementById('story');
@@ -110,7 +110,7 @@ function autoSound() {
   if (sndUserOff) return;
   sound.tryAuto().then((ok) => {
     if (ok) { GEST.forEach((ev) => removeEventListener(ev, firstGesture)); sndUI(); return; }
-    closeGate = sndGate(tr('X-003 · 진시영 · 김동선'), tr('빛쌀 — 80년의 기억'), (withSound) => {
+    closeGate = sndGate(tr('N-003 · 진시영 · 김동선'), tr('빛쌀 — 80년의 기억'), (withSound) => {
       GEST.forEach((ev) => removeEventListener(ev, firstGesture));
       sensor.enable();
       if (withSound) sound.start().then(sndUI);
@@ -123,8 +123,8 @@ function autoSound() {
 langSwitcher(document.querySelector('.bs-top'), { before: document.querySelector('.bs-menu-btn'), cls: 'bs-lang' });
 if (lang !== 'ko') {
   document.querySelector('.bs-menu-btn').textContent = tr('이야기 목차');
-  document.querySelector('.bs-title').textContent = 'X-003 · ' + tr('빛쌀 — 80년의 기억').split(' — ')[0];
-  document.title = `X-003 · ${tr('빛쌀 — 80년의 기억')} | XPACE`;
+  document.querySelector('.bs-title').textContent = 'N-003 · ' + tr('빛쌀 — 80년의 기억').split(' — ')[0];
+  document.title = `N-003 · ${tr('빛쌀 — 80년의 기억')} | NEBULA`;
   sndUI();
 }
 

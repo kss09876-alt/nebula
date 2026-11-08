@@ -1,6 +1,6 @@
-// X-001 · 최초의 행성 — 세 개의 방(위성)을 고르는 기획전 허브
-import { loadData, esc } from './data.js?v=13';
-import { hsound } from './home-sound.js?v=3';
+// N-001 · 최초의 행성 — 세 개의 방(위성)을 고르는 기획전 허브
+import { loadData, esc } from './data.js?v=18';
+import { hsound } from './home-sound.js?v=6';
 
 const cv = document.getElementById('fp-stage'), g = cv.getContext('2d');
 const labelsEl = document.getElementById('fp-labels'), card = document.getElementById('fp-card');
@@ -119,7 +119,7 @@ const firstGesture = (e) => {
 GEST.forEach((ev) => addEventListener(ev, firstGesture, { passive: true }));
 function sndGate(onStart) {
   const gt = document.createElement('div'); gt.className = 'snd-gate';
-  gt.innerHTML = '<div class="g-in"><p class="g-k">X-001 · XPACE 개관 기획전</p><p class="g-t">최초의 행성</p><button class="g-b"><i><b></b><b></b><b></b></i>입장하기</button><button class="g-s">소리 없이 보기</button><p class="g-n">헤드폰을 권장합니다</p></div>';
+  gt.innerHTML = '<div class="g-in"><p class="g-k">N-001 · NEBULA 개관 기획전</p><p class="g-t">최초의 행성</p><button class="g-b"><i><b></b><b></b><b></b></i>입장하기</button><button class="g-s">소리 없이 보기</button><p class="g-n">헤드폰을 권장합니다</p></div>';
   document.body.appendChild(gt);
   const close = () => { gt.classList.add('out'); setTimeout(() => gt.remove(), 1000); };
   gt.querySelector('.g-s').addEventListener('click', (e) => { e.stopPropagation(); onStart(false); close(); });
@@ -141,7 +141,7 @@ addEventListener('pageshow', (e) => { if (e.persisted) location.reload(); });
   const grp = groups.find((x) => x.id === 'g001') || groups[0];
   rooms = grp ? grp.rooms : [];
   if (grp) {
-    document.querySelector('.fp-hero .eyebrow').textContent = `${grp.code} · XPACE 개관 기획전`;
+    document.querySelector('.fp-hero .eyebrow').textContent = `${grp.code} · NEBULA 개관 기획전`;
     document.querySelector('.fp-hero h1').textContent = grp.title.replace(/^X-\d+ · /, '');
     document.querySelector('.fp-start').href = `cell.html?id=${encodeURIComponent(rooms[0]?.id || 'c001')}`;
   }

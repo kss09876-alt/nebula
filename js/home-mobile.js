@@ -1,9 +1,9 @@
-// XPACE 홈 — 모바일 전용 경험
+// NEBULA 홈 — 모바일 전용 경험
 // 나침반: 폰을 돌리면 행성계 전체가 나침반처럼 돌고, 가운데 X 둘레에 방위 고리가 생깁니다.
 // 기울이기: 행성계가 따라 기울어짐 · 흔들기: 별빛이 흩어지고 행성이 빨라짐(+소리·진동)
 // 스와이프: 좌우로 밀어 행성 넘기기 · 탭: 행성 소개 → 한 번 더 탭(또는 착륙 버튼)으로 착륙
-import { sensor, startMic, keepAwake, onPinch } from './sensors.js?v=2';
-import { tr } from './i18n.js?v=3';
+import { sensor, startMic, keepAwake, onPinch } from './sensors.js?v=3';
+import { tr } from './i18n.js?v=4';
 
 export function initHomeMobile(api) {
   const { state, planets, world, camera, THREE, enter, hsound, code, shortTitle, canvas } = api;
@@ -30,7 +30,7 @@ export function initHomeMobile(api) {
     ['∿', '후 불기', '마이크에 후~ 불면 별바람이 일어요.'],
     ['▽', '엎어 두기', '폰을 엎어 두면 우주가 잠들고, 다시 들면 깨어나요.'],
   ];
-  guide.innerHTML = `<div class="mg-in"><p class="mg-k">MOBILE</p><h3>${tr('휴대폰으로 만나는 XPACE')}</h3><ul>${G.map(([i, t, d]) => `<li><b>${i}</b><span><strong>${tr(t)}</strong>${tr(d)}</span></li>`).join('')}</ul>
+  guide.innerHTML = `<div class="mg-in"><p class="mg-k">MOBILE</p><h3>${tr('휴대폰으로 만나는 NEBULA')}</h3><ul>${G.map(([i, t, d]) => `<li><b>${i}</b><span><strong>${tr(t)}</strong>${tr(d)}</span></li>`).join('')}</ul>
     <div class="mg-btns"><button class="mg-sense">${tr('기울이기·흔들기 켜기')}</button><button class="mg-mic">${tr('후 불기 켜기 (마이크)')}</button></div>
     <p class="mg-note">${tr('센서와 마이크 신호는 이 휴대폰 안에서만 쓰이고 저장·전송되지 않습니다.')}</p><button class="mg-x">${tr('닫기')}</button></div>`;
   document.body.appendChild(guide);

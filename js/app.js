@@ -1,12 +1,12 @@
 // VALIX 앱 화면 — 시작 화면 → 소개 → 로그인 → 닉네임 → 탭(전시·플레이·리워드·마이)
-// 전시 내용은 기존 XPACE 페이지(cell.html, bitssal.html)를 같은 주소에서 그대로 불러옵니다.
+// 전시 내용은 기존 NEBULA 페이지(cell.html, bitssal.html)를 같은 주소에서 그대로 불러옵니다.
 // 데이터는 기존 data.js(구글 시트 → 백업 JSON)를 그대로 씁니다. 개인 기록은 기기 안(localStorage)에만 저장합니다.
-import { loadData, esc } from './data.js?v=17';
-import { lang, LANGS } from './i18n.js?v=3';
+import { loadData, esc } from './data.js?v=18';
+import { lang, LANGS } from './i18n.js?v=4';
 import { hasRing } from './planets.js?v=4';
 import { planetSrc, planetKey, onPlanet, planetBitmap, warm } from './planet-store.js?v=1';
 import { videoHTML, mountVideos, playVideo, stopVideos } from './video.js?v=2';
-import { IS_MOBILE, sensor } from './sensors.js?v=2';
+import { IS_MOBILE, sensor } from './sensors.js?v=3';
 
 /* ---------- 문구 ---------- */
 const T = {
@@ -31,7 +31,7 @@ function wanderer() {
   const [a, b] = NAMES[lang] || NAMES.ko, r = (x) => x[Math.floor(Math.random() * x.length)];
   return `${r(a)} ${r(b)}`;
 }
-const LAUNCH = new Date('2026-10-05T00:00:00'); // XPACE 개관 주의 월요일 → Vol.1
+const LAUNCH = new Date('2026-10-05T00:00:00'); // NEBULA 개관 주의 월요일 → Vol.1
 const $ = (s) => document.querySelector(s);
 const view = $('#view'), tabsEl = $('#tabs');
 const store = { get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
@@ -79,7 +79,7 @@ const playOf = (c) => { const p = PLAYS[c.id]; const l = p ? (p[lang] || p.ko) :
 /* ---------- 첫 실행: 소개 → 로그인 → 닉네임 ---------- */
 const ob = $('#onboard');
 function wall() {
-  const list = cells.length ? cells : [{ color: '#9db8ff', title: 'XPACE' }];
+  const list = cells.length ? cells : [{ color: '#9db8ff', title: 'NEBULA' }];
   const row = (k) => `<div class="row">${Array.from({ length: 9 }, (_, i) => poster(list[(i + k) % list.length])).join('')}</div>`;
   return `<div class="ob-wall"><div class="rows">${row(0)}${row(1)}${row(2)}</div></div>`;
 }
@@ -470,7 +470,7 @@ frame.addEventListener('load', () => {
   let path = '', full = '';
   try { full = frame.contentWindow.location.href; path = frame.contentWindow.location.pathname; } catch (e) {}
   if (!full || full === 'about:blank') return;
-  if (/\/(index\.html)?$/.test(path) || path.endsWith('/app.html')) { closeExhibit(); return; } // 전시 안 XPACE 로고 → 앱 홈
+  if (/\/(index\.html)?$/.test(path) || path.endsWith('/app.html')) { closeExhibit(); return; } // 전시 안 NEBULA 로고 → 앱 홈
   landing.loaded();
 });
 const CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
@@ -641,7 +641,7 @@ const landing = (() => {
 
 /* ---------- 시작 ---------- */
 // 지난번 데이터를 기기에 저장해 두었다가 바로 보여주고, 새 데이터는 뒤에서 받아 바뀐 게 있으면 조용히 갱신
-const DKEY = `valix-data-${lang}`;
+const DKEY = `valix-data2-${lang}`; // 이름 정리(N-001) 뒤 옛 저장 데이터는 버림
 const pack = () => JSON.stringify({ cells, blocks, ISSUES }, (k, v) => (k === 'group' ? undefined : v));
 function unpack(o) { cells = o.cells || []; blocks = o.blocks || []; ISSUES = o.ISSUES || {}; }
 async function fetchFresh() {

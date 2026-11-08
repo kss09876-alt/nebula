@@ -1,23 +1,26 @@
-# XPACE (엑스페이스) — 작업 안내서
+# NEBULA (네뷸라) — 작업 안내서
 
-온라인 인터랙티브 전시 플랫폼. "온라인에서 마주하는 무한한 가치의 공간."
-VALIX의 X(Value X) = 무한한 우주. 전시 하나가 행성 하나. 미시적 삶보다 거시적인 것을 바라보며 생각과 마음의 폭을 넓히자는 의미.
+온라인 인터랙티브 전시 플랫폼. "살아 있는 예술이 태어나는 우주."
+NEBULA = 성운, 별이 태어나는 곳. 성운 가운데에서 전시 하나하나가 행성으로 태어나 궤도를 돎. 전시는 관람객의 손끝·움직임(센서)에 반응하며 살아 움직임. 미시적 삶보다 거시적인 것을 바라보며 생각과 마음의 폭을 넓히자는 의미. 만드는 곳·앱 이름은 VALIX(VALIX LAB).
+- 2026-11 이름 정리: XPACE(엑스페이스) → **NEBULA(네뷸라)**, 저장소 `the-cell` → `nebula`, 전시 번호 X-001 → **N-001**. 홈 가운데의 X 표시 → 빛나는 별을 감싼 성운(색 구름 42개 + 나선 팔 먼지 2,600개), 로고는 빛나는 점+궤도.
 
-- 사이트: https://kss09876-alt.github.io/the-cell/ (GitHub Pages, main 브랜치 루트에서 바로 배포, 빌드 없음)
-- 저장소 이름은 아직 `the-cell` (옛 이름 THE CELL). 바꾸면 주소가 바뀌니 주의.
+- 사이트: https://kss09876-alt.github.io/nebula/ (GitHub Pages, main 브랜치 루트에서 바로 배포, 빌드 없음). 예전 주소 …/the-cell/ 은 더 이상 열리지 않음.
+- 저장소 이름을 다시 바꾸면 주소·앱 설정(`server.url`)이 함께 바뀌니 주의.
+- 기기 저장 키(localStorage `xpace-lang`, `xpace-sound` 등)는 사용자 설정이 사라지지 않게 옛 이름 그대로 둠.
+- 구글 드라이브 폴더 이름(THE CELL (online exhibition))은 드라이브 쪽 이름이라 그대로.
 - 소유자 언어: 한국어. 답변은 한국어로, 짧고 쉽게.
 
 ## 구조
 | 파일 | 역할 |
 |---|---|
-| `index.html` + `js/main.js` | 홈 행성계 (Three.js, `js/vendor/three.module.js` importmap) |
+| `index.html` + `js/main.js` | 홈 행성계 (Three.js, `js/vendor/three.module.js` importmap). 가운데 별 + 천천히 도는 성운(`nebula`, `puffs`) |
 | `js/home-mobile.js` | 홈 모바일 전용: 나침반 고리(행성계가 방위에 맞춰 회전), 기울이기, 흔들기, 좌우 스와이프, 하단 행성 시트 |
 | `cell.html` + `js/cell.js` | 전시 페이지. 블록 렌더러(cover, text, quote, sticky, timeline, quantum, prism, shadow, soundmap, listen, piano, wave, video …). `?id=g001`이면 기획전(방 여러 개를 한 페이지로) |
-| `bitssal.html` + `js/bitssal.js` | X-003 빛쌀 단독 스크롤 스토리 (캔버스 쌀알 1,900개, 15장면). **PART 1 순이의 이야기**(prologue→life→hunger→demand→street→spread→erased→boundary→mine→truth→share→light: 이야기·조작만, 기록·사진·영상 없음) → **PART 2 작품과 기록**(work: 조형물·사진·작품 영상 / records: 짧은 기록 7장 / archive). 장에 들어서면 장 제목이 화면 가운데 떠오름, 이야기 문단은 하나씩 나타남, 가장자리 어둡게+필름 입자. 렌더 루프는 오류가 나도 멈추지 않게 `draw()`를 try로 감쌈. 끝부분에 모바일 전용 블록(흔들기·AR) |
-| `sansa.html` + `js/sansa.js` + `css/sansa.css` | **X-004 산사, 잠시 머물다** 3D 온라인 산사 (Three.js, 기획 제안 프로토타입, 조계종 협력 가정·협의 전 — 실제 주최로 표시하지 말 것, 로고·공식 문구 사용 금지). 산문 → 돌길 마당(석등) → 계단 → 법당 '고요당'(VALIX 현판·후불벽 무늬·불상·초·연등·방석). 캐릭터(작은 방랑자 스님, 이름표는 앱 항해명 `valix-me`)를 뒤에서 따라감. 휴대폰: 앞으로 기울이면 걷기·몸을 돌리면 방향(나침반)·흔들면 목탁·엎었다 들면 절·화면 보며 돌리면 염주·방석에 앉아 엎어 두면 좌선(들면 종). PC: WASD/방향키·끌기. 하단 합장·절하기·목탁·염주·앉기, 상단 나가기·소리·설정(기울여 걷기/나침반 끄기, 자세 다시 맞추기), 염불 듣기('나무아미타불'을 목소리 합성 — 성대 톱니파+포먼트 필터, 세 사람 합창, 음절마다 목탁, 화면에 음절 자막). 소리: 목탁은 나무 울림 합성, 압축기·리미터로 휴대폰 스피커 음량 확보, iPhone 무음 스위치 대응(`navigator.audioSession='playback'`+무음 오디오), 앱 전환·권한 창 뒤 자동 재개. `#debug`면 `window.__snd`(소리 테스트용). 접속자 수·다른 사람 아바타는 서버가 필요해 아직 없음. `#debug`면 `window.__st` 노출 |
+| `bitssal.html` + `js/bitssal.js` | N-003 빛쌀 단독 스크롤 스토리 (캔버스 쌀알 1,900개, 15장면). **PART 1 순이의 이야기**(prologue→life→hunger→demand→street→spread→erased→boundary→mine→truth→share→light: 이야기·조작만, 기록·사진·영상 없음) → **PART 2 작품과 기록**(work: 조형물·사진·작품 영상 / records: 짧은 기록 7장 / archive). 장에 들어서면 장 제목이 화면 가운데 떠오름, 이야기 문단은 하나씩 나타남, 가장자리 어둡게+필름 입자. 렌더 루프는 오류가 나도 멈추지 않게 `draw()`를 try로 감쌈. 끝부분에 모바일 전용 블록(흔들기·AR) |
+| `sansa.html` + `js/sansa.js` + `css/sansa.css` | **N-004 산사, 잠시 머물다** 3D 온라인 산사 (Three.js, 기획 제안 프로토타입, 조계종 협력 가정·협의 전 — 실제 주최로 표시하지 말 것, 로고·공식 문구 사용 금지). 산문 → 돌길 마당(석등) → 계단 → 법당 '고요당'(VALIX 현판·후불벽 무늬·불상·초·연등·방석). 캐릭터(작은 방랑자 스님, 이름표는 앱 항해명 `valix-me`)를 뒤에서 따라감. 휴대폰: 앞으로 기울이면 걷기·몸을 돌리면 방향(나침반)·흔들면 목탁·엎었다 들면 절·화면 보며 돌리면 염주·방석에 앉아 엎어 두면 좌선(들면 종). PC: WASD/방향키·끌기. 하단 합장·절하기·목탁·염주·앉기, 상단 나가기·소리·설정(기울여 걷기/나침반 끄기, 자세 다시 맞추기), 염불 듣기('나무아미타불'을 목소리 합성 — 성대 톱니파+포먼트 필터, 세 사람 합창, 음절마다 목탁, 화면에 음절 자막). 소리: 목탁은 나무 울림 합성, 압축기·리미터로 휴대폰 스피커 음량 확보, iPhone 무음 스위치 대응(`navigator.audioSession='playback'`+무음 오디오), 앱 전환·권한 창 뒤 자동 재개. `#debug`면 `window.__snd`(소리 테스트용). 접속자 수·다른 사람 아바타는 서버가 필요해 아직 없음. `#debug`면 `window.__st` 노출 |
 | `js/cell-mobile.js` | 전시 페이지 모바일 전용(휴대폰에서만 불러옴): 지금 블록에서 할 수 있는 동작 안내 칩, 타임라인·단계 진동, 끝 블록 돌리기→다음 행성, 모바일 문구 번역(`WORDS`) |
 | `js/sensors.js` | 모바일 센서 공용: `IS_MOBILE`, `sensor`(tiltX/tiltY/heading/shake/spin/faceDown/blow, onShake/onSpin/onFaceDown/onBlow, vibrate, enable), `startCamera`, `startMic`, `getPosition`/`distanceKm`, `keepAwake`(화면 꺼짐 방지), `onPinch` |
-| `js/data.js` | 데이터 로드: 구글 시트(gviz) → 실패 시 `data/cells.json`. 기획전 묶기, 번호 재부여(X-001…), 다국어 적용 |
+| `js/data.js` | 데이터 로드: 구글 시트(gviz) → 실패 시 `data/cells.json`. 기획전 묶기, 번호 재부여(N-001…), 다국어 적용 |
 | `js/config.js` | 시트 ID, `groups`(기획전: g001 최초의 행성 = c001·c002·c003) |
 | `js/i18n.js`, `js/i18n-dict.js` | 다국어(ko/en/zh/ja). `tr(한국어문장)`으로 화면 문구 번역, 언어 선택 버튼 |
 | `data/i18n.json` | 전시 본문 번역 (키 `셀ID:순서`). 시트에 `title_en` 같은 칸이 있으면 그게 우선 |
@@ -38,7 +41,7 @@ VALIX의 X(Value X) = 무한한 우주. 전시 하나가 행성 하나. 미시�
 - `app.html`의 주소가 바뀌면 앱 설정(`server.url`)도 바꿔서 앱을 다시 내야 하니 주소 변경은 신중히.
 
 ## 앱 속도 (2026-11 최적화)
-- 시작: 지난번 데이터(`valix-data-언어`)를 바로 보여주고 시트·issues.json은 동시에 뒤에서 받아, 바뀌었으면 조용히 다시 그림(시트·전시 보는 중엔 안 건드림).
+- 시작: 지난번 데이터(`valix-data2-언어`)를 바로 보여주고 시트·issues.json은 동시에 뒤에서 받아, 바뀌었으면 조용히 다시 그림(시트·전시 보는 중엔 안 건드림).
 - 기울기 효과는 홈 탭에서 화면에 보이는 카드만, 별빛 배경은 앱이 가려지면 멈춤. 글꼴은 Pretendard 부분 글꼴(dynamic subset)을 화면을 막지 않게 불러옴.
 
 ## PC / 모바일
