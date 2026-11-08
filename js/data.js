@@ -1,6 +1,5 @@
-import { CONFIG } from './config.js?v=17';
-import { lang, tr } from './i18n.js?v=4';
-import { FIRST_IDS, getFirstCell, getFirstBlocks } from './first-story.js?v=2';
+import { CONFIG } from './config.js?v=18';
+import { lang, tr } from './i18n.js?v=5';
 
 // 응답 본문을 읽는 동안에도 제한 시간을 유지 (느린 연결에서 시작이 멈추지 않게)
 async function fetchBody(url, type, timeout, label = 'data') {
@@ -97,20 +96,6 @@ async function loadLiveData() {
   return prepareData(cells, blocks, source, translations);
 }
 
-// Use the repository's authored first exhibition even with old CMS rows or saved app data.
-// Personal likes/watch history use their existing g001 ID and are never migrated or removed.
-export function normalizeFirstData(cellRows, blockRows, language = lang) {
-  const ids = new Set(FIRST_IDS);
-  const first = getFirstCell(language);
-  const prior = cellRows.find((cell) => ids.has(cell.id));
-  if (prior?.month) first.month = prior.month;
-  first.code = 'N-001'; first.title = `N-001 · ${first.title}`; first.isGroup = false;
-  return {
-    cells: [first, ...cellRows.filter((cell) => !ids.has(cell.id))],
-    blocks: [...blockRows.filter((block) => !ids.has(block.cell_id)), ...getFirstBlocks(language)],
-  };
-}
-
 // 메모된 원본에 제목·그룹 역참조가 섞이지 않도록 행을 복사한 뒤 공통 처리
 async function prepareData(cellRows, blockRows, source, translations) {
   let cells = cellRows.map((c) => ({ ...c }))
@@ -125,10 +110,9 @@ async function prepareData(cellRows, blockRows, source, translations) {
     cells = cells.map((c) => loc(c, ['title', 'subtitle', 'artist', 'period'], tx.cells?.[c.id]?.[lang]));
     blocks = blocks.map((b) => loc(b, ['title', 'body', 'caption'], tx.blocks?.[`${b.cell_id}:${b.order}`]?.[lang]));
   }
-  ({ cells, blocks } = normalizeFirstData(cells, blocks));
   // 기획전 묶기: 멤버 전시는 행성 목록에서 빠지고, 첫 멤버 자리에 기획전 행성이 들어감
   const all = cells.slice(), top = [];
-  const groups = (CONFIG.groups || []).filter((g) => !g.singleJourney).map((g) => ({ ...g, members: [...g.members], title: tr(g.title), subtitle: tr(g.subtitle), artist: tr(g.artist), status: 'open', isGroup: true, rooms: [] }));
+  const groups = (CONFIG.groups || []).map((g) => ({ ...g, members: [...g.members], title: tr(g.title), subtitle: tr(g.subtitle), artist: tr(g.artist), status: 'open', isGroup: true, rooms: [] }));
   cells.forEach((c) => {
     const g = groups.find((x) => x.members.includes(c.id));
     if (!g) { top.push(c); return; }

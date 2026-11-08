@@ -1,5 +1,3 @@
-import { getFirstCell } from './first-story.js?v=2';
-
 // NEBULA — 데이터 소스 설정
 // 구글 드라이브 'THE CELL (online exhibition)' 폴더(드라이브 폴더명은 그대로)의 시트 2개를 CMS로 사용합니다.
 // 시트(또는 상위 폴더)는 '링크가 있는 모든 사용자 → 뷰어'로 공유되어 있어야 합니다.
@@ -9,9 +7,11 @@ export const CONFIG = {
   blocksSheetId: '1-l-01Syw0RUxzIoZRDQaQzDjMHttL5gLlRBPUZyfzTk',  // THE_CELL_blocks
   // 시트를 읽지 못할 때 쓰는 저장소 내 백업 데이터
   fallbackUrl: 'data/cells.json',
-  // 첫 전시는 하나의 여정. members는 이전 주소 호환용이며 방·위성을 생성하지 않습니다.
+  // 기획전: 여러 전시(셀)를 하나의 행성으로 묶음. members 순서가 방 순서입니다.
   groups: [
-    { ...getFirstCell('ko'), members: ['c001', 'c002', 'c003'] },
+    // single: 방으로 나누지 않고 하나의 전시로 이어서 보여줌 (위성·방 목록 없음)
+    { id: 'g001', title: '최초의 방', subtitle: '빛 · 소리 · 우주 — 하나로 이어지는 개관 전시', artist: 'NEBULA 개관 전시', period: '2026.10 – 2026.12',
+      color: '#c9d6ff', fx: 'stars', single: true, members: ['c001', 'c002', 'c003'] },
   ],
   // 메인 그리드 최소 큐브 수 (모자라면 빈 셀로 채움)
   minCubes: 12,

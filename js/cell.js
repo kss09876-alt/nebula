@@ -1,18 +1,11 @@
-import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=21';
-import { tr, langSwitcher } from './i18n.js?v=4';
+import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=22';
+import { tr, langSwitcher } from './i18n.js?v=5';
 import { IS_MOBILE, sensor, keepAwake } from './sensors.js?v=3';
 import { videoHTML, mountVideos } from './video.js?v=2';
 
 const story = document.getElementById('story');
 const wipe = document.getElementById('wipe');
 const id = new URLSearchParams(location.search).get('id');
-const firstAlias = ['g001', 'c001', 'c002', 'c003'].includes(id);
-if (firstAlias) {
-  const target = new URL(IS_MOBILE ? 'first-app.html' : 'first.html', location.href);
-  target.search = location.search; target.searchParams.delete('id');
-  target.hash = /^#room-/.test(location.hash) ? '' : location.hash;
-  location.replace(target.pathname + target.search + target.hash);
-}
 
 const media = (src, alt = '') => src
   ? `<img src="${esc(imageUrl(src))}" alt="${esc(alt)}" loading="lazy" referrerpolicy="no-referrer" />`
@@ -25,7 +18,7 @@ const R = {
       ${b.align === 'cosmos' ? '<canvas class="star-cv" data-mode="drift"></canvas>' : ''}${b.align === 'light' ? '<canvas class="beam-cv"></canvas>' : ''}${b.align === 'sound' ? '<canvas class="rip-cv"></canvas>' : ''}${b.align === 'rice' ? '<canvas class="rice-cv"></canvas>' : ''}
       ${b.media ? `<div class="cover-media parallax" data-speed="0.3">${media(b.media)}</div>` : '<div class="cover-planet"><i class="pl-ring back"></i><i class="pl-body"></i><i class="pl-ring front"></i></div>'}
       <div class="cover-text">
-        <p class="eyebrow">${c.group ? `${esc(c.group.code)} ${esc(c.group.title.replace(/^X-\d+ · /, ''))} · ROOM ${String(c.room).padStart(2, '0')}` : esc(c.code || '')}</p>
+        <p class="eyebrow">${c.group ? (c.group.single ? `${esc(c.group.code)} ${esc(c.group.title.replace(/^[XN]-\d+ · /, ''))} · ${String(c.room).padStart(2, '0')}` : `${esc(c.group.code)} ${esc(c.group.title.replace(/^[XN]-\d+ · /, ''))} · ROOM ${String(c.room).padStart(2, '0')}`) : esc(c.code || '')}</p>
         <h1 class="split">${esc(b.title || c.title)}</h1>
         <p class="sub reveal">${esc(b.body || c.subtitle)}</p>
         <p class="meta reveal">${esc([c.artist, c.period].filter(Boolean).join(' · '))}</p>
@@ -238,7 +231,7 @@ langSwitcher(document.querySelector('.topbar'));
 // 모바일: 첫 탭에서 기울기 권한 · 흔들면 화면에 보이는 양자 실험을 관측
 if (IS_MOBILE) {
   document.body.classList.add('is-mobile');
-  import('./cell-mobile.js?v=3');
+  import('./cell-mobile.js?v=4');
   addEventListener('click', function once() { removeEventListener('click', once, true); sensor.enable(); keepAwake(); }, true);
   sensor.onShake(() => {
     const q = [...document.querySelectorAll('.q-stage')].find((el) => { const r = el.getBoundingClientRect(); return r.top < innerHeight * 0.7 && r.bottom > innerHeight * 0.3; });
@@ -249,7 +242,6 @@ if (IS_MOBILE) {
   });
 }
 (async () => {
-  if (firstAlias) return;
   const { cells: top, all: cells, groups, blocks } = await loadData();
   TOP = top;
   // 기획전 행성: 방들을 한 페이지에 이어서 보여줌
@@ -309,13 +301,14 @@ function renderGroup(g, blocks) {
   const html = rooms.map((r, k) => {
     let bs = blocks.filter((b) => b.cell_id === r.id && b.type !== 'end');
     if (!bs.some((b) => b.type === 'cover')) bs = [{ type: 'cover' }, ...bs];
-    return `<div class="room" id="room-${k + 1}" data-room="${k}" style="--accent:${esc(r.color || g.color)}">${bs.map((b) => (R[b.type] || R.text)(b, r, k, rooms)).join('')}</div>`;
+    const link = g.single && k > 0 ? `<div class="room-link" aria-hidden="true"><i></i><span>${esc(r.short)}</span></div>` : ''; // 하나의 전시: 앞 장에서 다음 장으로 이어지는 빛줄기
+    return `<div class="room${g.single ? ' flow' : ''}" id="room-${k + 1}" data-room="${k}" style="--accent:${esc(r.color || g.color)}">${link}${bs.map((b) => (R[b.type] || R.text)(b, r, k, rooms)).join('')}</div>`;
   }).join('');
   const top = TOP.filter((x) => x.status === 'open'), gi = top.indexOf(g), next = top[(gi + 1) % top.length];
   const href = (x) => (x.isGroup ? `cell.html?id=${encodeURIComponent(x.id)}` : x.url || `cell.html?id=${encodeURIComponent(x.id)}`);
   const end = `<section class="b-end">
     <p class="eyebrow">END OF ${esc(g.title)}</p>
-    <p class="end-rooms">${rooms.map((r, k) => `<a href="#room-${k + 1}" style="--accent:${esc(r.color)}">ROOM ${String(k + 1).padStart(2, '0')} · ${esc(r.short)}</a>`).join('')}</p>
+    ${g.single ? '' : `<p class="end-rooms">${rooms.map((r, k) => `<a href="#room-${k + 1}" style="--accent:${esc(r.color)}">ROOM ${String(k + 1).padStart(2, '0')} · ${esc(r.short)}</a>`).join('')}</p>`}
     ${next && next !== g ? `<a class="next" href="${href(next)}" style="--accent:${esc(next.color)}"><span>${tr('다음 행성으로')}</span><strong>${esc(next.title)}</strong></a>` : ''}
     <a class="back" href="./">${tr('← 행성계로 돌아가기')}</a>
   </section>`;
@@ -331,7 +324,7 @@ function renderGroup(g, blocks) {
     els.forEach((el, j) => { if (el.getBoundingClientRect().top <= mid) k = j; });
     if (k === cur) return; cur = k;
     const r = rooms[k];
-    lab.innerHTML = `${esc(g.title)} <span class="room-tag">ROOM ${String(k + 1).padStart(2, '0')} / ${String(rooms.length).padStart(2, '0')}</span> ${esc(r.short)}`;
+    lab.innerHTML = g.single ? (g.title.endsWith(r.short) ? esc(g.title) : `${esc(g.title)} · ${esc(r.short)}`) : `${esc(g.title)} <span class="room-tag">ROOM ${String(k + 1).padStart(2, '0')} / ${String(rooms.length).padStart(2, '0')}</span> ${esc(r.short)}`;
     document.documentElement.style.setProperty('--accent', r.color || g.color);
     bgm && bgm.room(k);
   };

@@ -95,17 +95,17 @@
       },
       {
         "cell": "g001",
-        "type": "article",
-        "url": "https://spaceplace.nasa.gov/nebula/",
-        "title": "NASA Space Place · 성운이란 무엇일까요?",
-        "source": "NASA"
+        "type": "youtube",
+        "url": "https://www.youtube.com/watch?v=IeySvmt5ELk",
+        "title": "The legacy of Planck — 우주의 첫 빛을 지도로",
+        "source": "ESA"
       },
       {
         "cell": "g001",
-        "type": "article",
-        "url": "https://www.nasa.gov/general/how-are-we-made-of-star-stuff-we-asked-a-nasa-expert-episode-58/",
-        "title": "NASA · 우리는 어떻게 별의 물질로 이루어져 있을까요? 전문가에게 묻다, 58화",
-        "source": "NASA"
+        "type": "youtube",
+        "url": "https://www.youtube.com/watch?v=5QvQp5j1hjs",
+        "title": "Revealing the Cosmic Microwave Background with Planck",
+        "source": "ESA"
       }
     ]
   }

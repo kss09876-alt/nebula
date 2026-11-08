@@ -3,7 +3,7 @@
 // 기울이기: 행성계가 따라 기울어짐 · 흔들기: 별빛이 흩어지고 행성이 빨라짐(+소리·진동)
 // 스와이프: 좌우로 밀어 행성 넘기기 · 탭: 행성 소개 → 한 번 더 탭(또는 착륙 버튼)으로 착륙
 import { sensor, startMic, keepAwake, onPinch } from './sensors.js?v=3';
-import { tr } from './i18n.js?v=4';
+import { tr } from './i18n.js?v=5';
 
 export function initHomeMobile(api) {
   const { state, planets, world, camera, THREE, enter, hsound, code, shortTitle, canvas } = api;
@@ -52,7 +52,7 @@ export function initHomeMobile(api) {
     sheet.querySelector('.ms-no').textContent = code(p.i);
     sheet.querySelector('.ms-title').textContent = shortTitle(c.title);
     sheet.querySelector('.ms-sub').textContent = c.subtitle || '';
-    sheet.querySelector('.ms-meta').textContent = c.rooms ? `ROOMS · ${c.rooms.map((r) => r.short).join(' · ')}` : [c.artist, c.period].filter(Boolean).join(' · ');
+    sheet.querySelector('.ms-meta').textContent = c.rooms && !c.single ? `ROOMS · ${c.rooms.map((r) => r.short).join(' · ')}` : [c.artist, c.period].filter(Boolean).join(' · ');
     sheet.style.setProperty('--accent', c.color || '#7ee0d0');
     sheet.hidden = false; sheet.classList.remove('in-l', 'in-r'); void sheet.offsetWidth; sheet.classList.add(dir < 0 ? 'in-l' : 'in-r');
     // 고른 행성이 정면에 오도록 카메라를 천천히 돌림

@@ -2,7 +2,7 @@
 // 사실 서술 출처: 진실·화해를위한과거사정리위원회 「대구10월사건 관련 민간인 희생 사건」(jinsil.go.kr/KoreanWar/30.do),
 //                「경산 코발트광산 사건」(jinsil.go.kr/KoreanWar/36.do)
 import { sound } from './bitssal-sound.js?v=6';
-import { lang, tr, langSwitcher } from './i18n.js?v=4';
+import { lang, tr, langSwitcher } from './i18n.js?v=5';
 import { videoHTML, mountVideos, playVideo, onVideo, stopVideos } from './video.js?v=2';
 import { IS_MOBILE, sensor, startCamera, startMic, getPosition, distanceKm, keepAwake } from './sensors.js?v=3';
 import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=3';

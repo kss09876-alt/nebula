@@ -567,3 +567,11 @@ body.is-mobile .m-hint .m-btns { display: flex; gap: 6px; }
 .m-rest[hidden] { display: none; }
 .m-rest.on { animation: qIn2 3.2s ease forwards; }
 @keyframes qIn2 { 0% { opacity: 0; } 15% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+
+/* N-001 최초의 방: 세 장을 하나의 전시로 잇는 빛줄기 */
+.room.flow { position: relative; }
+.room-link { position: relative; height: 34vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: linear-gradient(180deg, transparent, rgba(0,0,0,.6) 60%, #050505); }
+.room-link i { width: 1px; height: 22vh; background: linear-gradient(180deg, rgba(255,255,255,0), var(--accent) 50%, rgba(255,255,255,0)); box-shadow: 0 0 18px var(--accent); animation: linkFlow 3.2s ease-in-out infinite; }
+.room-link span { font-size: 12px; letter-spacing: .32em; font-weight: 700; color: var(--accent); text-transform: uppercase; opacity: .85; }
+@keyframes linkFlow { 0%, 100% { opacity: .35; transform: scaleY(.7); } 50% { opacity: 1; transform: scaleY(1); } }
+@media (prefers-reduced-motion: reduce) { .room-link i { animation: none; } }
