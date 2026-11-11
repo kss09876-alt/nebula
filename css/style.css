@@ -575,3 +575,19 @@ body.is-mobile .m-hint .m-btns { display: flex; gap: 6px; }
 .room-link span { font-size: 12px; letter-spacing: .32em; font-weight: 700; color: var(--accent); text-transform: uppercase; opacity: .85; }
 @keyframes linkFlow { 0%, 100% { opacity: .35; transform: scaleY(.7); } 50% { opacity: 1; transform: scaleY(1); } }
 @media (prefers-reduced-motion: reduce) { .room-link i { animation: none; } }
+
+/* N-004 async · 센서 소리 실험 */
+.sk-stage { background: #08080a; }
+.sk-stage .q-hud { align-items: center; }
+.sk-btn { pointer-events: auto; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: rgba(8,8,10,.7); color: var(--fg, #f2f1ec); font-size: 12px; letter-spacing: .06em; cursor: pointer; }
+.sk-btn.on { border-color: var(--accent); color: var(--accent); }
+.sk-start { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 14px 24px; border-radius: 999px; border: 1px solid var(--accent); background: rgba(8,8,10,.8); color: var(--fg, #f2f1ec); font-size: 15px; font-weight: 700; letter-spacing: .04em; cursor: pointer; z-index: 2; animation: pulse 2s infinite; }
+.b-forest .lab-stage { cursor: grab; } .b-forest .lab-stage:active { cursor: grabbing; }
+.sk-sil { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; pointer-events: none; }
+.sk-hold { pointer-events: auto; padding: 16px 26px; border-radius: 999px; border: 1px solid var(--line); background: rgba(8,8,10,.6); color: var(--fg, #f2f1ec); font-size: 15px; font-weight: 700; cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: none; transition: border-color .3s, transform .3s; }
+.sk-hold.on { border-color: var(--accent); transform: scale(.96); }
+.sk-msg { min-height: 1.4em; font-size: 14px; color: var(--muted); }
+.sk-quote { display: flex; flex-direction: column; gap: 6px; animation: fadeUp 1.2s ease both; }
+.sk-quote b { font-size: clamp(18px, 2.4vw, 28px); font-weight: 300; letter-spacing: .04em; }
+.sk-quote span { font-size: 13px; color: var(--muted); letter-spacing: .1em; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }

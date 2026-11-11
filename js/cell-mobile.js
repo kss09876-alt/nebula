@@ -24,6 +24,10 @@ const WORDS = {
   '보지 않는 동안, 다시 중첩으로 돌아갔어요': ['While no one looked, it returned to superposition', '没人看的时候，它又回到了叠加态', '見ていない間に、重ね合わせに戻りました'],
   '기울이거나 눌러서 빛의 각도 바꾸기': ['Tilt or touch to change the light angle', '倾斜或触摸改变光的角度', '傾けるかタッチで光の角度を変える'],
   '빛이 없으면 그림자도 없다': ['No light, no shadow', '没有光，就没有影子', '光がなければ影もない'],
+  '기울이면 박자가 어긋나요 · 흔들면 다시 맞춰져요 · 엎어두면 고요': ['Tilt to drift out of sync · shake to resync · lay face down for silence', '倾斜让节拍错开 · 摇晃重新对齐 · 朝下放置归于寂静', '傾けると拍がずれる · 振るとそろう · 伏せると静寂'],
+  '기울여 바람과 빗줄기 · 엎어두면 양동이 속 빗소리': ['Tilt for wind and rain · lay face down to hear it inside the bucket', '倾斜控制风和雨 · 朝下放置听水桶里的雨声', '傾けて風と雨脚 · 伏せるとバケツの中の雨音'],
+  '몸을 돌려 소리가 오는 쪽을 찾아요 · 앞으로 기울이면 가까이': ['Turn to find where each sound comes from · tilt forward to get closer', '转身寻找声音的方向 · 向前倾斜靠近', '体を回して音の方向を探す · 前に傾けると近づく'],
+  '폰을 엎어 두고 10초 동안 고요를 들어요': ['Lay your phone face down and listen to 10 seconds of silence', '把手机朝下放，聆听10秒的寂静', 'スマホを伏せて10秒間の静寂を聴く'],
 };
 const IDX = { en: 0, zh: 1, ja: 2 };
 Object.entries(WORDS).forEach(([ko, a]) => Object.entries(IDX).forEach(([l, i]) => { DICT[l][ko] = a[i]; }));
@@ -36,6 +40,10 @@ const HINTS = [
   ['.b-shadow', '기울여 빛을 옮기고 · 흔들면 상자가 돌고 · 엎어두면 빛이 꺼져요', 'tilt'],
   ['.b-soundmap', '기울여 도시를 걷고 · 몸을 돌려 소리의 방향을 · 흔들면 새 장소', 'walk'],
   ['.b-listen', '마이크를 켜면 큰 소리에 폰이 떨려요', 'mic'],
+  ['.b-async', '기울이면 박자가 어긋나요 · 흔들면 다시 맞춰져요 · 엎어두면 고요', 'shake'],
+  ['.b-rain', '기울여 바람과 빗줄기 · 엎어두면 양동이 속 빗소리', 'tilt'],
+  ['.b-forest', '몸을 돌려 소리가 오는 쪽을 찾아요 · 앞으로 기울이면 가까이', 'walk'],
+  ['.b-silence', '폰을 엎어 두고 10초 동안 고요를 들어요', 'touch'],
   ['.b-wave', '기울이면 파형이 휘어요 · 흔들면 출렁', 'tilt'],
   ['.b-piano', '기울이면 음이 휘어요 · 흔들면 화음이 흩어져요', 'tilt'],
   ['.b-timeline', '천천히 내리면 시간의 마디가 손끝에 닿아요', 'touch'],

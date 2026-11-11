@@ -697,6 +697,74 @@
     "body": "",
     "caption": ""
    }
+  },
+  "c004:4.5": {
+   "en": {
+    "title": "Out of sync",
+    "body": "Seven pendulums swing, each at a slightly different tempo. They begin together, slowly drift apart, and become music while out of step. Touch the sense of “asynchrony” that the album async let us hear.",
+    "caption": "Sound is synthesized live, not the original recordings. On your phone: tilt to drift further, shake to resync, lay it face down for silence."
+   },
+   "zh": {
+    "title": "不对齐",
+    "body": "七个摆锤各以略有不同的节拍摆动。起初一同鸣响，渐渐错开，在错位中成为音乐。用手去触摸专辑《async》所呈现的“非同步”的感觉。",
+    "caption": "声音为实时合成，并非原曲音源。手机：倾斜会更加错位，摇晃会重新对齐，朝下放置则归于寂静。"
+   },
+   "ja": {
+    "title": "そろえない",
+    "body": "七つの振り子が、それぞれ少しずつ違う拍で揺れています。はじめは一緒に鳴り、やがてずれていき、ずれたまま音楽になります。アルバム『async』が聴かせた「非同期」の感覚に、手で触れてみてください。",
+    "caption": "音はリアルタイム合成で、原曲の音源ではありません。スマホ：傾けるとさらにずれ、振るとそろい、伏せると静寂。"
+   }
+  },
+  "c004:5.5": {
+   "en": {
+    "title": "Listening to rain with a bucket on",
+    "body": "In the documentary Ryuichi Sakamoto: Coda, there is a scene where he stands in the rain with a bucket on his head, listening. Make it rain on the screen and put on the bucket. The same rain becomes entirely different music.",
+    "caption": "On your phone: tilt to change the wind and rain; lay it face down to hear the rain inside the bucket. Tap the screen and each drop rings a note."
+   },
+   "zh": {
+    "title": "戴着水桶听雨声",
+    "body": "纪录片《坂本龙一：终曲》中，有他头戴水桶站在雨中聆听的一幕。在画面上让雨落下，再戴上水桶试试。同样的雨，会变成完全不同的音乐。",
+    "caption": "手机：倾斜改变风和雨势，把手机朝下放就能听到水桶里的雨声。点击画面，每一滴雨都会响起一个音。"
+   },
+   "ja": {
+    "title": "バケツをかぶって雨音を聴く",
+    "body": "ドキュメンタリー『Ryuichi Sakamoto: CODA』には、彼がバケツを頭にかぶって雨の中に立ち、音を聴く場面があります。画面に雨を降らせ、バケツをかぶってみてください。同じ雨がまったく違う音楽になります。",
+    "caption": "スマホ：傾けると風と雨脚が変わり、伏せるとバケツの中の雨音。画面を押すと雨粒が一音ずつ鳴ります。"
+   }
+  },
+  "c004:5.7": {
+   "en": {
+    "title": "Recording the sounds of the world",
+    "body": "He carried a recorder into forests, onto Arctic glaciers and along city streets to gather sound. Five sounds surround you now. Turn around and find where each one comes from.",
+    "caption": "On your phone: turn your body (compass) and the sound you face grows louder; tilt forward to move closer. Headphones make the directions clearer."
+   },
+   "zh": {
+    "title": "录下世界的声音",
+    "body": "他带着录音机走进森林、北极的冰川和城市的街道，收集声音。此刻有五种声音环绕着你。转过身，找找声音从哪里来。",
+    "caption": "手机：转身（指南针）时，面向的声音会变大；向前倾斜就会靠近。戴上耳机，方向听得更清楚。"
+   },
+   "ja": {
+    "title": "世界の音を録る",
+    "body": "彼は録音機を手に、森や北極の氷河、街の通りで音を集めました。いま五つの音があなたを囲んでいます。体を回して、音がやってくる方向を探してみてください。",
+    "caption": "スマホ：体を回すと（コンパス）向いた方の音が大きくなり、前に傾けると近づきます。ヘッドホンだと方向がよりはっきり聞こえます。"
+   }
+  },
+  "c004:8.5": {
+   "en": {
+    "title": "Silence",
+    "body": "To the very end, he listened between sound and silence. Take ten seconds in which nothing is played.",
+    "caption": ""
+   },
+   "zh": {
+    "title": "寂静",
+    "body": "直到最后，他都在聆听声音与寂静之间。请留出十秒钟，什么也不演奏。",
+    "caption": ""
+   },
+   "ja": {
+    "title": "静寂",
+    "body": "最後まで、彼は音と沈黙のあいだを聴いていました。10秒間、何も奏でない時間を過ごしてみてください。",
+    "caption": ""
+   }
   }
  }
 }
