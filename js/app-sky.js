@@ -19,8 +19,8 @@ export function createAppSky({ sensor, motionQuery, getTilt }) {
       x: width / 2 + (Math.random() - .5) * diagonal,
       y: height / 2 + (Math.random() - .5) * diagonal,
       depth: Math.random() ** 2, phase: Math.random() * Math.PI * 2,
-      color: Math.random() < .15 ? '255,226,180' : Math.random() < .3 ? '190,205,255' : '255,255,255',
-    }));
+      color: Math.random() < .15 ? 'rgb(255,226,180)' : Math.random() < .3 ? 'rgb(190,205,255)' : 'rgb(255,255,255)',
+    })).sort((a, b) => (a.color < b.color ? -1 : a.color > b.color ? 1 : 0));
     if (enabled && !document.hidden) { draw(0); schedule(); }
   }
   function draw(dt) {
@@ -36,16 +36,19 @@ export function createAppSky({ sensor, motionQuery, getTilt }) {
     const angle = calm ? 0 : -heading, ch = Math.cos(angle), sh = Math.sin(angle);
     const cx = width / 2, cy = height / 2, left = cx - diagonal / 2, top = cy - diagonal / 2;
     ctx.clearRect(0, 0, width, height);
+    let color = '';
     for (const s of stars) {
       if (!calm) { s.x -= (.004 + s.depth * .02) * dt; s.y -= dy * (.3 + s.depth); }
       if (s.x < left) s.x += diagonal;
       if (s.y < top) s.y += diagonal;
       if (s.y > top + diagonal) s.y -= diagonal;
       const twinkle = calm ? .72 : .45 + .55 * Math.sin(elapsed / (900 + s.depth * 600) + s.phase);
-      ctx.fillStyle = `rgba(${s.color},${(.15 + s.depth * .75) * twinkle})`;
+      if (s.color !== color) { color = s.color; ctx.fillStyle = color; }
+      ctx.globalAlpha = (.15 + s.depth * .75) * twinkle;
       const dx = s.x - cx, dy2 = s.y - cy, r = .4 + s.depth * 1.3;
       ctx.fillRect(cx + dx * ch - dy2 * sh - tilt.x * (4 + s.depth * 26), cy + dx * sh + dy2 * ch - tilt.y * (4 + s.depth * 22), r, r);
     }
+    ctx.globalAlpha = 1;
     if (!calm && !meteor && Math.random() < dt / 7000) meteor = { x: width * (.3 + Math.random() * .7), y: Math.random() * height * .4, time: 0 };
     if (!calm && meteor) {
       meteor.time += dt;
