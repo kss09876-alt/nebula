@@ -208,6 +208,7 @@ function detailSheet(c) {
       <p class="dt-meta">${esc(c.artist || '')}${c.period ? ' · ' + esc(c.period) : ''}</p>
       ${c.summary ? `<p class="dt-sum">${esc(c.summary)}</p>` : ''}
       ${c.rooms && c.rooms.length && !c.single ? `<div class="dt-rooms"><h4>${t('방')}</h4>${c.rooms.map((r, i) => `<div><em>${String(i + 1).padStart(2, '0')}</em><span><b>${esc(r.short || name(r))}</b><small>${esc(r.subtitle || '')}</small></span></div>`).join('')}</div>` : ''}
+      ${SHOP.worksForCellHTML(c.id)}
       <div class="dt-how"><h4>${t('이렇게 체험해요')}</h4><p>${esc(p.how)}</p><p class="small">${t('휴대폰을 기울이고, 흔들고, 엎어 보세요. 권한은 입장할 때 한 번 물어봐요.')}</p></div>
     </div>
     <div class="dt-cta"><button class="like${liked ? ' on' : ''}" data-like="${esc(c.id)}" aria-label="${t('좋아요')}" aria-pressed="${liked}">${heart(liked)}</button><button class="nb-share" data-share="${esc(c.id)}" aria-label="${t('공유하기')}">${shareIcon}</button><button class="btn black" data-land="${esc(c.id)}" ${isOpen(c) ? '' : 'disabled'}>${t(isOpen(c) ? '착륙하기' : '준비 중')}</button></div>`, 'detail');
@@ -843,6 +844,7 @@ function firstValidData(promises) {
   }
   warm(firstPlanets());
   if (!store.get('valix-onboarded', false)) showOB('intro0'); else go('home');
+  if (location.hash === '#orders') { history.replaceState(null, '', location.pathname + location.search); go('my'); SHOP.loadShop().then(() => SHOP.openOrders(sheet)); } // 결제 후 돌아옴
   const match = location.hash.match(/open=([\w-]+)/);
   if (match) { const cell = cells.find((item) => item.id === match[1]); if (cell && isOpen(cell)) openExhibit(cell); }
   if (!saved) saveData(pack());

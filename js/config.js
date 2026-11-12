@@ -22,5 +22,11 @@ export const CONFIG = {
   // 온라인 아트 판매(앱 '컬렉트' 탭) — 작품은 data/artworks.json, 또는 cells 시트에 'artworks' 탭을 만들면 그게 우선
   // inquiryEmail: 구매 문의를 받을 메일 주소(비어 있으면 '문의 창구 준비 중'), showSamples: 예시 작품 보이기(실제 작품이 생기면 false)
   // 실물 작품은 애플·구글 인앱결제 대상이 아님(실물 상품) → 나중에 토스페이먼츠 등 일반 결제 연결 가능. 지금은 문의 방식만.
-  shop: { enabled: true, sheetTab: 'artworks', inquiryEmail: '', showSamples: true },
+  // pay: 실물 작품 일반 결제(토스페이먼츠 결제창). clientKey(test_ck_… / live_ck_…)와 서버 주소(api, Supabase Edge Functions)가 둘 다 있어야 켜짐.
+  //      시크릿 키는 절대 여기에 넣지 말 것(서버 환경 변수). 시험은 ?shoptest=1. 설명 docs/shop/README.md
+  // shippingKrw: 국내 배송비(작품가에 더해 결제). 해외 배송은 문의로. seller: 판매자 정보(전자상거래법 표시, 대괄호는 채울 것)
+  shop: { enabled: true, sheetTab: 'artworks', inquiryEmail: '', showSamples: true,
+    pay: { enabled: false, provider: 'toss', clientKey: '', api: '' },
+    shippingKrw: 0,
+    seller: { name: '[상호]', ceo: '[대표자]', bizNo: '[사업자등록번호]', mailOrderNo: '[통신판매업 신고번호]', address: '[사업장 주소]', contact: '[고객센터 연락처]' } },
 };
