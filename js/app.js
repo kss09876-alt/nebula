@@ -14,7 +14,7 @@ import { createMotionPreference } from './app-preferences.js?v=1';
 import { createAppDiscover } from './app-discover.js?v=2';
 import { createExhibitShare } from './app-share.js?v=1';
 import { APP_COPY } from './app-copy.js?v=1';
-import * as MB from './membership.js?v=1';
+import * as MB from './membership.js?v=2';
 const motionQuery = createMotionPreference();
 let nativeActive = true;
 
@@ -201,7 +201,7 @@ function detailSheet(c) {
   const el = sheet.open(`
     <div class="dt-stage" style="--c:${esc(c.color || '#9db8ff')}"><span class="dt-orbit"><i></i></span><img class="dt-pl" data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt=""></div>
     <div class="dt-body">
-      <p class="dt-code">${esc(c.code)} ${kindTag(c)}${MB.badge(c)}</p>
+      <p class="dt-code">${esc(c.code)} ${kindTag(c)}${MB.badge(c)}</p>${MB.passLine(c) ? `<p class="dt-pass">${esc(MB.passLine(c))}</p>` : ''}
       <h2>${esc(name(c))}</h2>
       <p class="dt-sub">${esc(c.subtitle || '')}</p>
       <p class="dt-meta">${esc(c.artist || '')}${c.period ? ' · ' + esc(c.period) : ''}</p>

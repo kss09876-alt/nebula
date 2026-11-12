@@ -38,3 +38,4 @@
 .vx :is(.mc-foot button, .btn, .nb-home-tools button, .row, .card, .nrow):active { transform: scale(.975); opacity: .86; }
 @media (prefers-reduced-motion: reduce) { .vx :is(.mc-foot button, .btn, .row, .card, .nrow):active { transform: none; } }
 .vx .mag-art, .vx .mag-sec { scroll-margin-top: 20px; }
+.dt-pass { margin-top: 6px; font-size: 13px; color: #cfe3d6; }
