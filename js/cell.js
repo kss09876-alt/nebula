@@ -1,9 +1,9 @@
-import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=24';
+import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=25';
 import { tr, langSwitcher } from './i18n.js?v=5';
 import { IS_MOBILE, sensor, keepAwake } from './sensors.js?v=3';
 import { videoHTML, mountVideos } from './video.js?v=2';
 import { labRenderers, setupSakamotoLab } from './sakamoto-lab.js?v=1';
-import * as MB from './membership.js?v=2';
+import * as MB from './membership.js?v=3';
 
 const story = document.getElementById('story');
 const wipe = document.getElementById('wipe');

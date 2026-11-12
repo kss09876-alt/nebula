@@ -3,7 +3,7 @@
 // 지금은 CONFIG.paywall.enabled = false 라서 모든 전시가 열려 있고, 멤버십 화면은 '준비 중' 안내만 함.
 // 주소에 ?paytest=1 을 붙이면 이 기기에서만 결제를 흉내 내어 잠금·구매·복원 흐름을 시험할 수 있음(실제 결제 아님).
 // 실제 결제를 붙일 때는 아래 provider 를 서버(Supabase)·RevenueCat·웹 결제 구현으로 바꾸면 됨 → docs/paid/README.md
-import { CONFIG } from './config.js?v=19';
+import { CONFIG } from './config.js?v=20';
 import { lang } from './i18n.js?v=5';
 
 const PW = CONFIG.paywall || {};
@@ -24,22 +24,22 @@ export const price = (p) => (lang === 'ko' ? `${p.krw.toLocaleString('ko-KR')}�
 const W = {
   ko: { title: '멤버십', lead: '모든 전시와 매달 태어나는 새 행성을 자유롭게.', monthly: '월 구독', yearly: '연 구독', ticket: '하루 입장권', perMonth: '매달', perYear: '매년 · 두 달 무료', once: '처음 입장 후 24시간 · 구매 후 30일 안에 입장',
     b1: '모든 전시 전체 관람', b2: '매달 새 전시', b3: '언제든 해지', start: '시작하기', buy: '이 전시 하루 입장권', restore: '구매 복원', manage: '구독 관리', soon: '결제는 준비 중이에요. 지금은 모든 전시가 열려 있어요.',
-    active: '멤버십 이용 중', none: '아직 멤버십이 없어요', owned: '입장권 {n}장', free: '무료', paid: '멤버십', locked: '여기까지 무료로 보셨어요', lockedT: '이어서 보려면 멤버십을 시작하거나 이 전시만 구매하세요.',
+    active: '멤버십 이용 중', none: '아직 멤버십이 없어요', owned: '입장권 {n}장', free: '무료', paid: '멤버십', locked: '여기까지 무료로 보셨어요', lockedT: '이어서 보려면 멤버십을 시작하거나 이 전시 하루 입장권을 구매하세요.',
     done: '구매가 완료됐어요. 이어서 감상하세요.', restored: '구매 내역을 되찾았어요.', nothing: '되찾을 구매 내역이 없어요.', test: '테스트 모드 — 실제 결제가 아니에요', terms: '이용약관', privacy: '개인정보처리방침',
     legal: '구독은 해지하기 전까지 자동으로 갱신돼요. 해지는 스토어의 구독 관리에서 언제든 할 수 있어요.', reset: '테스트 구매 지우기', open: '멤버십 보기', inApp: 'NEBULA 앱에서 멤버십을 시작할 수 있어요.' , passLeft: '입장권 · {t} 남음', passReady: '입장권이 있어요 · 입장하면 24시간이 시작돼요', passEnd: '입장권 시간이 끝났어요. 지금 보던 관람은 끝까지 볼 수 있어요.', passOver: '입장권 시간이 끝났어요.', passDone: '입장권을 샀어요. 지금부터 24시간 동안 볼 수 있어요.', passLegal: '하루 입장권은 처음 입장한 때부터 24시간 동안 몇 번이든 다시 들어올 수 있고, 구매 후 30일 안에 입장하지 않으면 사라져요. 소장하는 상품이 아니에요.', h: '시간', m: '분' },
   en: { title: 'Membership', lead: 'Every exhibition, and a new planet born each month.', monthly: 'Monthly', yearly: 'Yearly', ticket: 'Day pass', perMonth: 'per month', perYear: 'per year · 2 months free', once: '24 hours from first entry · enter within 30 days',
     b1: 'Full access to every exhibition', b2: 'A new exhibition every month', b3: 'Cancel anytime', start: 'Start', buy: 'Day pass for this exhibition', restore: 'Restore purchases', manage: 'Manage subscription', soon: 'Payments are coming soon. For now, every exhibition is open.',
-    active: 'Membership active', none: 'No membership yet', owned: '{n} pass(es)', free: 'Free', paid: 'Members', locked: 'You’ve reached the end of the free preview', lockedT: 'Start a membership or buy this exhibition to keep going.',
+    active: 'Membership active', none: 'No membership yet', owned: '{n} pass(es)', free: 'Free', paid: 'Members', locked: 'You’ve reached the end of the free preview', lockedT: 'Start a membership or get a day pass for this exhibition to keep going.',
     done: 'Purchase complete. Enjoy the rest.', restored: 'Your purchases were restored.', nothing: 'No purchases to restore.', test: 'Test mode — no real payment', terms: 'Terms of Use', privacy: 'Privacy Policy',
     legal: 'Subscriptions renew automatically until cancelled. You can cancel anytime in your store’s subscription settings.', reset: 'Clear test purchases', open: 'See membership', inApp: 'You can start a membership in the NEBULA app.' , passLeft: 'Day pass · {t} left', passReady: 'You have a day pass · 24 hours start when you enter', passEnd: 'Your day pass has ended. You can finish the visit you’re in.', passOver: 'Your day pass has ended.', passDone: 'Day pass bought. You can visit for the next 24 hours.', passLegal: 'A day pass lets you re-enter as often as you like for 24 hours from your first entry, and expires if not used within 30 days of purchase. It is not a permanent purchase.', h: 'h', m: 'm' },
   zh: { title: '会员', lead: '畅享全部展览，以及每月诞生的新行星。', monthly: '月度订阅', yearly: '年度订阅', ticket: '一日通行证', perMonth: '每月', perYear: '每年 · 免两个月', once: '首次进入后24小时 · 购买后30天内进入',
     b1: '完整观看全部展览', b2: '每月新展览', b3: '随时取消', start: '开始', buy: '这场展览的一日通行证', restore: '恢复购买', manage: '管理订阅', soon: '支付功能即将开放。目前所有展览均可观看。',
-    active: '会员使用中', none: '尚未开通会员', owned: '通行证 {n} 张', free: '免费', paid: '会员', locked: '免费试看到此结束', lockedT: '开通会员或购买这场展览即可继续观看。',
+    active: '会员使用中', none: '尚未开通会员', owned: '通行证 {n} 张', free: '免费', paid: '会员', locked: '免费试看到此结束', lockedT: '开通会员或购买这场展览的一日通行证即可继续观看。',
     done: '购买完成，请继续欣赏。', restored: '已恢复购买记录。', nothing: '没有可恢复的购买记录。', test: '测试模式 — 并非真实支付', terms: '使用条款', privacy: '隐私政策',
     legal: '订阅在取消前会自动续订。可随时在应用商店的订阅管理中取消。', reset: '清除测试购买', open: '查看会员', inApp: '可在 NEBULA 应用中开通会员。' , passLeft: '通行证 · 剩余 {t}', passReady: '你有一张通行证 · 进入后开始计时24小时', passEnd: '通行证时间已结束。正在观看的这一次可以看完。', passOver: '通行证时间已结束。', passDone: '已购买通行证。接下来24小时内可以观看。', passLegal: '一日通行证自首次进入起24小时内可多次重新进入；购买后30天内未使用则失效。这不是永久收藏的商品。', h: '小时', m: '分' },
   ja: { title: 'メンバーシップ', lead: 'すべての展示と、毎月生まれる新しい惑星を自由に。', monthly: '月額プラン', yearly: '年額プラン', ticket: '1日入場券', perMonth: '毎月', perYear: '毎年 · 2か月分無料', once: '初回入場から24時間 · 購入後30日以内に入場',
     b1: 'すべての展示を最後まで', b2: '毎月あたらしい展示', b3: 'いつでも解約', start: 'はじめる', buy: 'この展示の1日入場券', restore: '購入を復元', manage: 'サブスクリプション管理', soon: '決済は準備中です。現在はすべての展示をご覧いただけます。',
-    active: 'メンバーシップ利用中', none: 'まだメンバーシップがありません', owned: '入場券 {n}枚', free: '無料', paid: 'メンバー', locked: '無料でご覧いただけるのはここまでです', lockedT: '続きを見るには、メンバーシップをはじめるか、この展示だけを購入してください。',
+    active: 'メンバーシップ利用中', none: 'まだメンバーシップがありません', owned: '入場券 {n}枚', free: '無料', paid: 'メンバー', locked: '無料でご覧いただけるのはここまでです', lockedT: '続きをご覧になるには、メンバーシップを始めるか、この展示の1日入場券をご購入ください。',
     done: '購入が完了しました。続きをお楽しみください。', restored: '購入履歴を復元しました。', nothing: '復元できる購入履歴がありません。', test: 'テストモード — 実際の決済ではありません', terms: '利用規約', privacy: 'プライバシーポリシー',
     legal: 'サブスクリプションは解約するまで自動更新されます。解約はストアのサブスクリプション管理からいつでもできます。', reset: 'テスト購入を消す', open: 'メンバーシップを見る', inApp: 'NEBULA アプリでメンバーシップをはじめられます。' , passLeft: '入場券 · 残り {t}', passReady: '入場券があります · 入場すると24時間がはじまります', passEnd: '入場券の時間が終わりました。いま見ている観覧は最後まで見られます。', passOver: '入場券の時間が終わりました。', passDone: '入場券を購入しました。これから24時間ご覧いただけます。', passLegal: '1日入場券は、初回入場から24時間のあいだ何度でも再入場でき、購入後30日以内に入場しないと失効します。所蔵する商品ではありません。', h: '時間', m: '分' },
 };

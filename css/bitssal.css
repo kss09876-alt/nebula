@@ -326,3 +326,6 @@ body::before { content: ''; position: fixed; inset: -50%; z-index: 2; pointer-ev
 /* 목차: 1부·2부 나눔 / 진행 막대 2부 색 */
 .bs-menu .m-part { list-style: none; font-size: 11px; font-weight: 700; letter-spacing: .18em; color: var(--warm); padding: 10px 10px 4px; }
 .bs-progress button.part2 i { background: rgba(150,180,200,.9) !important; }
+
+/* 유료 안내(입장권·멤버십): 장 제목 번쩍임 위로 */
+#paywall { position: relative; z-index: 7; background: #0a0b0c; }
