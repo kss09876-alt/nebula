@@ -18,5 +18,5 @@ export const CONFIG = {
   // 유료화(멤버십) — 실제 결제를 붙이기 전까지 enabled: false (모든 전시 공개, 멤버십 화면은 '준비 중')
   // paid: 유료 전시 id 목록(시트 cells 의 paid 칸으로도 지정 가능), previewBlocks: 무료로 보여 줄 블록 수
   // 권리 정리 전에는 어떤 전시도 유료로 지정하지 말 것. 구성 설명: docs/paid/README.md
-  paywall: { enabled: false, paid: ['c004', 'c005'], previewBlocks: 3 }, // 유료 지정: c004 async(류이치 사카모토), c005 빛쌀(진시영·김동선). enabled가 false면 아무것도 잠기지 않음
+  paywall: { enabled: false, paid: ['c005'], previewBlocks: 3 }, // 유료 지정: c005 빛쌀(진시영·김동선, 작가 계약 완료). enabled가 false면 아무것도 잠기지 않음
 };
