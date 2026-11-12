@@ -15,4 +15,8 @@ export const CONFIG = {
   ],
   // 메인 그리드 최소 큐브 수 (모자라면 빈 셀로 채움)
   minCubes: 12,
+  // 유료화(멤버십) — 실제 결제를 붙이기 전까지 enabled: false (모든 전시 공개, 멤버십 화면은 '준비 중')
+  // paid: 유료 전시 id 목록(시트 cells 의 paid 칸으로도 지정 가능), previewBlocks: 무료로 보여 줄 블록 수
+  // 권리 정리 전에는 어떤 전시도 유료로 지정하지 말 것. 구성 설명: docs/paid/README.md
+  paywall: { enabled: false, paid: [], previewBlocks: 3 },
 };

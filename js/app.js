@@ -1,7 +1,7 @@
 // NEBULA 앱 화면 — 시작 화면 → 소개 → 로그인 → 닉네임 → 탭(전시·플레이·리워드·마이)
 // 전시 내용은 기존 NEBULA 페이지(cell.html, bitssal.html)를 같은 주소에서 그대로 불러옵니다.
 // 데이터는 기존 data.js(구글 시트 → 백업 JSON)를 그대로 씁니다. 개인 기록은 기기 안(localStorage)에만 저장합니다.
-import { loadData, loadLocalData, esc } from './data.js?v=23';
+import { loadData, loadLocalData, esc } from './data.js?v=24';
 import { lang, LANGS } from './i18n.js?v=5';
 import { hasRing } from './planets.js?v=4';
 import { planetSrc, planetKey, onPlanet, planetBitmap, warm } from './planet-store.js?v=2';
@@ -14,6 +14,7 @@ import { createMotionPreference } from './app-preferences.js?v=1';
 import { createAppDiscover } from './app-discover.js?v=2';
 import { createExhibitShare } from './app-share.js?v=1';
 import { APP_COPY } from './app-copy.js?v=1';
+import * as MB from './membership.js?v=1';
 const motionQuery = createMotionPreference();
 let nativeActive = true;
 
@@ -200,7 +201,7 @@ function detailSheet(c) {
   const el = sheet.open(`
     <div class="dt-stage" style="--c:${esc(c.color || '#9db8ff')}"><span class="dt-orbit"><i></i></span><img class="dt-pl" data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt=""></div>
     <div class="dt-body">
-      <p class="dt-code">${esc(c.code)} ${kindTag(c)}</p>
+      <p class="dt-code">${esc(c.code)} ${kindTag(c)}${MB.badge(c)}</p>
       <h2>${esc(name(c))}</h2>
       <p class="dt-sub">${esc(c.subtitle || '')}</p>
       <p class="dt-meta">${esc(c.artist || '')}${c.period ? ' · ' + esc(c.period) : ''}</p>
@@ -380,6 +381,7 @@ const screens = {
         ${lk.length ? `<div class="hscroll mini">${lk.map((c) => `<button data-detail="${esc(c.id)}"><img data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt=""><span>${esc(name(c))}</span></button>`).join('')}</div>` : `<p class="empty">${t('아직 좋아요한 행성이 없어요.')}</p>`}</section>
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('최근 본 전시')}</h2></div>
         ${seen.length ? `<div class="list">${seen.map(([id, x]) => { const c = cells.find((y) => y.id === id); return `<button class="row" data-detail="${esc(id)}">${poster(c)}<div><b>${esc(name(c))}</b><span>${new Date(x.last).toLocaleDateString(lang)}</span></div><span class="v">${fmtTime(x.time || 0)}</span></button>`; }).join('')}</div>` : `<p class="empty">${t('아직 다녀온 행성이 없어요.')}</p>`}</section>
+      <section class="sec list"><button class="row" data-membership><b>${MB.mt('title')}</b><span class="v">${MB.isMember() ? MB.mt('active') : MB.ENABLED ? MB.mt('start') : '›'}</span></button></section>
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('언어')}</h2></div><div class="chips">${LANGS.map((l) => `<button data-lang="${l.id}" class="${l.id === lang ? 'on' : ''}">${l.name}</button>`).join('')}</div></section>
       <section class="sec"><button class="nb-preference" data-motion role="switch" aria-checked="${motionQuery.matches}" ${motionQuery.systemReduced ? 'disabled' : ''}><span><b>${t('모션 줄이기')}</b><small>${t(motionQuery.systemReduced ? '시스템에서 모션 감소를 사용 중이에요.' : '카드 기울기와 장식 애니메이션을 줄여요.')}</small></span><i class="nb-switch" aria-hidden="true"></i></button></section>
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('체험 권한')}</h2></div><p class="small">${t('기울기·흔들기·마이크·카메라·위치는 전시 안에서 체험할 때만 쓰고, 기기 밖으로 저장하거나 보내지 않아요.')}</p></section>
@@ -466,6 +468,8 @@ function onAction(e) {
   const q = (selector) => { const candidate = e.target.closest(selector); return candidate && e.currentTarget.contains(candidate) ? candidate : null; };
   const byId = (id) => cells.find((x) => x.id === id);
   let b;
+  if (q('[data-membership]')) { sheet.open(MB.membershipHTML(), 'membership'); return true; }
+  if (q('[data-mb-buy], [data-mb-restore], [data-mb-reset]')) { MB.handleMembershipClick(e, { notify: toast, refresh: () => { if (sheet.isOpen) sheet.open(MB.membershipHTML(), 'membership'); if (tab === 'my') go('my', true); } }); return true; }
   if ((b = q('[data-land]'))) { const c = byId(b.dataset.land); sheet.close({ restoreFocus: false }); openExhibit(c); return true; }
   if ((b = q('[data-open]'))) { const c = byId(b.dataset.open); if (c && isOpen(c)) { if (sheet.isOpen) sheet.close({ restoreFocus: false }); openExhibit(c); } return true; }
   if ((b = q('[data-detail]'))) { const c = byId(b.dataset.detail); if (c) detailSheet(c); return true; }
