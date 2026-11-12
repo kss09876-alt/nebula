@@ -1,7 +1,7 @@
-// NEBULA 앱 화면 — 시작 화면 → 소개 → 로그인 → 닉네임 → 탭(전시·플레이·리워드·마이)
+// NEBULA 앱 화면 — 시작 화면 → 소개 → 로그인 → 닉네임 → 탭(전시·플레이·컬렉트·리워드·마이)
 // 전시 내용은 기존 NEBULA 페이지(cell.html, bitssal.html)를 같은 주소에서 그대로 불러옵니다.
 // 데이터는 기존 data.js(구글 시트 → 백업 JSON)를 그대로 씁니다. 개인 기록은 기기 안(localStorage)에만 저장합니다.
-import { loadData, loadLocalData, esc } from './data.js?v=24';
+import { loadData, loadLocalData, esc } from './data.js?v=26';
 import { lang, LANGS } from './i18n.js?v=5';
 import { hasRing } from './planets.js?v=4';
 import { planetSrc, planetKey, onPlanet, planetBitmap, warm } from './planet-store.js?v=2';
@@ -14,7 +14,8 @@ import { createMotionPreference } from './app-preferences.js?v=1';
 import { createAppDiscover } from './app-discover.js?v=2';
 import { createExhibitShare } from './app-share.js?v=1';
 import { APP_COPY } from './app-copy.js?v=1';
-import * as MB from './membership.js?v=1';
+import * as MB from './membership.js?v=4';
+import * as SHOP from './app-shop.js?v=1';
 const motionQuery = createMotionPreference();
 let nativeActive = true;
 
@@ -29,7 +30,7 @@ const t = (k, n) => { let s = (T[lang] && T[lang][k]) ?? k; if (n != null) s = s
 const br = (s) => esc(s).replace(/\n/g, '<br>');
 document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
 
-const VERSION = '0.8.0';
+const VERSION = '0.9.0';
 
 /* ---------- 우주 방랑자 이름 ---------- */
 const NAMES = {
@@ -201,7 +202,7 @@ function detailSheet(c) {
   const el = sheet.open(`
     <div class="dt-stage" style="--c:${esc(c.color || '#9db8ff')}"><span class="dt-orbit"><i></i></span><img class="dt-pl" data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt=""></div>
     <div class="dt-body">
-      <p class="dt-code">${esc(c.code)} ${kindTag(c)}${MB.badge(c)}</p>
+      <p class="dt-code">${esc(c.code)} ${kindTag(c)}${MB.badge(c)}</p>${MB.passLine(c) ? `<p class="dt-pass">${esc(MB.passLine(c))}</p>` : ''}
       <h2>${esc(name(c))}</h2>
       <p class="dt-sub">${esc(c.subtitle || '')}</p>
       <p class="dt-meta">${esc(c.artist || '')}${c.period ? ' · ' + esc(c.period) : ''}</p>
@@ -366,6 +367,7 @@ const screens = {
         <div class="note${thisWeek.length >= 3 ? ' ready' : ''}">${thisWeek.length >= 3 ? t('이번 주 스탬프 완성!') : t('행성 3곳에 착륙하면 완성돼요')}</div>
         <p>${t('스탬프와 기록은 이 기기에만 저장돼요.')}</p></div>`;
   },
+  shop() { return SHOP.screenHTML(bell()); },
   my() {
     const p = me() || { nick: wanderer(), since: Date.now() }, h = hist();
     const seen = Object.entries(h).filter(([id]) => cells.some((c) => c.id === id)).sort((a, b) => b[1].last - a[1].last);
@@ -381,6 +383,7 @@ const screens = {
         ${lk.length ? `<div class="hscroll mini">${lk.map((c) => `<button data-detail="${esc(c.id)}"><img data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt=""><span>${esc(name(c))}</span></button>`).join('')}</div>` : `<p class="empty">${t('아직 좋아요한 행성이 없어요.')}</p>`}</section>
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('최근 본 전시')}</h2></div>
         ${seen.length ? `<div class="list">${seen.map(([id, x]) => { const c = cells.find((y) => y.id === id); return `<button class="row" data-detail="${esc(id)}">${poster(c)}<div><b>${esc(name(c))}</b><span>${new Date(x.last).toLocaleDateString(lang)}</span></div><span class="v">${fmtTime(x.time || 0)}</span></button>`; }).join('')}</div>` : `<p class="empty">${t('아직 다녀온 행성이 없어요.')}</p>`}</section>
+      ${SHOP.myHTML()}
       <section class="sec list"><button class="row" data-membership><b>${MB.mt('title')}</b><span class="v">${MB.isMember() ? MB.mt('active') : MB.ENABLED ? MB.mt('start') : '›'}</span></button></section>
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('언어')}</h2></div><div class="chips">${LANGS.map((l) => `<button data-lang="${l.id}" class="${l.id === lang ? 'on' : ''}">${l.name}</button>`).join('')}</div></section>
       <section class="sec"><button class="nb-preference" data-motion role="switch" aria-checked="${motionQuery.matches}" ${motionQuery.systemReduced ? 'disabled' : ''}><span><b>${t('모션 줄이기')}</b><small>${t(motionQuery.systemReduced ? '시스템에서 모션 감소를 사용 중이에요.' : '카드 기울기와 장식 애니메이션을 줄여요.')}</small></span><i class="nb-switch" aria-hidden="true"></i></button></section>
@@ -389,7 +392,7 @@ const screens = {
   },
 };
 
-const TAB_I = { home: 0, play: 1, reward: 2, my: 3 };
+const TAB_I = { home: 0, play: 1, shop: 2, reward: 3, my: 4 };
 function go(next, keepScroll) {
   if (!Object.hasOwn(screens, next)) return;
   const previous = tab, oldScroll = scrollY;
@@ -398,7 +401,7 @@ function go(next, keepScroll) {
   tab = next; view.hidden = false; tabsEl.hidden = false;
   view.className = 'vx-view'; view.innerHTML = screens[tab]();
   let i = 0;
-  view.querySelectorAll('.mc-top, .mc-lines, .mc-foot, .hero, .page-h, .rw-h, .sec-h, .sec-sub, .card, .gcard, .play, .shelf, .lockcard, .mission, .me, .stat2, .row, .chips, .about, .hscroll.mini, .empty').forEach((el) => {
+  view.querySelectorAll('.mc-top, .mc-lines, .mc-foot, .hero, .page-h, .sp-lead, .sp-note, .sp-art, .sp-card, .rw-h, .sec-h, .sec-sub, .card, .gcard, .play, .shelf, .lockcard, .mission, .me, .stat2, .row, .chips, .about, .hscroll.mini, .empty').forEach((el) => {
     el.classList.add('rv'); el.style.animationDelay = `${Math.min(i++, 14) * 45}ms`;
   });
   if (tab === 'home') {
@@ -468,6 +471,7 @@ function onAction(e) {
   const q = (selector) => { const candidate = e.target.closest(selector); return candidate && e.currentTarget.contains(candidate) ? candidate : null; };
   const byId = (id) => cells.find((x) => x.id === id);
   let b;
+  if (SHOP.shopAction(e, { sheet, toast, refresh: shopRefresh })) return true;
   if (q('[data-membership]')) { sheet.open(MB.membershipHTML(), 'membership'); return true; }
   if (q('[data-mb-buy], [data-mb-restore], [data-mb-reset]')) { MB.handleMembershipClick(e, { notify: toast, refresh: () => { if (sheet.isOpen) sheet.open(MB.membershipHTML(), 'membership'); if (tab === 'my') go('my', true); } }); return true; }
   if ((b = q('[data-land]'))) { const c = byId(b.dataset.land); sheet.close({ restoreFocus: false }); openExhibit(c); return true; }
@@ -530,6 +534,11 @@ function onAction(e) {
   return false;
 }
 view.addEventListener('click', onAction);
+sheet.el.addEventListener('submit', (e) => SHOP.shopSubmit(e, { sheet, toast, refresh: shopRefresh }));
+// 컬렉트(아트 판매): 작품 목록은 뒤에서 받고, 받으면 보고 있는 탭만 다시 그림
+function shopRefresh(name) { if (tab === name && !view.hidden) go(name, true); }
+{ const lab = tabsEl.querySelector('[data-tab="shop"] span'); if (lab) lab.textContent = SHOP.st('tab'); }
+SHOP.loadShop().then(() => { if (tab === 'shop' || tab === 'my') shopRefresh(tab); });
 sheet.el.addEventListener('click', onAction);
 
 /* ---------- 전시 보기 ---------- */

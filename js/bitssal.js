@@ -7,6 +7,7 @@ import { videoHTML, mountVideos, playVideo, onVideo, stopVideos } from './video.
 import { IS_MOBILE, sensor, startCamera, startMic, getPosition, distanceKm, keepAwake } from './sensors.js?v=3';
 import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=3';
 import { facePoints, drawPortrait } from './bitssal-faces.js?v=2';
+import * as MB from './membership.js?v=4';
 const SRC1 = tr('진실·화해를위한과거사정리위원회, 「대구10월사건 관련 민간인 희생 사건」');
 const SRC2 = tr('진실·화해를위한과거사정리위원회, 「경산 코발트광산 사건」');
 const RICE = [255, 248, 230], DIM = [92, 86, 76], RED = [200, 56, 47], WARM = [255, 214, 150];
@@ -24,7 +25,11 @@ const vid = (id, cap, title) => ({ kind: 'vid', id, cap, title });
 // ---------------- 장면 정의 (bitssal-scenes.js) ----------------
 // 이야기 중심: 장면마다 순이의 이야기 → 이야기에 맞춘 조작 → 짧은 기록
 const TOUCH = matchMedia('(hover: none), (pointer: coarse)').matches;
-const { SCENES, UI, NOTE, LABEL, PARTS } = buildScenes({ lang, IS_MOBILE, TOUCH, PH, VD, photo, vid, SRC1, SRC2 });
+// 유료 전시(c005): 입장권·멤버십이 없으면 앞 장면 몇 개만 보여 주고 안내 (결제가 꺼져 있으면 모두 열림)
+const CELL = { id: 'c005', title: '빛쌀' };
+const LOCKED = !MB.canView(CELL);
+const { SCENES: ALL_SCENES, UI, NOTE, LABEL, PARTS } = buildScenes({ lang, IS_MOBILE, TOUCH, PH, VD, photo, vid, SRC1, SRC2 });
+const SCENES = LOCKED ? ALL_SCENES.slice(0, MB.previewCount(CELL)) : ALL_SCENES;
 const fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
 const CREDITS = `<footer class="bs-credits"><div>
   <h3>${tr('출처와 안내')}</h3>
@@ -37,7 +42,9 @@ const CREDITS = `<footer class="bs-credits"><div>
 // ---------------- DOM 구성 ----------------
 const story = document.getElementById('story');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-story.innerHTML = SCENES.map((s, si) => `<section class="scene" id="s-${s.id}" data-i="${si}" data-h="${s.h}" style="height:${s.h}vh">${s.cards.map((c, ci) => cardHTML(s, c, si, ci)).join('')}</section>`).join('') + CREDITS;
+story.innerHTML = SCENES.map((s, si) => `<section class="scene" id="s-${s.id}" data-i="${si}" data-h="${s.h}" style="height:${s.h}vh">${s.cards.map((c, ci) => cardHTML(s, c, si, ci)).join('')}</section>`).join('') + (LOCKED ? MB.paywallHTML(CELL) : '') + CREDITS;
+if (LOCKED) story.addEventListener('click', (e) => { MB.handleMembershipClick(e, { notify: (m) => { const el = document.querySelector('#paywall .mb-state'); if (el) el.textContent = m; }, refresh: () => location.reload() }); });
+else MB.enter(CELL).then(MB.passChip); // 입장권이면 이때 24시간 시작
 // 카드가 길어져도(작은 화면·번역·이야기 카드) 서로 겹치지 않게: 원래 자리보다 위로는 안 올리고, 앞 카드 밑으로만 밀어냄. 모자라면 장면을 늘림
 function relayout() {
   const gap = Math.max(28, innerHeight * 0.06);

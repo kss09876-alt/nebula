@@ -13,15 +13,15 @@ Deno.serve(async (req) => {
 
   const userId = event.app_user_id;                 // 앱에서 RevenueCat에 로그인 사용자 id를 넘겨 둠
   const product = String(event.product_id || '');
-  const isTicket = product.startsWith('nebula.ticket');
+  const isPass = product.startsWith('nebula.pass'); // 하루 입장권(소모성 상품): 구매 후 30일 안에 입장, 입장하면 enter_pass()가 24시간으로 바꿈
   const row = {
     user_id: userId,
-    kind: isTicket ? 'ticket' : 'member',
-    cell_id: isTicket ? event.subscriber_attributes?.cell_id?.value ?? null : null,
+    kind: isPass ? 'pass' : 'member',
+    cell_id: isPass ? event.subscriber_attributes?.cell_id?.value ?? null : null,
     product_id: product,
     source: event.store === 'PLAY_STORE' ? 'play_store' : 'app_store',
     external_id: event.original_transaction_id ?? event.transaction_id,
-    expires_at: event.expiration_at_ms ? new Date(event.expiration_at_ms).toISOString() : null,
+    expires_at: isPass ? new Date(Date.now() + 30 * 864e5).toISOString() : event.expiration_at_ms ? new Date(event.expiration_at_ms).toISOString() : null,
     revoked_at: null as string | null,
   };
 

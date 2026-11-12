@@ -18,5 +18,9 @@ export const CONFIG = {
   // 유료화(멤버십) — 실제 결제를 붙이기 전까지 enabled: false (모든 전시 공개, 멤버십 화면은 '준비 중')
   // paid: 유료 전시 id 목록(시트 cells 의 paid 칸으로도 지정 가능), previewBlocks: 무료로 보여 줄 블록 수
   // 권리 정리 전에는 어떤 전시도 유료로 지정하지 말 것. 구성 설명: docs/paid/README.md
-  paywall: { enabled: false, paid: [], previewBlocks: 3 },
+  paywall: { enabled: false, paid: ['c005'], previewBlocks: 3 }, // 유료 지정: c005 빛쌀(진시영·김동선, 작가 계약 완료). enabled가 false면 아무것도 잠기지 않음
+  // 온라인 아트 판매(앱 '컬렉트' 탭) — 작품은 data/artworks.json, 또는 cells 시트에 'artworks' 탭을 만들면 그게 우선
+  // inquiryEmail: 구매 문의를 받을 메일 주소(비어 있으면 '문의 창구 준비 중'), showSamples: 예시 작품 보이기(실제 작품이 생기면 false)
+  // 실물 작품은 애플·구글 인앱결제 대상이 아님(실물 상품) → 나중에 토스페이먼츠 등 일반 결제 연결 가능. 지금은 문의 방식만.
+  shop: { enabled: true, sheetTab: 'artworks', inquiryEmail: '', showSamples: true },
 };

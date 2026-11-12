@@ -38,3 +38,82 @@
 .vx :is(.mc-foot button, .btn, .nb-home-tools button, .row, .card, .nrow):active { transform: scale(.975); opacity: .86; }
 @media (prefers-reduced-motion: reduce) { .vx :is(.mc-foot button, .btn, .row, .card, .nrow):active { transform: none; } }
 .vx .mag-art, .vx .mag-sec { scroll-margin-top: 20px; }
+.dt-pass { margin-top: 6px; font-size: 13px; color: #cfe3d6; }
+
+/* ---------- 컬렉트(아트 판매) — 탭 5개 ---------- */
+.vx-tabs .pill { grid-template-columns: repeat(5, 1fr); }
+.vx-tabs .ind { width: calc((100% - 10px) / 5); }
+.vx-tabs .pill button span { font-size: 11px; white-space: nowrap; }
+.vx-tabs svg { width: 24px; height: 24px; }
+.vx-tabs .orb { width: 60px; height: 60px; }
+.sp-lead { padding: 0 24px; color: var(--tx2); font-size: 15px; line-height: 1.6; }
+.sp-note { margin: 12px 24px 0; padding: 10px 14px; border-radius: 12px; background: rgba(255,207,138,.08); border: 1px solid rgba(255,207,138,.28); color: #ffd9a3; font-size: 13px; line-height: 1.55; }
+.sp-feat { padding-bottom: 4px; margin-top: 16px; }
+.sp-feat .sp-card { width: 46vw; max-width: 220px; flex-shrink: 0; scroll-snap-align: start; }
+.sp-card { position: relative; min-width: 0; }
+.sp-pic { display: block; width: 100%; position: relative; border-radius: 6px; overflow: hidden; background: var(--bg2); }
+.sp-img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+.sp-img.big { aspect-ratio: auto; max-height: 62svh; object-fit: contain; background: #0b0c12; }
+.sp-sample { position: absolute; left: 8px; top: 8px; padding: 3px 7px; border-radius: 4px; background: rgba(0,0,0,.55); color: #ffd9a3; font-size: 10px; font-weight: 700; letter-spacing: .14em; }
+.sp-save { position: absolute; right: 6px; top: 6px; width: 34px; height: 34px; border-radius: 50%; background: rgba(5,6,12,.55); display: grid; place-items: center; color: #fff; }
+.sp-save svg, .sp-savebig svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.sp-save.on, .sp-savebig.on { color: #ff8fa3; }
+.sp-save.pop, .sp-savebig.pop { animation: spPop .35s ease; }
+@keyframes spPop { 50% { transform: scale(1.25); } }
+.sp-meta { display: block; width: 100%; text-align: left; padding: 9px 2px 0; }
+.sp-meta b { display: block; font-size: 14px; font-weight: 700; }
+.sp-meta i { display: block; font-style: italic; font-size: 13px; color: var(--tx2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.sp-meta span { display: block; font-size: 14px; margin-top: 4px; }
+.sp-tag { display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid var(--line); color: var(--tx2); }
+.sp-tag.reserved { color: #ffd9a3; border-color: rgba(255,207,138,.4); }
+.sp-tag.sold { color: #ff9a9a; border-color: rgba(255,140,140,.4); }
+.sp-artists { margin-top: 16px; }
+.sp-art { width: 104px; flex-shrink: 0; text-align: center; scroll-snap-align: start; }
+.sp-art > button:first-child { display: block; width: 100%; }
+.sp-art img { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 8px; }
+.sp-art b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-art small { display: block; font-size: 12px; color: var(--tx3); }
+.sp-follow { margin-top: 8px; padding: 6px 14px; border-radius: 999px; border: 1.5px solid var(--line); font-size: 13px; font-weight: 700; }
+.sp-follow.on { background: var(--tx); color: var(--bg); border-color: var(--tx); }
+.sp-filters .sp-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 12px -24px 0; padding: 0 24px; }
+.sp-filters .sp-row::-webkit-scrollbar { display: none; }
+.sp-filters .sp-row button { flex-shrink: 0; padding: 8px 14px; font-size: 14px; }
+.sp-count { margin-top: 18px; color: var(--tx3); font-size: 13px; }
+.sp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 14px; margin-top: 12px; }
+@media (min-width: 720px) { .sp-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.sp-reset { max-width: 220px; height: 44px; font-size: 15px; margin: 16px auto 0; }
+.sp-detail .sp-hero { position: relative; background: #0b0c12; }
+.sp-body { padding: 18px 24px 8px; }
+.sp-arow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sp-arow > button:first-child { text-align: left; }
+.sp-arow b { display: block; font-size: 17px; }
+.sp-arow small { font-size: 13px; color: var(--tx3); }
+.sp-arow .sp-follow { margin-top: 0; }
+.sp-title { font-size: 22px; font-weight: 500; font-style: italic; margin-top: 14px; line-height: 1.35; }
+.sp-dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin-top: 14px; font-size: 14px; }
+.sp-dl dt { color: var(--tx3); }
+.sp-dl dd { margin: 0; color: var(--tx); }
+.sp-badges { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.sp-badges li { padding: 5px 10px; border-radius: 8px; background: var(--bg2); font-size: 12.5px; color: var(--tx2); }
+.sp-desc { margin-top: 14px; font-size: 15px; line-height: 1.7; color: var(--tx2); }
+.sp-price { margin-top: 18px; font-size: 22px; font-weight: 800; }
+.sp-acts { display: grid; gap: 10px; margin-top: 14px; }
+.sp-acts .btn { height: 52px; font-size: 16px; }
+.sp-acts .btn[disabled] { opacity: .4; }
+.sp-pn { margin-top: 10px; }
+.sp-cell { display: flex; width: 100%; padding: 16px 0; margin-top: 10px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.sp-cell .v { margin-left: auto; color: var(--tx2); }
+.sp-sub { margin: 26px 0 0; font-weight: 700; font-size: 16px; }
+.sp-form { padding: 6px 24px 8px; display: grid; gap: 14px; }
+.sp-form label { display: grid; gap: 6px; font-size: 13px; color: var(--tx2); }
+.sp-form input, .sp-form textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--bg2); color: var(--tx); font: inherit; font-size: 16px; }
+.sp-form input:focus, .sp-form textarea:focus { outline: none; border-color: var(--tx2); }
+.sp-mini { display: flex; gap: 12px; align-items: center; }
+.sp-mini .sp-img { width: 56px; border-radius: 4px; }
+.sp-mini b { display: block; font-size: 14px; }
+.sp-mini i { display: block; font-size: 13px; color: var(--tx2); }
+.sp-mini span { font-size: 13px; }
+.sp-q { font-size: 14px; font-weight: 700; margin: 0; }
+.sp-form .sp-row { margin-top: 0; }
+.sp-form .chips button { padding: 8px 12px; font-size: 13px; }
+.sp-err { color: #ff9a9a; font-size: 13px; margin: 0; min-height: 1em; }
