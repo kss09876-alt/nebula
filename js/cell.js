@@ -1,8 +1,9 @@
-import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=23';
+import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=24';
 import { tr, langSwitcher } from './i18n.js?v=5';
 import { IS_MOBILE, sensor, keepAwake } from './sensors.js?v=3';
 import { videoHTML, mountVideos } from './video.js?v=2';
 import { labRenderers, setupSakamotoLab } from './sakamoto-lab.js?v=1';
+import * as MB from './membership.js?v=1';
 
 const story = document.getElementById('story');
 const wipe = document.getElementById('wipe');
@@ -266,7 +267,11 @@ if (IS_MOBILE) {
   let bs = blocks.filter((b) => b.cell_id === cell.id);
   if (!bs.some((b) => b.type === 'cover')) bs = [{ type: 'cover' }, ...bs];
   if (!bs.some((b) => b.type === 'end')) bs.push({ type: 'end' });
-  story.innerHTML = bs.map((b) => (R[b.type] || R.text)(b, cell, idx, cells)).join('');
+  // 유료 전시: 구매 전에는 무료 앞부분만 보여 주고 그 뒤에 멤버십 안내 (membership.js, 지금은 꺼져 있음)
+  const locked = !MB.canView(cell);
+  if (locked) bs = bs.filter((b) => b.type !== 'end').slice(0, MB.previewCount(cell));
+  story.innerHTML = bs.map((b) => (R[b.type] || R.text)(b, cell, idx, cells)).join('') + (locked ? MB.paywallHTML(cell) : '');
+  if (locked) story.addEventListener('click', (e) => { MB.handleMembershipClick(e, { notify: (m) => { const el = document.querySelector('#paywall .mb-state'); if (el) el.textContent = m; }, refresh: () => location.reload() }); });
   mountVideos(story);
   setupAll(cell.color);
   setupBgm(cell);

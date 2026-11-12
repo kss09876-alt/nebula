@@ -87,3 +87,7 @@ NEBULA = 성운, 별이 태어나는 곳. 성운 가운데에서 전시 하나�
 ## 앱 다듬기 (2026-11-12)
 
 `css/app-polish.css`(app.html에서 맨 마지막에 불러옴): 표지를 한 화면(100svh)에 맞춰 '착륙하기' 버튼이 항상 탭 메뉴 위에 보이게(행성은 남는 높이만 사용, 부제 2줄, `mc-more` 숨김, 낮은 화면에선 힌트 숨김), 가장 작은 글자 8~10px → 10~12px, 화면 밖 기사·섹션은 `content-visibility: auto`, 흐림 효과(backdrop-filter)는 탭 메뉴에만 약하게(12곳 → 3곳), 버튼 눌림 효과. 목차 이동은 `scrollIntoView` + 도착 위치 보정. `app-sky.js`는 별을 색별로 묶어 `globalAlpha`만 바꿈, `monthName`은 Intl 포매터 캐시. 측정(iPhone 13 에뮬레이션, CPU 4배 느리게): 첫 화면 1.76초 → 0.89초, 가장 긴 멈춤 643ms → 201ms.
+
+## 멤버십(유료화) 뼈대 (2026-11-12) — 결제는 꺼져 있음
+
+`js/membership.js`: 상품·가격(전시 한 편 3,900원/$2.99 · 월 5,900원/$4.99 · 연 59,000원/$49.99), 멤버십 화면(앱 마이 → 멤버십), 구매·복원 버튼, 전시 잠금(무료 앞 `previewBlocks`개 + 안내 블록), 4개 언어. `js/config.js`의 `paywall: { enabled: false, paid: [], previewBlocks: 3 }` — **권리 정리·사업자·서버가 준비되기 전에는 켜지 말 것, 어떤 전시도 paid로 지정하지 말 것**(사카모토는 가상 기획전, 산사는 협의 전, 빛쌀은 작가 계약 필요). 시험: `?paytest=1`(이 기기에서만 결제 흉내), 전시 잠금 시험 `cell.html?id=c004&paytest=1&paid=c004`. 실제 결제는 `setProvider()`에 서버 구현을 끼움. 구성·순서는 `docs/paid/README.md`, 서버 표 `docs/paid/schema.sql`, 결제 알림 함수 뼈대 `docs/paid/webhook.ts`. `terms.html`·`privacy.html`은 한·영 **초안**(대괄호 채우기, 법률 검토 필요). 앱은 애플·구글 인앱결제 규정을 따르고, 앱 안에서 웹 결제를 안내·링크하지 않음. 화면 잠금만으로는 공개 파일을 막을 수 없으니 유료 전시 본문은 서버로 옮겨야 함.
