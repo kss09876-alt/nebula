@@ -1,7 +1,8 @@
-import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=22';
+import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=23';
 import { tr, langSwitcher } from './i18n.js?v=5';
 import { IS_MOBILE, sensor, keepAwake } from './sensors.js?v=3';
 import { videoHTML, mountVideos } from './video.js?v=2';
+import { labRenderers, setupSakamotoLab } from './sakamoto-lab.js?v=1';
 
 const story = document.getElementById('story');
 const wipe = document.getElementById('wipe');
@@ -225,13 +226,14 @@ const R = {
     </section>`;
   },
 };
+Object.assign(R, labRenderers({ esc, paras })); // N-004 async: 어긋난 박자·빗소리·360° 소리·고요
 
 let TOP = [];
 langSwitcher(document.querySelector('.topbar'));
 // 모바일: 첫 탭에서 기울기 권한 · 흔들면 화면에 보이는 양자 실험을 관측
 if (IS_MOBILE) {
   document.body.classList.add('is-mobile');
-  import('./cell-mobile.js?v=4');
+  import('./cell-mobile.js?v=5');
   addEventListener('click', function once() { removeEventListener('click', once, true); sensor.enable(); keepAwake(); }, true);
   sensor.onShake(() => {
     const q = [...document.querySelectorAll('.q-stage')].find((el) => { const r = el.getBoundingClientRect(); return r.top < innerHeight * 0.7 && r.bottom > innerHeight * 0.3; });
@@ -290,6 +292,7 @@ function setupAll(color) {
   setupRicebowl();
   setupBoundary();
   setupMemory();
+  setupSakamotoLab();
 }
 
 // ---------- 기획전: 방 1 → 2 → 3 을 하나의 흐름으로 ----------

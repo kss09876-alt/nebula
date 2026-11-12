@@ -87,6 +87,8 @@ async function loadLiveData() {
         if (i >= 0) cells[i] = { ...cells[i], ...fc }; else cells.push(fc);
         blocks = blocks.concat(fbBlocks);
       });
+      // 저장소에서 추가한 체험 블록(extra)은 시트에 같은 종류가 없으면 함께 보여줌 (order에 소수를 써서 사이에 끼움)
+      fb.blocks.filter((b) => b.extra && !blocks.some((x) => x.cell_id === b.cell_id && x.type === b.type)).forEach((b) => blocks.push(b));
     } catch (e2) {}
   } catch (e) {
     console.warn('[NEBULA] 드라이브 시트를 읽지 못해 백업 데이터를 사용합니다:', e.message);
