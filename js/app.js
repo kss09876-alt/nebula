@@ -7,7 +7,7 @@ import { hasRing } from './planets.js?v=4';
 import { planetSrc, planetKey, onPlanet, planetBitmap, warm } from './planet-store.js?v=2';
 import { videoHTML, mountVideos, playVideo, stopVideos } from './video.js?v=2';
 import { IS_MOBILE, sensor } from './sensors.js?v=3';
-import { createAppSky } from './app-sky.js?v=1';
+import { createAppSky } from './app-sky.js?v=2';
 import { createAppSheet } from './app-sheet.js?v=2';
 import { createAppLanding } from './app-landing.js?v=1';
 import { createMotionPreference } from './app-preferences.js?v=1';
@@ -479,7 +479,7 @@ function onAction(e) {
   if (q('[data-search]')) { discover.open('all', true); return true; }
   if (q('[data-saved]')) { discover.open('liked'); return true; }
   if (q('[data-motion]')) { motionQuery.setReduced(!motionQuery.requested); syncPreferenceControls(); return true; }
-  if ((b = q('[data-jump]'))) { const el = document.getElementById(b.dataset.jump); if (el) scrollTo({ top: el.getBoundingClientRect().top + scrollY - 20, behavior: motionQuery.matches ? 'auto' : 'smooth' }); return true; }
+  if ((b = q('[data-jump]'))) { const el = document.getElementById(b.dataset.jump); if (el) { el.scrollIntoView({ block: 'start', behavior: motionQuery.matches ? 'auto' : 'smooth' }); let touched = false; const stop = () => { touched = true; }; ['touchstart', 'wheel'].forEach((ev) => addEventListener(ev, stop, { once: true, passive: true })); [500, 1100].forEach((ms) => setTimeout(() => { if (!touched && Math.abs(el.getBoundingClientRect().top - 20) > 12) el.scrollIntoView({ block: 'start', behavior: 'auto' }); }, ms)); } return true; } // 화면 밖 섹션을 늦게 그려도 정확히 도착
   if (q('[data-noti]')) { notiSheet(); return true; }
   if (q('[data-read]')) { store.set('valix-noti', vol()); sheet.close(); go(tab, true); return true; }
   if (q('[data-recent]')) {
@@ -608,7 +608,8 @@ const monthDate = (k) => { const [y, m] = k.split('-').map(Number); return new D
 const issueNo = (k) => { const [y, m] = k.split('-').map(Number), [y0, m0] = LAUNCH_M.split('-').map(Number); return (y - y0) * 12 + (m - m0) + 1; };
 const nextKey = (k) => { const d = monthDate(k); d.setMonth(d.getMonth() + 1); return mkey(d); };
 const prevKey = (k) => { const d = monthDate(k); d.setMonth(d.getMonth() - 1); return mkey(d); };
-const monthName = (k) => monthDate(k).toLocaleDateString(lang, { year: 'numeric', month: 'long' }) + t('호');
+const monthFmt = new Intl.DateTimeFormat(lang, { year: 'numeric', month: 'long' }), monthNames = {}; // 날짜 형식 도구는 한 번만 만듦
+const monthName = (k) => monthNames[k] || (monthNames[k] = monthFmt.format(monthDate(k)) + t('호'));
 const byAnyId = (id) => cells.find((c) => c.id === id) || cells.find((c) => c.rooms && c.rooms.some((r) => r.id === id));
 const monthsOf = (c) => [c.month, ...(c.rooms || []).map((r) => r.month)].join(',').split(/[,\s]+/).filter(Boolean);
 function picksFor(k) {
