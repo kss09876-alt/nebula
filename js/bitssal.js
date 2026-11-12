@@ -7,7 +7,7 @@ import { videoHTML, mountVideos, playVideo, onVideo, stopVideos } from './video.
 import { IS_MOBILE, sensor, startCamera, startMic, getPosition, distanceKm, keepAwake } from './sensors.js?v=3';
 import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=3';
 import { facePoints, drawPortrait } from './bitssal-faces.js?v=2';
-import * as MB from './membership.js?v=3';
+import * as MB from './membership.js?v=4';
 const SRC1 = tr('진실·화해를위한과거사정리위원회, 「대구10월사건 관련 민간인 희생 사건」');
 const SRC2 = tr('진실·화해를위한과거사정리위원회, 「경산 코발트광산 사건」');
 const RICE = [255, 248, 230], DIM = [92, 86, 76], RED = [200, 56, 47], WARM = [255, 214, 150];

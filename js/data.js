@@ -1,4 +1,4 @@
-import { CONFIG } from './config.js?v=20';
+import { CONFIG } from './config.js?v=21';
 import { lang, tr } from './i18n.js?v=5';
 
 // 응답 본문을 읽는 동안에도 제한 시간을 유지 (느린 연결에서 시작이 멈추지 않게)
@@ -15,8 +15,8 @@ async function fetchBody(url, type, timeout, label = 'data') {
 }
 
 // 공개 구글 시트를 gviz JSON 엔드포인트로 읽어 [{col: value}] 배열로 변환
-async function fetchSheet(id) {
-  const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json&headers=1&t=${Date.now()}`;
+export async function fetchSheet(id, tab) {
+  const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json&headers=1${tab ? `&sheet=${encodeURIComponent(tab)}` : ''}&t=${Date.now()}`;
   const txt = await fetchBody(url, 'text', 8000, 'sheet');
   const json = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
   if (json.status === 'error') throw new Error('sheet error');
