@@ -117,3 +117,59 @@
 .sp-form .sp-row { margin-top: 0; }
 .sp-form .chips button { padding: 8px 12px; font-size: 13px; }
 .sp-err { color: #ff9a9a; font-size: 13px; margin: 0; min-height: 1em; }
+/* 구매(결제) */
+.sp-sum { padding: 14px 16px; border-radius: 14px; background: var(--bg2); margin-top: 0; }
+.sp-sum dd { text-align: right; }
+.sp-agree { display: grid; gap: 10px; }
+.sp-agree label { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--tx); line-height: 1.5; }
+.sp-agree input { width: 20px; height: 20px; margin: 1px 0 0; flex-shrink: 0; accent-color: #cfe3d6; }
+.sp-form button[type=submit][disabled] { opacity: .6; }
+.sp-seller { font-size: 13px; color: var(--tx3); }
+.sp-seller summary { cursor: pointer; }
+.sp-seller p { margin: 8px 0 0; line-height: 1.7; }
+.sp-order .sp-img { width: 48px; border-radius: 4px; flex-shrink: 0; }
+.sp-order .v { text-align: right; line-height: 1.5; }
+.dt-works { margin-top: 22px; }
+.dt-works h4 { font-size: 15px; margin: 0 0 4px; }
+.dt-works .sp-feat { margin: 10px -24px 0; }
+
+/* ---------- 소장(프리미엄) 톤: 금빛·명조 ---------- */
+:root { --gold: #d8b878; --gold2: #f0dcae; --serif: 'Nanum Myeongjo', 'Noto Serif KR', 'AppleMyungjo', Georgia, serif; }
+.sp-lead { font-family: var(--serif); font-size: 16px; color: #cfc6b3; }
+.sp-meta b, .sp-arow b, .sp-art b { font-family: var(--serif); letter-spacing: .01em; }
+.sp-title { font-family: var(--serif); font-style: normal; font-weight: 700; font-size: 24px; }
+.sp-meta i { font-family: var(--serif); }
+.sp-price { font-family: var(--serif); font-weight: 700; letter-spacing: .01em; }
+.sp-acts [data-buy] { background: linear-gradient(180deg, var(--gold2), var(--gold)); color: #1b1408; box-shadow: 0 8px 26px rgba(216,184,120,.22); letter-spacing: .02em; }
+.sp-tag.sold { color: var(--gold); border-color: rgba(216,184,120,.45); }
+.sp-pic { box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+.sp-detail .sp-hero { padding: 26px 22px; background: radial-gradient(ellipse at 50% 40%, #1a1c26, #07080d 70%); }
+.sp-detail .sp-hero .sp-img.big { box-shadow: 0 18px 50px rgba(0,0,0,.6); background: none; }
+.sp-form [type=submit] { background: linear-gradient(180deg, var(--gold2), var(--gold)); color: #1b1408; }
+.sp-certbtn { margin-top: 6px; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(216,184,120,.5); color: var(--gold); font-size: 12px; }
+.sp-cert { margin: 6px 20px 0; padding: 30px 24px 26px; text-align: center; border-radius: 6px; border: 1px solid rgba(216,184,120,.45); outline: 1px solid rgba(216,184,120,.18); outline-offset: -8px; background: radial-gradient(ellipse at 50% 0%, rgba(216,184,120,.10), transparent 60%), #0b0c11; }
+.sp-cert .cc-k { font-size: 11px; letter-spacing: .4em; color: var(--gold); margin: 0; }
+.sp-cert .cc-t { font-family: var(--serif); font-size: 18px; letter-spacing: .14em; margin: 10px 0 0; color: var(--gold2); }
+.sp-cert .cc-s { font-size: 12px; color: var(--tx3); margin: 4px 0 0; }
+.sp-cert .cc-img { width: 52%; margin: 22px auto 0; border-radius: 2px; box-shadow: 0 12px 30px rgba(0,0,0,.6); }
+.sp-cert .cc-a { font-family: var(--serif); font-weight: 700; font-size: 17px; margin: 20px 0 0; }
+.sp-cert .cc-w { font-family: var(--serif); font-size: 16px; color: var(--tx2); margin: 4px 0 0; }
+.sp-cert .cc-m { font-size: 12.5px; color: var(--tx3); margin: 10px 0 0; line-height: 1.6; }
+.sp-cert .cc-dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; text-align: left; margin: 22px auto 0; max-width: 260px; font-size: 13px; border-top: 1px solid rgba(216,184,120,.25); padding-top: 16px; }
+.sp-cert .cc-dl dt { color: var(--tx3); } .sp-cert .cc-dl dd { margin: 0; word-break: break-all; }
+.sp-cert .cc-n { font-size: 12px; color: var(--tx3); line-height: 1.6; margin: 18px 0 0; }
+
+/* ---------- 웹 컬렉트 페이지 (collect.html) ---------- */
+.collect-web { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
+.cw-top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding: calc(var(--sat) + 14px) 24px 14px; background: linear-gradient(#05060c, rgba(5,6,12,.85)); }
+.cw-logo { display: flex; align-items: center; gap: 10px; color: var(--tx); text-decoration: none; }
+.cw-logo img { width: 26px; height: 26px; } .cw-logo b { letter-spacing: .24em; font-size: 14px; }
+.cw-back { color: var(--tx2); font-size: 14px; text-decoration: none; }
+.cw-view { max-width: 980px; margin: 0 auto; padding-bottom: 80px; }
+.cw-view .page-h { padding-top: 10px; }
+@media (min-width: 720px) { .cw-view .sp-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .collect-web .sheet { max-width: 620px; margin: 0 auto; } }
+@media (min-width: 1000px) { .cw-view .sp-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.collect-web .vx-toast { bottom: calc(var(--sab) + 30px); }
+.sp-meta .sp-tag { display: inline-block; }
+.sp-feat + .sp-feat, .cw-view .nb-page-kicker { color: var(--gold); }
+@media (min-width: 720px) { .collect-web .sp-img.big { max-height: 52vh; } }

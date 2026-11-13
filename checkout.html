@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#05060c" />
+  <meta name="robots" content="noindex" />
+  <title>NEBULA — 소장</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" media="print" onload="this.media='all'" />
+  <link rel="stylesheet" href="css/app.css?v=11" />
+  <link rel="stylesheet" href="css/app-polish.css?v=6" />
+  <link rel="icon" href="assets/nebula-mark.svg" type="image/svg+xml" />
+  <style>
+    body { min-height: 100svh; display: grid; place-items: center; padding: 24px; box-sizing: border-box; }
+    .co { width: 100%; max-width: 420px; text-align: center; }
+    .co .mark { width: 64px; height: 64px; margin: 0 auto 22px; display: block; }
+    .co h1 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin: 0; }
+    .co p { color: var(--tx2); line-height: 1.7; margin: 12px 0 0; }
+    .co dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; text-align: left; margin: 26px 0 0; padding: 18px; border-radius: 16px; background: var(--bg2); font-size: 14px; }
+    .co dt { color: var(--tx3); } .co dd { margin: 0; word-break: break-all; }
+    .co .btn { margin-top: 26px; }
+    .co .spin { width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--tx); margin: 0 auto 22px; animation: r 1s linear infinite; }
+    @keyframes r { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <main class="co" id="co" aria-live="polite"><div class="spin"></div></main>
+  <script type="module" src="js/checkout.js?v=2"></script>
+</body>
+</html>
