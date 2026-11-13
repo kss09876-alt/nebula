@@ -3,7 +3,7 @@
 // 시크릿 키(TOSS_SECRET_KEY = test_sk_… / live_sk_…)는 이 함수의 환경 변수에만 둔다.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-const cors = { 'Access-Control-Allow-Origin': Deno.env.get('ALLOW_ORIGIN') ?? 'https://kss09876-alt.github.io', 'Access-Control-Allow-Headers': 'content-type, authorization' };
+const cors = { 'Access-Control-Allow-Origin': Deno.env.get('ALLOW_ORIGIN') ?? 'https://vailixlab.github.io', 'Access-Control-Allow-Headers': 'content-type, authorization' };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, 'Content-Type': 'application/json' } });
 
 Deno.serve(async (req) => {
