@@ -2,7 +2,7 @@
 // config.auth.supabaseUrl · supabaseAnonKey 를 채우면 실제로 동작. 비어 있으면 '곧 열려요' 안내 후 둘러보기.
 // ?authtest=1 → 이 기기에서만 로그인·가입을 흉내 냄(실제 계정 아님). 설정·순서: docs/auth/README.md
 // 비밀번호는 이 코드에서 저장하지 않음(Supabase가 암호화해 보관). 개인정보 동의 기록은 서버 profiles 표에.
-import { CONFIG } from './config.js?v=24';
+import { CONFIG } from './config.js?v=25';
 import { lang } from './i18n.js?v=6';
 
 const A = CONFIG.auth || {};
@@ -94,6 +94,7 @@ export function nickFormat(n) {
 const NKEY = 'artmos-authtest-nicks';
 const testNicks = () => { try { return JSON.parse(localStorage.getItem(NKEY)) || ['떠도는 혜성', '고요한 성운', 'Quiet Comet']; } catch (e) { return []; } };
 // 쓸 수 있으면 true, 겹치면 false, 확인할 수 없으면(서버 없음·둘러보기) null
+const noTable = (e) => ['PGRST205', '42P01', 'PGRST202'].includes(e && e.code); // 서버에 회원 표가 아직 없음 → 기기 안에만 저장
 export async function nickAvailable(n) {
   if (!AUTH_ON || !cached) return null;
   const key = nickKey(n);
@@ -113,7 +114,7 @@ export async function saveNick(n) {
     const u = JSON.parse(localStorage.getItem(TKEY)) || {}; const list = testNicks().filter((x) => nickKey(x) !== nickKey(u.nick)); list.push(n);
     localStorage.setItem(NKEY, JSON.stringify(list)); u.nick = n; localStorage.setItem(TKEY, JSON.stringify(u)); return { ok: true };
   }
-  try { const c = await supa(); const { error } = await c.from('profiles').update({ nickname: n }).eq('id', cached.id); if (error) { if (error.code === '23505') return { ok: false, taken: true }; throw error; } return { ok: true }; }
+  try { const c = await supa(); const { error } = await c.from('profiles').update({ nickname: n }).eq('id', cached.id); if (error) { if (error.code === '23505') return { ok: false, taken: true }; if (noTable(error)) return { ok: true, local: true }; throw error; } return { ok: true }; }
   catch (e) { return { ok: false, msg: at('eNet') }; }
 }
 

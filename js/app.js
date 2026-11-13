@@ -1,7 +1,7 @@
 // ARTMOS 앱 화면 — 시작 화면 → 소개 → 로그인 → 닉네임 → 탭(전시·플레이·컬렉트·리워드·마이)
 // 전시 내용은 기존 ARTMOS 페이지(cell.html, bitssal.html)를 같은 주소에서 그대로 불러옵니다.
 // 데이터는 기존 data.js(구글 시트 → 백업 JSON)를 그대로 씁니다. 개인 기록은 기기 안(localStorage)에만 저장합니다.
-import { loadData, loadLocalData, esc } from './data.js?v=28';
+import { loadData, loadLocalData, esc } from './data.js?v=29';
 import { lang, LANGS } from './i18n.js?v=6';
 import { hasRing } from './planets.js?v=4';
 import { planetSrc, planetKey, onPlanet, planetBitmap, warm } from './planet-store.js?v=2';
@@ -14,9 +14,9 @@ import { createMotionPreference } from './app-preferences.js?v=1';
 import { createAppDiscover } from './app-discover.js?v=3';
 import { createExhibitShare } from './app-share.js?v=2';
 import { APP_COPY } from './app-copy.js?v=1';
-import * as MB from './membership.js?v=6';
-import * as SHOP from './app-shop.js?v=4';
-import * as AU from './auth.js?v=2';
+import * as MB from './membership.js?v=7';
+import * as SHOP from './app-shop.js?v=5';
+import * as AU from './auth.js?v=3';
 const motionQuery = createMotionPreference();
 let nativeActive = true;
 

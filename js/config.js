@@ -32,5 +32,6 @@ export const CONFIG = {
   // 로그인·회원가입(Supabase Auth): 카카오·Apple·구글 + 이메일. 두 값을 채우면 켜짐(anon 키는 공개돼도 되는 키, 서비스 키는 절대 넣지 말 것)
   // appRedirect: 앱(Capacitor)에서 로그인 뒤 돌아올 앱 주소(예: 'artmos://auth'), redirectTo: 웹에서 돌아올 주소(비우면 지금 페이지)
   // 설정 순서: docs/auth/README.md
-  auth: { supabaseUrl: '', supabaseAnonKey: '', providers: ['kakao', 'apple', 'google'], appRedirect: '', redirectTo: '' },
+  auth: { supabaseUrl: 'https://tyuvosvhmvmlbbinhehz.supabase.co', supabaseAnonKey: 'sb_publishable_dwqT2vrjDRbADssUkt6iCA_xgTtTAKM', // 공개용(publishable) 키 — 비밀 키 아님
+    providers: ['kakao', 'apple', 'google'], appRedirect: '', redirectTo: '' },
 };
