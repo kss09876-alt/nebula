@@ -7,7 +7,7 @@ import { videoHTML, mountVideos, playVideo, onVideo, stopVideos } from './video.
 import { IS_MOBILE, sensor, startCamera, startMic, getPosition, distanceKm, keepAwake } from './sensors.js?v=4';
 import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=4';
 import { facePoints, drawPortrait } from './bitssal-faces.js?v=3';
-import * as MB from './membership.js?v=5';
+import * as MB from './membership.js?v=6';
 const SRC1 = tr('진실·화해를위한과거사정리위원회, 「대구10월사건 관련 민간인 희생 사건」');
 const SRC2 = tr('진실·화해를위한과거사정리위원회, 「경산 코발트광산 사건」');
 const RICE = [255, 248, 230], DIM = [92, 86, 76], RED = [200, 56, 47], WARM = [255, 214, 150];
@@ -45,7 +45,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 story.innerHTML = SCENES.map((s, si) => `<section class="scene" id="s-${s.id}" data-i="${si}" data-h="${s.h}" style="height:${s.h}vh">${s.cards.map((c, ci) => cardHTML(s, c, si, ci)).join('')}</section>`).join('') + (LOCKED ? MB.paywallHTML(CELL) : '') + CREDITS;
 if (LOCKED) story.addEventListener('click', (e) => { MB.handleMembershipClick(e, { notify: (m) => { const el = document.querySelector('#paywall .mb-state'); if (el) el.textContent = m; }, refresh: () => location.reload() }); });
 else MB.enter(CELL).then(MB.passChip); // 입장권이면 이때 24시간 시작
-if (window === window.top) import('./app-shop.js?v=3').then((SHOP) => SHOP.loadShop().then(() => { const box = document.querySelector('.bs-credits > div'), html = SHOP.collectBannerHTML(CELL.id); if (box && html) box.insertAdjacentHTML('afterbegin', html); })).catch(() => {}); // 웹에서만
+if (window === window.top) import('./app-shop.js?v=4').then((SHOP) => SHOP.loadShop().then(() => { const box = document.querySelector('.bs-credits > div'), html = SHOP.collectBannerHTML(CELL.id); if (box && html) box.insertAdjacentHTML('afterbegin', html); })).catch(() => {}); // 웹에서만
 // 카드가 길어져도(작은 화면·번역·이야기 카드) 서로 겹치지 않게: 원래 자리보다 위로는 안 올리고, 앞 카드 밑으로만 밀어냄. 모자라면 장면을 늘림
 function relayout() {
   const gap = Math.max(28, innerHeight * 0.06);

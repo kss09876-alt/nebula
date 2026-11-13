@@ -1,6 +1,6 @@
 // ARTMOS — 메인: 성운 가운데에서 태어난 전시 행성계
 import * as THREE from 'three';
-import { loadData, imageUrl, esc } from './data.js?v=27';
+import { loadData, imageUrl, esc } from './data.js?v=28';
 import { hsound } from './home-sound.js?v=7';
 import { tr, lang, langSwitcher } from './i18n.js?v=6';
 import { IS_MOBILE } from './sensors.js?v=4';

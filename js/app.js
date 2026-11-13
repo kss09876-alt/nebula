@@ -1,7 +1,7 @@
 // ARTMOS 앱 화면 — 시작 화면 → 소개 → 로그인 → 닉네임 → 탭(전시·플레이·컬렉트·리워드·마이)
 // 전시 내용은 기존 ARTMOS 페이지(cell.html, bitssal.html)를 같은 주소에서 그대로 불러옵니다.
 // 데이터는 기존 data.js(구글 시트 → 백업 JSON)를 그대로 씁니다. 개인 기록은 기기 안(localStorage)에만 저장합니다.
-import { loadData, loadLocalData, esc } from './data.js?v=27';
+import { loadData, loadLocalData, esc } from './data.js?v=28';
 import { lang, LANGS } from './i18n.js?v=6';
 import { hasRing } from './planets.js?v=4';
 import { planetSrc, planetKey, onPlanet, planetBitmap, warm } from './planet-store.js?v=2';
@@ -14,8 +14,9 @@ import { createMotionPreference } from './app-preferences.js?v=1';
 import { createAppDiscover } from './app-discover.js?v=3';
 import { createExhibitShare } from './app-share.js?v=2';
 import { APP_COPY } from './app-copy.js?v=1';
-import * as MB from './membership.js?v=5';
-import * as SHOP from './app-shop.js?v=3';
+import * as MB from './membership.js?v=6';
+import * as SHOP from './app-shop.js?v=4';
+import * as AU from './auth.js?v=2';
 const motionQuery = createMotionPreference();
 let nativeActive = true;
 
@@ -102,50 +103,81 @@ const OB = {
       <div class="dots"><i class="${step === 0 ? 'on' : ''}"></i><i class="${step === 1 ? 'on' : ''}"></i></div>
       <button class="btn black" data-ob="${step === 0 ? 'intro1' : 'login'}">${t('다음')}</button><button class="link" data-ob="login">${t('건너뛰기')}</button>`;
   },
-  login() {
-    return `<div class="ob-center"><h1>${br(t('매주 착륙하는\n온라인 인터랙티브 전시'))}</h1><p>${esc(t('생각과 마음의 폭을 넓히는 시간'))}</p></div>
-      <div class="ob-login">
-        <button class="btn kakao" data-ob="soon"><svg viewBox="0 0 24 24"><path fill="#191600" d="M12 4C6.9 4 3 7.2 3 11.1c0 2.5 1.6 4.6 4 5.9l-.9 3.4 3.9-2.6c.6.1 1.3.1 2 .1 5.1 0 9-3.2 9-7.1S17.1 4 12 4z"/></svg>${t('카카오로 시작하기')}</button>
-        <button class="btn black" data-ob="soon"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M16.4 12.6c0-2 1.6-2.9 1.7-3-1-1.4-2.4-1.6-2.9-1.6-1.2-.1-2.4.7-3 .7s-1.6-.7-2.6-.7c-1.3 0-2.6.8-3.3 2-1.4 2.4-.4 6 1 8 .7 1 1.4 2 2.5 2 1 0 1.4-.6 2.6-.6s1.5.6 2.6.6c1.1 0 1.8-1 2.4-2 .8-1.1 1.1-2.2 1.1-2.3 0 0-2.1-.8-2.1-3.1zM14.5 6.6c.5-.7.9-1.6.8-2.6-.8 0-1.8.5-2.4 1.2-.5.6-1 1.6-.8 2.5.9.1 1.8-.4 2.4-1.1z"/></svg>${t('Apple로 계속하기')}</button>
-        <button class="link" data-ob="nick">${t('먼저 우주 둘러보기')} ›</button>
-      </div>`;
-  },
+  login() { return AU.loginHTML(); },
+  signup() { return AU.signupHTML(); },
+  'login-form'() { return AU.loginFormHTML(); },
+  reset() { return AU.resetHTML(); },
+  verify(email) { return AU.verifyHTML(email); },
   nick() {
     return `<button class="back" data-ob="login" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M20 12H4M10 6l-6 6 6 6"/></svg></button>
       <h1 class="ob-h">${br(t('마지막으로\n이 우주에서 불릴\n이름을 정해주세요'))}</h1>
       <div class="field"><label for="nick">${t('항해명')}</label>
         <div class="in"><input id="nick" maxlength="20" autocomplete="off" placeholder="${esc(t('최대 20자까지 입력 가능해요'))}" /><button class="btn dice" data-dice aria-label="${esc(t('다른 이름 뽑기'))}"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="15" cy="15" r="1.2" fill="currentColor"/><circle cx="15" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="15" r="1.2" fill="currentColor"/></svg></button></div>
         <div class="names" id="names"></div>
-        <p class="hint">${t('이름은 이 기기에만 저장돼요.')}</p></div>
+        <p class="hint au-nick" id="nick-state" aria-live="polite">${AU.cachedUser() ? '' : AU.at('nickGuest')}</p></div>
       <div style="margin-top:auto"><button class="btn black" id="nick-go" data-ob="done">${t('탑승하기')}</button></div>`;
   },
 };
-function showOB(k) {
+function showOB(k, arg) {
   stopViewEffects(); ob.hidden = false; view.hidden = true; tabsEl.hidden = true;
-  ob.innerHTML = k === 'intro0' ? OB.intro(0) : k === 'intro1' ? OB.intro(1) : OB[k]();
+  if (!OB[k] && k !== 'intro0' && k !== 'intro1') k = 'login';
+  ob.innerHTML = k === 'intro0' ? OB.intro(0) : k === 'intro1' ? OB.intro(1) : OB[k](arg);
+  ob.dataset.step = k;
   if (k === 'nick') {
     const i = $('#nick'), b = $('#nick-go'), p = me();
     const fill = () => { const seen = new Set(); const list = []; while (list.length < 4) { const n = wanderer(); if (!seen.has(n)) { seen.add(n); list.push(n); } } $('#names').innerHTML = list.map((n) => `<button data-name="${esc(n)}">${esc(n)}</button>`).join(''); };
-    i.value = (p && p.nick) || wanderer(); fill();
-    i.addEventListener('input', () => b.className = 'btn ' + (i.value.trim() ? 'black' : 'off'));
+    i.value = (p && p.nick) || wanderer(); fill(); checkNick();
+    i.addEventListener('input', () => { b.className = 'btn ' + (i.value.trim() ? 'black' : 'off'); checkNick(); });
     i.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !event.isComposing && i.value.trim()) { event.preventDefault(); b.click(); } });
   }
   syncRuntime();
 }
+// 항해명 겹침 확인(로그인한 사람만 서버로 확인, 0.35초 쉬었다가)
+let nickTimer = 0, nickSeq = 0;
+function checkNick() {
+  const el = $('#nick-state'), v = $('#nick') && $('#nick').value; if (!el) return;
+  clearTimeout(nickTimer); const seq = ++nickSeq;
+  const f = AU.nickFormat(v); if (!f.ok) { el.textContent = f.msg; el.dataset.s = 'bad'; return; }
+  if (!AU.cachedUser()) { el.textContent = AU.at('nickGuest'); el.dataset.s = ''; return; }
+  el.textContent = AU.at('nickChecking'); el.dataset.s = '';
+  nickTimer = setTimeout(async () => { const ok = await AU.nickAvailable(f.value); if (seq !== nickSeq) return; el.textContent = ok === false ? AU.at('nickTaken') : ok ? AU.at('nickOk') : ''; el.dataset.s = ok === false ? 'bad' : ok ? 'ok' : ''; }, 350);
+}
+// 로그인을 마치면: 서버에 이름이 있으면 그 이름으로 바로 입장, 없으면 항해명 정하기
+async function afterLogin() {
+  const n = await AU.profileNick();
+  if (n) { const old = me(); store.set('valix-me', { nick: n, since: (old && old.since) || Date.now() }); store.set('valix-onboarded', true); ob.hidden = true; ob.innerHTML = ''; toast(AU.at('welcome')); go(tab); return; }
+  showOB('nick');
+}
+const auCtx = { show: (k, arg) => showOB(k, arg), done: afterLogin, browse: () => showOB('nick'), toast: (m) => toast(m) };
+ob.addEventListener('submit', (e) => { AU.handleSubmit(e, auCtx); });
 ob.addEventListener('click', (e) => {
-  if (e.target.closest('[data-dice]')) { $('#nick').value = wanderer(); $('#nick-go').className = 'btn black'; return; }
-  const nm = e.target.closest('[data-name]'); if (nm) { $('#nick').value = nm.dataset.name; $('#nick-go').className = 'btn black'; return; }
+  if (e.target.closest('[data-au], [data-au-social], .au-agree input')) { AU.handleClick(e, auCtx); return; }
+  if (e.target.closest('[data-dice]')) { $('#nick').value = wanderer(); $('#nick-go').className = 'btn black'; checkNick(); return; }
+  const nm = e.target.closest('[data-name]'); if (nm) { $('#nick').value = nm.dataset.name; $('#nick-go').className = 'btn black'; checkNick(); return; }
   const b = e.target.closest('[data-ob]'); if (!b) return;
   const k = b.dataset.ob;
   if (k === 'soon') { toast(t('로그인은 곧 열려요. 지금은 둘러보기로 시작할게요.')); setTimeout(() => showOB('nick'), 900); return; }
   if (k === 'done') {
-    const nick = $('#nick').value.trim().slice(0, 20); if (!nick) return;
-    const old = me();
-    store.set('valix-me', { nick, since: (old && old.since) || Date.now() });
-    store.set('valix-onboarded', true); ob.hidden = true; ob.innerHTML = ''; go(tab); return;
+    const f = AU.nickFormat($('#nick').value), st = $('#nick-state');
+    if (!f.ok) { st.textContent = f.msg; st.dataset.s = 'bad'; $('#nick').focus(); return; }
+    const nick = f.value;
+    b.disabled = true;
+    AU.saveNick(nick).then((r) => { // 서버가 있으면 겹치지 않는지 마지막으로 확인하며 저장
+      b.disabled = false;
+      if (!r.ok) { st.textContent = r.taken ? AU.at('nickTaken') : (r.msg || ''); st.dataset.s = 'bad'; $('#nick').focus(); return; }
+      finishNick(nick);
+    });
+    return;
   }
   showOB(k);
 });
+function finishNick(nick) {
+  {
+    const old = me();
+    store.set('valix-me', { nick, since: (old && old.since) || Date.now() });
+    store.set('valix-onboarded', true); ob.hidden = true; ob.innerHTML = ''; go(tab);
+  }
+}
 
 /* ---------- 추가 문구 ---------- */
 const T2 = {
@@ -384,6 +416,7 @@ const screens = {
         ${lk.length ? `<div class="hscroll mini">${lk.map((c) => `<button data-detail="${esc(c.id)}"><img data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt=""><span>${esc(name(c))}</span></button>`).join('')}</div>` : `<p class="empty">${t('아직 좋아요한 행성이 없어요.')}</p>`}</section>
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('최근 본 전시')}</h2></div>
         ${seen.length ? `<div class="list">${seen.map(([id, x]) => { const c = cells.find((y) => y.id === id); return `<button class="row" data-detail="${esc(id)}">${poster(c)}<div><b>${esc(name(c))}</b><span>${new Date(x.last).toLocaleDateString(lang)}</span></div><span class="v">${fmtTime(x.time || 0)}</span></button>`; }).join('')}</div>` : `<p class="empty">${t('아직 다녀온 행성이 없어요.')}</p>`}</section>
+      ${AU.accountHTML(AU.cachedUser())}
       ${SHOP.myHTML()}
       <section class="sec list"><button class="row" data-membership><b>${MB.mt('title')}</b><span class="v">${MB.isMember() ? MB.mt('active') : MB.ENABLED ? MB.mt('start') : '›'}</span></button></section>
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('언어')}</h2></div><div class="chips">${LANGS.map((l) => `<button data-lang="${l.id}" class="${l.id === lang ? 'on' : ''}">${l.name}</button>`).join('')}</div></section>
@@ -524,6 +557,14 @@ function onAction(e) {
     return true;
   }
   if (q('[data-rename]')) { showOB('nick'); return true; }
+  if ((b = q('[data-acct]'))) {
+    const k = b.dataset.acct;
+    if (k === 'login') showOB('login');
+    else if (k === 'logout') AU.signOut().then(() => { toast(AU.at('loggedOut')); go('my', true); });
+    else if (k === 'delete') sheet.open(AU.deleteConfirmHTML(), 'confirm');
+    else if (k === 'delete-go') { b.disabled = true; AU.deleteAccount().then(() => { sheet.close(); store.set('valix-onboarded', false); store.set('valix-me', null); toast(AU.at('deleted')); showOB('login'); }).catch(() => { b.disabled = false; toast(AU.at('eNet')); }); }
+    return true;
+  }
   if ((b = q('[data-lang]'))) { if (b.dataset.lang !== lang) { try { localStorage.setItem('xpace-lang', b.dataset.lang); } catch (er) {} location.reload(); } return true; }
   if (q('[data-clear]')) {
     sheet.open(`<div class="sh-h"><h3>${t('관람 기록을 지울까요?')}</h3></div><div class="nb-danger"><p>${t('항해명과 좋아요는 유지돼요. 관람 시간과 스탬프만 삭제됩니다.')}</p><div class="nb-confirm-actions"><button class="btn line" data-close>${t('취소')}</button><button class="btn black" data-confirm-clear>${t('기록 삭제')}</button></div></div>`, 'confirm');
@@ -843,7 +884,10 @@ function firstValidData(promises) {
     syncRuntime(); return;
   }
   warm(firstPlanets());
-  if (!store.get('valix-onboarded', false)) showOB('intro0'); else go('home');
+  // 인트로(ARTMOS) 다음 바로 로그인. 소셜 로그인에서 돌아온 경우(세션 있음)엔 항해명 단계로
+  const user = await AU.currentUser();
+  if (!store.get('valix-onboarded', false)) { if (user) afterLogin(); else showOB('login'); } else go('home');
+  AU.onAuth(() => { if (tab === 'my' && !view.hidden) go('my', true); });
   if (location.hash === '#orders') { history.replaceState(null, '', location.pathname + location.search); go('my'); SHOP.loadShop().then(() => SHOP.openOrders(sheet)); } // 결제 후 돌아옴
   const match = location.hash.match(/open=([\w-]+)/);
   if (match) { const cell = cells.find((item) => item.id === match[1]); if (cell && isOpen(cell)) openExhibit(cell); }

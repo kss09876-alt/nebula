@@ -173,3 +173,38 @@
 .sp-meta .sp-tag { display: inline-block; }
 .sp-feat + .sp-feat, .cw-view .nb-page-kicker { color: var(--gold); }
 @media (min-width: 720px) { .collect-web .sp-img.big { max-height: 52vh; } }
+
+/* ---------- 로그인·회원가입 ---------- */
+.au-test { margin: 0 0 6px; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255,207,138,.35); color: #ffd9a3; font-size: 12.5px; text-align: center; }
+.au-top { margin: auto 0; text-align: center; }
+.au-top .au-logo { font-family: 'ARTMOS Michroma', 'Michroma', sans-serif; letter-spacing: .18em; -webkit-text-stroke: .05em currentColor; font-size: 22px; margin: 0 -.18em 26px 0; }
+.au-top h1 { font-size: 25px; font-weight: 550; line-height: 1.45; letter-spacing: -.03em; }
+.au-top p { margin-top: 12px; color: var(--tx2); font-size: 15px; line-height: 1.6; }
+.au-login .btn { height: 54px; font-size: 16px; font-weight: 600; gap: 10px; }
+.au-login .btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+.btn.au-kakao { background: #fee500; color: #191600; }
+.btn.au-apple { background: #fff; color: #000; }
+.btn.au-google { background: #fff; color: #1f1f1f; border: 1px solid #dadce0; }
+.au-or { display: flex; align-items: center; gap: 12px; color: var(--tx3); font-size: 13px; margin: 4px 0; }
+.au-or::before, .au-or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.au-row { display: flex; justify-content: center; gap: 8px; font-size: 14px; color: var(--tx2); margin: 4px 0 0; }
+.au-row .link, .au-browse { font-size: 14px; color: var(--tx); text-decoration: underline; text-underline-offset: 3px; }
+.au-browse { color: var(--tx2); text-decoration: none; margin-top: 6px; }
+.au-form { display: flex; flex-direction: column; gap: 18px; padding-bottom: 20px; }
+.au-form .field input { width: 100%; box-sizing: border-box; }
+.au-form .link { align-self: center; font-size: 14px; color: var(--tx2); }
+.au-agree { display: grid; gap: 12px; padding: 16px; border-radius: 16px; background: var(--bg2); }
+.au-chk { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--tx); }
+.au-chk input { width: 20px; height: 20px; flex-shrink: 0; accent-color: #cfe3d6; }
+.au-chk span { flex: 1; }
+.au-chk a { font-size: 13px; color: var(--tx3); }
+.au-all { padding-bottom: 12px; border-bottom: 1px solid var(--line); font-weight: 700; }
+.au-err { margin: 0; min-height: 1.2em; color: #ff9a9a; font-size: 13.5px; }
+.au-verify svg { width: 64px; height: 64px; fill: none; stroke: var(--tx); stroke-width: 1.6; margin-bottom: 20px; }
+.au-nick[data-s="ok"] { color: #9fe0b8; }
+.au-nick[data-s="bad"] { color: #ff9a9a; }
+.au-acc b small { display: block; margin-top: 4px; font-size: 12.5px; font-weight: 400; color: var(--tx3); }
+.au-del b { color: #ff9a9a; }
+.vx-onboard { overflow-y: auto; }
+.au-row { flex-direction: row !important; align-items: center; }
+.au-row .link { width: auto !important; display: inline !important; padding: 0 !important; height: auto !important; }

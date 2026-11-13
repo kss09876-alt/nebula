@@ -1,9 +1,9 @@
-import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=27';
+import { loadData, imageUrl, videoEmbed, esc, paras } from './data.js?v=28';
 import { tr, langSwitcher } from './i18n.js?v=6';
 import { IS_MOBILE, sensor, keepAwake } from './sensors.js?v=4';
 import { videoHTML, mountVideos } from './video.js?v=2';
 import { labRenderers, setupSakamotoLab } from './sakamoto-lab.js?v=2';
-import * as MB from './membership.js?v=5';
+import * as MB from './membership.js?v=6';
 
 const story = document.getElementById('story');
 const wipe = document.getElementById('wipe');
@@ -273,7 +273,7 @@ if (IS_MOBILE) {
   story.innerHTML = bs.map((b) => (R[b.type] || R.text)(b, cell, idx, cells)).join('') + (locked ? MB.paywallHTML(cell) : '');
   if (!locked) MB.enter(cell).then(MB.passChip);
   // 이 전시에 연결된 소장 가능 작품이 있으면 끝에 '컬렉트' 안내 (앱 안에서는 컬렉트 탭이 있으니 생략)
-  if (window === window.top) import('./app-shop.js?v=3').then((SHOP) => SHOP.loadShop().then(() => { const end = story.querySelector('.b-end'), html = SHOP.collectBannerHTML(cell.id); if (end && html) end.insertAdjacentHTML('afterbegin', html); })).catch(() => {}); // 웹에서만 불러옴(앱 안에서는 받지 않아 가볍게) // 입장권이면 이때 24시간 시작, 남은 시간 표시 (보는 중에 끊지 않음)
+  if (window === window.top) import('./app-shop.js?v=4').then((SHOP) => SHOP.loadShop().then(() => { const end = story.querySelector('.b-end'), html = SHOP.collectBannerHTML(cell.id); if (end && html) end.insertAdjacentHTML('afterbegin', html); })).catch(() => {}); // 웹에서만 불러옴(앱 안에서는 받지 않아 가볍게) // 입장권이면 이때 24시간 시작, 남은 시간 표시 (보는 중에 끊지 않음)
   if (locked) story.addEventListener('click', (e) => { MB.handleMembershipClick(e, { notify: (m) => { const el = document.querySelector('#paywall .mb-state'); if (el) el.textContent = m; }, refresh: () => location.reload() }); });
   mountVideos(story);
   setupAll(cell.color);

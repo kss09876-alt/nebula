@@ -1,8 +1,8 @@
 // 웹 '컬렉트' 페이지 (collect.html) — 앱의 컬렉트 탭과 같은 화면·같은 소장 흐름을 웹에서도.
 // ?cell=c005 → 그 전시의 작품만, ?work=w001 → 작품 상세를 바로 엶, #orders → 소장 내역(결제 후 돌아올 때)
-import * as SHOP from './app-shop.js?v=3';
+import * as SHOP from './app-shop.js?v=4';
 import { createAppSheet } from './app-sheet.js?v=2';
-import { loadLocalData } from './data.js?v=27';
+import { loadLocalData } from './data.js?v=28';
 import { lang } from './i18n.js?v=6';
 
 document.documentElement.lang = lang;
