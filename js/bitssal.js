@@ -5,9 +5,17 @@ import { sound } from './bitssal-sound.js?v=7';
 import { lang, tr, langSwitcher } from './i18n.js?v=6';
 import { videoHTML, mountVideos, playVideo, onVideo, stopVideos } from './video.js?v=2';
 import { IS_MOBILE, sensor, startCamera, startMic, getPosition, distanceKm, keepAwake } from './sensors.js?v=4';
-import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=4';
+import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=5';
 import { facePoints, drawPortrait } from './bitssal-faces.js?v=3';
 import * as MB from './membership.js?v=6';
+import { createNarrator } from './bitssal-narrator.js?v=1';
+// 화면 문구 (읽기 → 체험 · 내레이션)
+const LX = ({
+  ko: { play: '체험', next: '이야기를 다 읽으면, 아래에서 직접 해 볼 수 있어요.', narr: '내레이션', listen: '듣기', stop: '멈춤', chapter: '장' },
+  en: { play: 'Experience', next: 'When you finish reading, try it yourself just below.', narr: 'Narration', listen: 'Listen', stop: 'Stop', chapter: 'Chapter' },
+  zh: { play: '体验', next: '读完故事后，可以在下方亲自体验。', narr: '旁白', listen: '收听', stop: '停止', chapter: '第' },
+  ja: { play: '体験', next: '読み終えたら、すぐ下で体験できます。', narr: 'ナレーション', listen: '聴く', stop: '停止', chapter: '章' },
+})[lang] || {};
 const SRC1 = tr('진실·화해를위한과거사정리위원회, 「대구10월사건 관련 민간인 희생 사건」');
 const SRC2 = tr('진실·화해를위한과거사정리위원회, 「경산 코발트광산 사건」');
 const RICE = [255, 248, 230], DIM = [92, 86, 76], RED = [200, 56, 47], WARM = [255, 214, 150];
@@ -53,7 +61,12 @@ function relayout() {
     const base = (+sc.dataset.h / 100) * innerHeight;
     const cards = [...sc.querySelectorAll(':scope > .card')].sort((a, b) => a.dataset.at - b.dataset.at);
     let y = 0;
-    cards.forEach((c) => { const top = Math.max(+c.dataset.at * base, y); c.style.top = `${Math.round(top)}px`; y = top + c.offsetHeight + gap; });
+    let prev = null;
+    cards.forEach((c) => {
+      // 장 표지 → 이야기, 이야기 → 체험 사이는 한 화면 가까이 띄워서 서로 겹쳐 보이지 않게
+      const extra = prev && ((prev.classList.contains('story') && !c.classList.contains('story')) || prev.classList.contains('chap-open')) ? innerHeight * 0.42 : 0;
+      const top = Math.max(+c.dataset.at * base, y + extra); c.style.top = `${Math.round(top)}px`; y = top + c.offsetHeight + gap; prev = c;
+    });
     sc.style.height = `${Math.round(Math.max(base, y + innerHeight * 0.25))}px`;
   });
 }
@@ -66,7 +79,7 @@ if (window.ResizeObserver) { const ro = new ResizeObserver(relSoon); document.qu
 function cardHTML(s, c, si, ci) {
   const pos = `style="top:${c.at * 100}%" data-at="${c.at}"`;
   const src = c.src ? `<p class="src">${tr('출처: ')}${esc(c.src)}</p>` : '';
-  if (c.kind === 'story') return `<article class="card story" ${pos}${c.face ? ` data-face="${c.face}"` : ''}>${c.chap ? `<p class="chap">${esc(c.chap)}</p>` : ''}<div class="st-top">${c.face ? `<canvas class="st-face" data-face="${c.face}" aria-hidden="true"></canvas>` : ''}<div><p class="st-who"><b>${esc(LABEL)}</b>${esc(c.who)}</p><h2>${esc(c.head)}</h2></div></div>${c.html}${c.first ? `<p class="note st-note">${esc(NOTE)}</p>` : ''}</article>`;
+  if (c.kind === 'story') return `<article class="card story" ${pos}${c.face ? ` data-face="${c.face}"` : ''}>${c.chap ? `<p class="chap">${esc(c.chap)}</p>` : ''}<div class="st-top">${c.face ? `<canvas class="st-face" data-face="${c.face}" aria-hidden="true"></canvas>` : ''}<div><p class="st-who"><b>${esc(LABEL)}</b>${esc(c.who)}</p><h2>${esc(c.head)}</h2></div></div>${c.html}${c.first ? `<p class="note st-note">${esc(NOTE)}</p>` : ''}${s.cards.some((d) => d.play && d.at > c.at) ? `<p class="st-next">↓ ${esc(LX.next)}</p>` : ''}<button class="st-listen" type="button" aria-pressed="false"><i aria-hidden="true"></i><span>${esc(LX.listen)}</span></button></article>`;
   if (c.kind === 'record') return `<article class="card rec brief ${c.tone || ''}" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3>${c.html}${src}</article>`;
   if (c.kind === 'reveal') return `<article class="card rec reveal-rec" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3><div class="blur">${c.html}</div><button class="rv-btn">${tr('기록 읽기')}</button>${src}</article>`;
   if (c.kind === 'correct') return `<article class="card rec reveal-rec correct" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3><div class="blur">${c.html}</div><button class="rv-btn">${tr('기록 읽기')}</button><button class="fix-btn" hidden>${tr('기록 바로잡기')}</button><p class="fix-note" hidden>${esc(c.fix)}</p>${src}</article>`;
@@ -82,6 +95,8 @@ function cardHTML(s, c, si, ci) {
     <h3>${tr('작업 영상')}</h3><div class="arch-grid">${['p1', 'p2', 'p3', 'p4', 'p5', 'p6'].map((k, i) => `<button class="arch-v" data-lb-vid="${VD[k]}"><img src="${thumb(VD[k])}" alt="" loading="lazy" onerror="this.remove()"><span>▶ ${tr('작업 영상 {n}', { n: String(i + 1).padStart(2, '0') })}</span></button>`).join('')}</div>
     <h3>${tr('사진')}</h3><div class="arch-grid ph6">${PH.map((id, i) => `<button class="arch-p" data-lb-img="${id}" aria-label="${tr('사진 크게 보기')} ${i + 1}"><img src="${img(id, 500)}" alt="" loading="lazy"></button>`).join('')}</div>
     <p class="note">${tr('영상·사진: ')}${WORK}</p></div>`;
+  if (c.kind === 'open') return `<header class="card chap-open" ${pos} aria-label="${esc(c.num)} ${esc(c.title)}"><small>${esc(c.num)}</small><b>${esc(c.title)}</b><i aria-hidden="true"></i></header>`;
+  if (c.play) return `<article class="card play" ${pos}><p class="play-tag">${esc(LX.play)}</p>${c.html}</article>`;
   return `<article class="card ${c.kind || ''}" ${pos}>${c.html}</article>`;
 }
 function vidHTML(id, title) { // 썸네일만 먼저, 누르면 그때 재생 (video.js)
@@ -105,11 +120,24 @@ const sndBtn = document.querySelector('.bs-snd');
 let sndUserOff = (() => { try { return localStorage.getItem('xpace-sound') === 'off'; } catch (e) { return false; } })();
 function sndUI() { sndBtn.classList.toggle('on', sound.on); sndBtn.setAttribute('aria-pressed', String(sound.on)); sndBtn.querySelector('span').textContent = sound.on ? tr('소리 켜짐') : tr('소리 켜기'); }
 sndBtn.addEventListener('click', (e) => { e.stopPropagation(); const v = sound.toggle(); sndUserOff = !v; try { localStorage.setItem('xpace-sound', v ? 'on' : 'off'); } catch (e2) {} setTimeout(sndUI, 30); });
+// 내레이션: 순이의 이야기를 읽어 줌 (기기 음성). 말하는 동안 배경 소리는 낮춤
+const narr = createNarrator({ lang, onStart: () => sound.duck(0.35), onEnd: () => { if (!state.videoOn && lb.hidden) sound.duck(1); } });
+const narrBtn = document.createElement('button');
+narrBtn.className = 'bs-narr'; narrBtn.type = 'button'; narrBtn.hidden = !narr.ok;
+narrBtn.innerHTML = `<i aria-hidden="true"></i><span>${esc(LX.narr)}</span>`;
+function narrUI() { narrBtn.classList.toggle('on', narr.on); narrBtn.setAttribute('aria-pressed', String(narr.on)); document.querySelectorAll('.st-listen').forEach((b) => { const me = narr.card === b.closest('.card'); b.classList.toggle('on', me); b.setAttribute('aria-pressed', String(me)); b.querySelector('span').textContent = me ? LX.stop : LX.listen; }); }
+narrBtn.addEventListener('click', (e) => { e.stopPropagation(); narr.unlock(); narr.toggle(); narrUI(); });
+sndBtn.after(narrBtn);
+document.querySelectorAll('.st-listen').forEach((b) => { b.hidden = !narr.ok; b.addEventListener('click', (e) => { e.stopPropagation(); const c = b.closest('.card'); if (narr.card === c) narr.stop(); else { narr.unlock(); narr.play(c); } narrUI(); }); });
+setInterval(narrUI, 500);
+addEventListener('visibilitychange', () => { if (document.hidden) narr.stop(); });
+['pointerdown', 'keydown'].forEach((ev) => addEventListener(ev, function nu() { ['pointerdown', 'keydown'].forEach((x) => removeEventListener(x, nu, true)); narr.unlock(); }, true));
 const GEST = ['pointerdown', 'keydown', 'touchstart'];
 const firstGesture = (e) => {
   if (e.target && e.target.closest && e.target.closest('.bs-snd, .snd-gate')) return; // 버튼은 자체 처리
   GEST.forEach((ev) => removeEventListener(ev, firstGesture));
   if (!sndUserOff && !sound.on) sound.start().then(sndUI).catch(() => {});
+  narr.unlock();
   if (closeGate) { closeGate(); closeGate = null; }
 };
 GEST.forEach((ev) => addEventListener(ev, firstGesture, { passive: true }));
@@ -121,8 +149,8 @@ function autoSound() {
     closeGate = sndGate(tr('A-003 · 진시영 · 김동선'), tr('빛쌀 — 80년의 기억'), (withSound) => {
       GEST.forEach((ev) => removeEventListener(ev, firstGesture));
       sensor.enable();
-      if (withSound) sound.start().then(sndUI);
-      else { sndUserOff = true; sndUI(); }
+      if (withSound) { sound.start().then(sndUI); narr.unlock(); }
+      else { sndUserOff = true; sndUI(); narr.set(false); }
     });
   });
 }
@@ -167,11 +195,11 @@ document.querySelectorAll('.choice').forEach((c) => {
 // 영상: 눌렀을 때만 불러오기
 mountVideos(story);
 // 영상을 보는 동안: 배경 소리 낮추고 쌀알 캔버스는 쉬게 함 (휴대폰에서 영상이 끊기지 않도록)
-onVideo('play', () => { state.videoOn = true; sound.duck(0.15); });
+onVideo('play', () => { state.videoOn = true; narr.stop(); sound.duck(0.15); });
 onVideo('stop', () => { state.videoOn = false; sound.duck(1); });
 // 라이트박스
 const lb = document.createElement('div'); lb.className = 'lb'; lb.hidden = true; lb.innerHTML = '<button class="lb-x" aria-label="' + tr('닫기') + '">×</button><div class="lb-in"></div>'; document.body.appendChild(lb);
-function openLB(html) { lb.querySelector('.lb-in').innerHTML = html; lb.hidden = false; document.body.classList.add('lb-open'); }
+function openLB(html) { narr.stop(); lb.querySelector('.lb-in').innerHTML = html; lb.hidden = false; document.body.classList.add('lb-open'); }
 function closeLB() { stopVideos(); sound.duck(1); lb.hidden = true; lb.querySelector('.lb-in').innerHTML = ''; document.body.classList.remove('lb-open'); }
 lb.addEventListener('click', (e) => { if (e.target === lb || e.target.closest('.lb-x')) closeLB(); });
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lb.hidden) closeLB(); });
@@ -288,9 +316,7 @@ const FN = 1000;
 function wantFace(id) {
   if (id === 'light' && state.brotherLight) return { kind: 'brother', col: 3 };
   if (id === 'street' && state.dawn) return { kind: 'brother', col: 0, max: 0.92 };
-  const els = sections[cur].querySelectorAll('.card.story.in[data-face]'); if (!els.length) return null;
-  let best = null, bd = 1e9; els.forEach((el) => { const r = el.getBoundingClientRect(), d = Math.abs(r.top + r.height / 2 - innerHeight / 2); if (d < bd) { bd = d; best = el; } });
-  return best ? { kind: best.dataset.face, col: 0 } : null;
+  return readCard && readCard.dataset.face ? { kind: readCard.dataset.face, col: 0 } : null;
 }
 function applyFace(id) {
   const want = wantFace(id);
@@ -349,7 +375,7 @@ const TARGETS = {
     hideAll(gi);
   },
   hunger(p) {
-    state.hold = ptrDown ? Math.min(1, state.hold + 0.02) : Math.max(0, state.hold - 0.03);
+    state.hold = ptrDown && !readCard ? Math.min(1, state.hold + 0.02) : Math.max(0, state.hold - 0.03);
     const gone = Math.max(0, seg(p, 0.1, 0.9) - 0.25 * state.hold * (1 - seg(p, 0.6, 0.9))), sx = CX + R * 1.05, sy = CY + R * 0.75;
     for (let i = 0; i < 140; i++) {
       const b = bowlPos(i % 10), ang = R2[i] * 6.28, rr = Math.sqrt(R3[i]) * 16;
@@ -602,14 +628,12 @@ function placeLabels(id, p) {
 
 // ---------------- 루프 ----------------
 let last = performance.now();
-const flash = document.createElement('div'); flash.className = 'chap-flash'; flash.setAttribute('aria-hidden', 'true'); document.body.appendChild(flash);
-const seenChap = new Set(); let lastChap = -1;
-function chapterCard(i) {
-  if (i === lastChap) return; lastChap = i; const sc = SCENES[i];
-  if (!sc || sc.id === 'prologue' || sc.id === 'records' || sc.id === 'archive' || seenChap.has(sc.id)) return; seenChap.add(sc.id);
-  const st = sc.cards.find((c) => c.kind === 'story'), num = sc.part === 2 ? 'PART 2' : st && st.chap ? st.chap.split(' · ')[0] : '';
-  flash.innerHTML = `<small>${esc(num)}</small><b>${esc(sc.part === 2 ? sc.title : st ? st.head : sc.title)}</b>`;
-  flash.classList.remove('on'); void flash.offsetWidth; flash.classList.add('on');
+// 지금 읽고 있는 이야기 카드 (화면 가운데 띠에 걸친 것) → 읽기 단계
+let readCard = null;
+function findReadCard() {
+  const band0 = innerHeight * 0.22, band1 = innerHeight * 0.78; let best = null, bd = 1e9;
+  sections[cur].querySelectorAll(':scope > .card.story').forEach((el) => { const r = el.getBoundingClientRect(); if (r.bottom < band0 || r.top > band1) return; const d = Math.abs(r.top + r.height / 2 - innerHeight / 2); if (d < bd) { bd = d; best = el; } });
+  return best;
 }
 let frameErr = 0;
 function frame(now) {
@@ -623,6 +647,14 @@ function draw(now) {
   measure();
   const sc = SCENES[cur], id = sc.id, p = curP;
   { const tl = IS_MOBILE && sensor.on ? Math.min(1, Math.abs(sensor.tiltX) + Math.abs(sensor.tiltY)) : 0; state.flowT += dt * 0.03 * (1 + tl * 3.5); }
+  readCard = findReadCard();
+  const reading = !!readCard; state.readK = Math.max(0, Math.min(1, (state.readK || 0) + (reading ? dt * 2.5 : -dt * 2)));
+  document.body.classList.toggle('phase-read', reading);
+  // 장 표지가 화면 가운데 있으면 쌀알·장면 그림을 거의 꺼서 제목만 보이게
+  const opening = !reading && [...sections[cur].querySelectorAll(':scope > .card.chap-open')].some((el) => { const r = el.getBoundingClientRect(); return r.top < innerHeight * 0.5 && r.bottom > innerHeight * 0.45; });
+  state.openK = Math.max(0, Math.min(1, (state.openK || 0) + (opening ? dt * 2.5 : -dt * 1.5)));
+  document.body.classList.toggle('phase-open', opening);
+  narr.follow(readCard);
   TARGETS[id](p);
   applyFace(id);
   document.body.dataset.scene = id;
@@ -638,20 +670,20 @@ function draw(now) {
   prog.children[cur].querySelector('i').style.width = Math.round(p * 100) + '%';
 
   if (!state.ar) { g.fillStyle = id === 'mine' ? '#020202' : '#050505'; g.fillRect(0, 0, W, H); }
-  drawBackdrop(id, p, t);
+  g.globalAlpha = 1 - Math.max(0.75 * state.readK, 0.9 * state.openK); drawBackdrop(id, p, t); g.globalAlpha = 1; // 읽는 동안 장면 그림은 뒤로 물러남
   const wander = TOUCH && !ptr.in; // 터치: 누르지 않을 땐 손전등이 천천히 바닥을 훑음
-  const torch = id === 'mine' && (ptr.in || TOUCH) ? state.torch || 0 : 0, tx = wander ? CX + Math.sin(t * 0.5) * R * 0.7 : ptr.x, ty = wander ? CY + R * 0.62 + Math.sin(t * 0.9) * R * 0.08 : ptr.y;
+  const torch = id === 'mine' && !reading && (ptr.in || TOUCH) ? state.torch || 0 : 0, tx = wander ? CX + Math.sin(t * 0.5) * R * 0.7 : ptr.x, ty = wander ? CY + R * 0.62 + Math.sin(t * 0.9) * R * 0.08 : ptr.y;
   // 모바일: 기울이면 쌀알이 낮은 쪽으로 쏠리고(밥상·굶주림 장면에선 그릇에서 쏟아짐), 흔들면 떨림. 광산·진실규명 장에서는 쓰지 않음
-  const calm = id === 'boundary' || id === 'mine' || id === 'truth';
+  const calm = reading || id === 'boundary' || id === 'mine' || id === 'truth';
   const gx = IS_MOBILE && sensor.on && !calm ? sensor.tiltX : 0, gy = IS_MOBILE && sensor.on && !calm ? sensor.tiltY : 0, sh = IS_MOBILE && !calm ? sensor.shake : 0;
   // 밥상: 폰을 기울인 쪽 그릇에 밥이 담김
-  if (IS_MOBILE && sensor.on && id === 'life' && Math.abs(gx) > 0.3) {
+  if (IS_MOBILE && sensor.on && !reading && id === 'life' && Math.abs(gx) > 0.3) {
     let changed = false;
     BOWLS.forEach((b, k) => { if (Math.sign(Math.cos(b.a)) === Math.sign(gx) && Math.abs(Math.cos(b.a)) > 0.2 && state.bowls[k] < 1) { state.bowls[k] = Math.min(1, state.bowls[k] + dt * 0.5 * Math.abs(gx)); changed = true; } });
     if (changed && now - (state.rt || 0) > 160) { state.rt = now; sound.rattle(0.2 + Math.abs(gx) * 0.3); sensor.vibrate(6); const done = state.bowls.filter((v) => v >= 1).length; document.querySelectorAll('.bowl-n').forEach((n) => (n.textContent = done)); if (done === 10 && !state.bowlTip) { state.bowlTip = true; sound.ping('bowlsDone'); showTip(UI.bowlsDone, UI.bowlsDoneT, { getBoundingClientRect: () => ({ left: CX - 120, top: CY + R * 0.7 }) }); } }
   }
   // 통행금지의 밤: 움직이지 않고 기다리면 새벽이 옴 (폰은 기울기·흔들림, PC는 마우스)
-  if (id === 'street' && p > 0.82 && !state.dawn) {
+  if (id === 'street' && !reading && sections[cur].querySelector('.card.play.in') && !state.dawn) {
     const still = IS_MOBILE && sensor.on ? Math.abs(sensor.tiltX - (state.ptx ?? 0)) + Math.abs(sensor.tiltY - (state.pty ?? 0)) < 0.004 && sensor.shake < 0.05 : now - ptr.t > 700;
     state.wait = Math.max(0, Math.min(1, state.wait + (still ? dt / 6 : -dt / 2)));
     if (now - (state.wt || 0) > 200) { state.wt = now; document.querySelectorAll('.wait-n').forEach((el) => (el.textContent = Math.round(state.wait * 100))); }
@@ -670,7 +702,7 @@ function draw(now) {
     if (A[i] < 0.01) continue;
     if (face.k > 0.3 && i > 0 && i <= FN) { const d = ((TROT[i] - ROT[i]) % Math.PI + Math.PI * 1.5) % Math.PI - Math.PI / 2; ROT[i] += d * 0.12; }
     else if (!state.freeze) ROT[i] += (R3[i] - 0.5) * 0.01;
-    let al = A[i];
+    let al = A[i] * (1 - 0.85 * state.openK);
     if (torch > 0) { const d = Math.hypot(X[i] - tx, Y[i] - ty); al *= lerp(1, d < 150 ? 1.25 - d / 300 : 0.12, torch); }
     if (al < 0.01) continue;
     const k = 0.4 + R1[i], jx = sh ? (Math.random() - 0.5) * sh * 16 : 0, jy = sh ? (Math.random() - 0.5) * sh * 16 : 0;
@@ -683,15 +715,15 @@ function draw(now) {
   const ax = state.ar ? -sensor.tiltX * W * 0.6 : 0, ay = state.ar ? -sensor.tiltY * H * 0.5 : 0;
   if (id === 'light') state.lamps.forEach((l0) => { l0.y -= l0.v * (1 + sensor.blow * 7); l0.x += Math.sin(t + l0.ph) * 0.3; const l = { x: l0.x + (l0.ar ? ax : 0), y: l0.y + (l0.ar ? ay : 0) }; const r = 10 + Math.sin(t * 3 + l0.ph) * 2; const lg = g.createRadialGradient(l.x, l.y, 0, l.x, l.y, r * 2.4); lg.addColorStop(0, 'rgba(255,240,205,.95)'); lg.addColorStop(1, 'rgba(255,214,150,0)'); g.fillStyle = lg; g.beginPath(); g.arc(l.x, l.y, r * 2.4, 0, 6.283); g.fill(); if (l0.y < -40) l0.y = H + 40; });
   if (state.ar && id !== 'light') stopAR();
-  if (id === 'hunger' && state.hold > 0.05) { g.strokeStyle = `rgba(255,248,230,${0.5 * state.hold})`; g.beginPath(); g.arc(ptr.x, ptr.y, 26 + state.hold * 10, -Math.PI / 2, -Math.PI / 2 + state.hold * 6.283); g.stroke(); }
+  if (id === 'hunger' && !reading && state.hold > 0.05) { g.strokeStyle = `rgba(255,248,230,${0.5 * state.hold})`; g.beginPath(); g.arc(ptr.x, ptr.y, 26 + state.hold * 10, -Math.PI / 2, -Math.PI / 2 + state.hold * 6.283); g.stroke(); }
   sound.update(id, p, { freeze: state.freeze, lamps: state.lamps.length });
   placeLabels(id, p);
-  chapterCard(cur);
 }
 
 // ---------------- 캔버스 인터랙션 ----------------
 addEventListener('click', (e) => {
   if (e.target.closest('.card, .bs-top, .bs-menu, .bs-progress, .lab, .bs-credits, .lb')) return;
+  if (readCard) return; // 이야기를 읽는 동안에는 체험을 받지 않음
   const id = SCENES[cur].id;
   if (id === 'prologue' && Math.hypot(e.clientX - X[0], e.clientY - Y[0]) < 60) { state.entered = true; sound.ping('enter'); sensor.vibrate(25); setTimeout(() => window.scrollTo({ top: sections[0].offsetTop + sections[0].offsetHeight * 0.55, behavior: 'smooth' }), 300); }
   if (id === 'life') {
@@ -744,7 +776,7 @@ if (IS_MOBILE) {
   addEventListener('click', function once() { removeEventListener('click', once, true); sensor.enable(); }, true); // iPhone: 첫 탭에서 기울기 권한
   sensor.onShake((v) => {
     const id = SCENES[cur].id;
-    if (id === 'boundary' || id === 'mine' || id === 'truth') return;
+    if (readCard || id === 'boundary' || id === 'mine' || id === 'truth') return;
     if (id === 'hunger') { jarShake(); return; }
     sound.rattle(0.4 + v * 0.6); sensor.vibrate([25, 30, 25]);
   });
@@ -755,20 +787,20 @@ if (IS_MOBILE) {
     try { await startMic(); btn.textContent = tr('후~ 불면 빛이 떠올라요'); btn.disabled = true; } catch (err) { btn.textContent = tr('마이크를 쓸 수 없어요'); }
   }));
   sensor.onBlow((v) => {
-    if (SCENES[cur].id !== 'light') return;
+    if (SCENES[cur].id !== 'light' || readCard) return;
     const n = 1 + Math.round(v * 3);
     for (let k = 0; k < n && state.lamps.length < 60; k++) state.lamps.push({ x: W * (0.15 + Math.random() * 0.7), y: H + 20, v: 0.5 + Math.random() * 0.6, ph: Math.random() * 6 });
     document.querySelectorAll('.lamp-n').forEach((el) => (el.textContent = state.lamps.length)); sound.ping('lamp'); sensor.vibrate(12);
   });
   // 여러 손가락: 빛 장면에서 손가락마다 빛 하나
   addEventListener('touchstart', (e) => {
-    if (SCENES[cur].id !== 'light' || e.touches.length < 2 || e.target.closest('.card, .bs-top, .lb')) return;
+    if (SCENES[cur].id !== 'light' || readCard || e.touches.length < 2 || e.target.closest('.card, .bs-top, .lb')) return;
     [...e.touches].forEach((tt) => { if (state.lamps.length < 60) state.lamps.push({ x: tt.clientX, y: tt.clientY, v: 0.25 + Math.random() * 0.35, ph: Math.random() * 6 }); });
     document.querySelectorAll('.lamp-n').forEach((el) => (el.textContent = state.lamps.length)); sound.ping('lamp'); sensor.vibrate(20);
   }, { passive: true });
   // 돌리기: 나눔 장면에서 주먹밥이 한 자리씩 옆으로
   sensor.onSpin((dir) => {
-    if (SCENES[cur].id !== 'share') return;
+    if (SCENES[cur].id !== 'share' || readCard) return;
     state.balls.forEach((bl) => { bl.ta += dir * Math.PI * 2 / 10; });
     state.share++; document.querySelectorAll('.share-n').forEach((el) => (el.textContent = state.share)); sound.ping('share'); sensor.vibrate([15, 30, 15]);
   });
