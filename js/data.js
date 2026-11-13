@@ -1,4 +1,4 @@
-import { CONFIG } from './config.js?v=23';
+import { CONFIG } from './config.js?v=24';
 import { lang, tr } from './i18n.js?v=6';
 
 // 응답 본문을 읽는 동안에도 제한 시간을 유지 (느린 연결에서 시작이 멈추지 않게)
