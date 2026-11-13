@@ -31,7 +31,7 @@ export const CONFIG = {
     seller: { name: '[상호]', ceo: '[대표자]', bizNo: '[사업자등록번호]', mailOrderNo: '[통신판매업 신고번호]', address: '[사업장 주소]', contact: '[고객센터 연락처]' } },
   // 로그인·회원가입(Supabase Auth): 카카오·Apple·구글 + 이메일. 두 값을 채우면 켜짐(anon 키는 공개돼도 되는 키, 서비스 키는 절대 넣지 말 것)
   // appRedirect: 앱(Capacitor)에서 로그인 뒤 돌아올 앱 주소(예: 'artmos://auth'), redirectTo: 웹에서 돌아올 주소(비우면 지금 페이지)
-  // 설정 순서: docs/auth/README.md
+  // providers: Supabase에서 실제로 켠 소셜 로그인만 적기(예: ['kakao', 'apple', 'google']). 비어 있으면 버튼은 보이되 '곧 열려요'. 설정 순서: docs/auth/README.md
   auth: { supabaseUrl: 'https://tyuvosvhmvmlbbinhehz.supabase.co', supabaseAnonKey: 'sb_publishable_dwqT2vrjDRbADssUkt6iCA_xgTtTAKM', // 공개용(publishable) 키 — 비밀 키 아님
-    providers: ['kakao', 'apple', 'google'], appRedirect: '', redirectTo: '' },
+    providers: [], appRedirect: '', redirectTo: '' },
 };
