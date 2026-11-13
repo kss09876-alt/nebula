@@ -5,7 +5,11 @@
 // 자동 재생이 막히면 로고가 다 그려진 뒤 '입장하기' 버튼(누르면 소리와 함께 입장). 화면을 누르면 건너뜀.
 // 모션 줄이기 설정이면 짧게 페이드만. 소리 끄기(xpace-sound=off)면 소리·버튼 없이.
 (() => {
-  const L = (() => { try { return new URLSearchParams(location.search).get('lang') || localStorage.getItem('xpace-lang') || (navigator.language || 'ko').slice(0, 2); } catch (e) { return 'ko'; } })();
+  const L = (() => { // 앱(i18n.js)과 같은 순서: 주소 ?lang= → 지난번 선택 → 기기 언어 → 한국어
+    const ok = (l) => ['ko', 'en', 'zh', 'ja'].includes(l);
+    try { const q = new URLSearchParams(location.search).get('lang'); if (ok(q)) return q; const s = localStorage.getItem('xpace-lang'); if (ok(s)) return s; } catch (e) {}
+    const n = (navigator.language || 'ko').slice(0, 2).toLowerCase(); return ok(n) ? n : 'ko';
+  })();
   const COPY = {
     ko: ['세상의 예술을 가까이 만나는 공간', '입장하기'],
     en: ['A space to meet the world’s art up close', 'Enter'],
