@@ -15,7 +15,7 @@ import { createAppDiscover } from './app-discover.js?v=2';
 import { createExhibitShare } from './app-share.js?v=1';
 import { APP_COPY } from './app-copy.js?v=1';
 import * as MB from './membership.js?v=4';
-import * as SHOP from './app-shop.js?v=1';
+import * as SHOP from './app-shop.js?v=2';
 const motionQuery = createMotionPreference();
 let nativeActive = true;
 
