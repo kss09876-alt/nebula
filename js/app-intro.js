@@ -7,10 +7,10 @@
 (() => {
   const L = (() => { try { return new URLSearchParams(location.search).get('lang') || localStorage.getItem('xpace-lang') || (navigator.language || 'ko').slice(0, 2); } catch (e) { return 'ko'; } })();
   const COPY = {
-    ko: ['지금, 세상의 예술이 내 손 안에서 열려요', 'ART + COSMOS · 예술로 이루어진 우주', '입장하기'],
-    en: ['The world’s art, opening in your hand', 'ART + COSMOS · a universe made of art', 'Enter'],
-    zh: ['此刻，世界的艺术在你掌中展开', 'ART + COSMOS · 由艺术构成的宇宙', '进入'],
-    ja: ['いま、世界のアートが手のひらでひらく', 'ART + COSMOS · アートでできた宇宙', '入場する'],
+    ko: ['세상의 예술을 가까이 만나는 공간', '입장하기'],
+    en: ['A space to meet the world’s art up close', 'Enter'],
+    zh: ['近距离遇见世界艺术的空间', '进入'],
+    ja: ['世界のアートに、もっと近くで出会える場所', '入場する'],
   };
   const C = COPY[L] || COPY.ko;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches || (() => { try { return localStorage.getItem('valix-motion') === 'reduce'; } catch (e) { return false; } })();
@@ -18,35 +18,29 @@
   const T = { art: 300, cosmos: 650, scatter: 1850, join: 1900, hit: 2600, ring: 2650, copy: 3200, end: 3950 }; // ms
 
   const css = `
-  .ai{position:fixed;inset:0;z-index:80;background:radial-gradient(ellipse at 50% 46%,#0e1426 0%,#06070d 58%,#030308 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;color:#f2f3f8;font-family:Pretendard,-apple-system,'Apple SD Gothic Neo',sans-serif;transition:opacity .7s ease}
+  .ai{position:fixed;inset:0;z-index:80;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;color:#f2f3f8;font-family:Pretendard,-apple-system,'Apple SD Gothic Neo',sans-serif;transition:opacity .7s ease}
   .ai.out{opacity:0;pointer-events:none}
   .ai canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   .ai .stage{position:absolute;left:0;right:0;top:calc(47% - 70px);width:100%;height:140px;display:flex;align-items:center;justify-content:center}
-  .ai .word{position:relative;display:flex;align-items:center;font-weight:200;font-size:clamp(34px,10.5vw,58px);letter-spacing:.16em;white-space:nowrap}
+  @font-face{font-family:'ARTMOS Michroma';src:url('assets/fonts/michroma-latin-400.woff2') format('woff2');font-display:block}
+  .ai .word{position:relative;display:flex;align-items:center;font-family:'ARTMOS Michroma','Michroma',sans-serif;font-weight:400;font-size:clamp(22px,7vw,56px);letter-spacing:.18em;white-space:nowrap;-webkit-text-stroke:.055em currentColor}
+  .ai .live{transition:transform 1.1s cubic-bezier(.2,.8,.2,1)}
+  .ai .live.big{transform:scale(1.35)}
   .ai .word.ghost{position:absolute;visibility:hidden}
   .ai .ch{display:inline-block;opacity:0;transform:translateY(12px);filter:blur(8px);transition:transform .95s cubic-bezier(.65,0,.2,1),opacity .6s,filter .6s,color .6s,text-shadow .6s}
   .ai .ch.on{opacity:1;transform:none;filter:none}
   .ai .gap{display:inline-block;width:.9em}
-  .ai .cos .ch{color:#bfe6ff;text-shadow:0 0 14px rgba(140,210,255,.8)}
+  .ai .cos .x{color:#cfe8ff;text-shadow:0 0 14px rgba(160,215,255,.7)}
   .ai .ch.dust{opacity:0!important;filter:blur(14px)!important;transition:transform 1s cubic-bezier(.2,.7,.2,1),opacity .9s,filter .9s}
-  .ai .ch.lit{color:#fff;text-shadow:0 0 22px rgba(160,225,255,.95),0 0 4px #fff}
-  .ai .planet{position:absolute;pointer-events:none;opacity:0;transition:opacity .5s}
-  .ai .planet.on{opacity:1}
-  .ai .planet .core{position:absolute;inset:18%;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.55),rgba(150,215,255,.22) 45%,rgba(90,120,220,0) 72%)}
-  .ai .planet svg{position:absolute;inset:-60% -95%;width:290%;height:220%;overflow:visible}
-  .ai .planet ellipse{fill:none;stroke:url(#aiRing);stroke-width:1.4;stroke-dasharray:420;stroke-dashoffset:420}
-  .ai .planet.on ellipse{animation:aiDraw 1.1s cubic-bezier(.4,0,.2,1) forwards}
-  .ai .planet .moon{fill:#e8f7ff;filter:url(#aiGlow);opacity:0}
-  .ai .planet.on .moon{opacity:1}
-  .ai .flash{position:absolute;left:50%;top:50%;width:340px;height:340px;margin:-170px;border-radius:50%;background:radial-gradient(circle,rgba(220,245,255,.75) 0%,rgba(130,200,255,.25) 26%,rgba(130,200,255,0) 62%);opacity:0;pointer-events:none}
+  .ai .ch.lit{color:#fff;text-shadow:0 0 20px rgba(255,255,255,.8)}
+  .ai .flash{position:absolute;left:50%;top:50%;width:340px;height:340px;margin:-170px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.45) 0%,rgba(255,255,255,.12) 26%,rgba(255,255,255,0) 62%);opacity:0;pointer-events:none}
   .ai .flash.on{animation:aiFlash 1.2s ease-out forwards}
-  .ai .copy{position:absolute;left:0;right:0;top:calc(47% + 74px);text-align:center;padding:0 28px;opacity:0;transform:translateY(8px);transition:opacity .9s,transform .9s}
+  .ai .copy{position:absolute;left:0;right:0;top:calc(47% + 84px);text-align:center;padding:0 28px;opacity:0;transform:translateY(8px);transition:opacity .9s,transform .9s}
   .ai.copyon .copy{opacity:1;transform:none}
-  .ai .copy b{display:block;font-family:'Nanum Myeongjo','Noto Serif KR','AppleMyungjo',serif;font-weight:700;font-size:clamp(17px,4.8vw,22px);line-height:1.5;color:#f3ead6}
+  .ai .copy b{display:block;font-family:Pretendard,-apple-system,'Apple SD Gothic Neo',sans-serif;font-weight:300;font-size:clamp(17px,4.8vw,22px);line-height:1.5;color:#e9e9ee;font-weight:400;letter-spacing:.02em}
   .ai .copy small{display:block;margin-top:10px;font-size:12.5px;letter-spacing:.14em;color:#9aa1bd}
-  .ai .enter{position:absolute;z-index:2;top:calc(47% + 190px);left:50%;margin-left:-80px;width:160px;padding:13px 30px;border-radius:999px;border:1px solid rgba(216,184,120,.6);color:#f0dcae;font-size:15px;letter-spacing:.12em;background:rgba(216,184,120,.06);opacity:0;transform:translateY(6px);transition:opacity .6s,transform .6s;font-family:inherit}
+  .ai .enter{position:absolute;z-index:2;top:calc(47% + 190px);left:50%;margin-left:-80px;width:160px;padding:13px 30px;border-radius:999px;border:1px solid rgba(255,255,255,.45);color:#f2f2f2;font-size:15px;letter-spacing:.12em;background:rgba(255,255,255,.04);opacity:0;transform:translateY(6px);transition:opacity .6s,transform .6s;font-family:inherit}
   .ai .enter.show{opacity:1;transform:none}
-  .ai .planet .core{box-shadow:0 0 24px rgba(150,215,255,.35)}
   .ai .by{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 30px);font-size:11px;letter-spacing:.3em;color:#5f6684;opacity:0;transition:opacity 1s}
   .ai.copyon .by{opacity:1}
   @keyframes aiDraw{to{stroke-dashoffset:0}}
@@ -62,14 +56,10 @@
         <span class="art">${[...'ART'].map((t, i) => span(t, 'k k' + i)).join('')}</span><span class="gap"></span>
         <span class="cos">${span('C', 'x')}${span('O', 'x')}${span('S', 'x')}${span('M', 'k k3')}${span('O', 'k k4')}${span('S', 'k k5')}</span>
       </div>
-      <div class="planet"><span class="core"></span><svg viewBox="-100 -40 200 80" aria-hidden="true"><defs>
-        <linearGradient id="aiRing" x1="0" x2="1"><stop offset="0" stop-color="#9fd8ff" stop-opacity=".15"/><stop offset=".5" stop-color="#e9f7ff" stop-opacity=".95"/><stop offset="1" stop-color="#9fd8ff" stop-opacity=".2"/></linearGradient>
-        <filter id="aiGlow" x="-300%" y="-300%" width="700%" height="700%"><feGaussianBlur stdDeviation="2.2"/></filter></defs>
-        <ellipse rx="64" ry="15" transform="rotate(-14)"/><circle class="moon" r="3.2"><animateMotion dur="1.6s" begin="indefinite" fill="freeze" rotate="0" path="M64,0 A64,15 0 1,1 63.9,-0.9" /></circle></svg></div>
       <span class="flash"></span>
     </div>
-    <div class="copy"><b>${C[0]}</b><small>${C[1]}</small></div>
-    <button class="enter" type="button" hidden>♪&nbsp;&nbsp;${C[2]}</button>
+    <div class="copy"><b>${C[0]}</b></div>
+    <button class="enter" type="button" hidden>♪&nbsp;&nbsp;${C[1]}</button>
     <p class="by">ARTMOS · BY VALIX LAB</p>`;
   document.body.appendChild(el);
   const $ = (s) => el.querySelector(s), $$ = (s) => [...el.querySelectorAll(s)];
@@ -79,7 +69,7 @@
   const dpr = Math.min(devicePixelRatio || 1, 2); let W = 0, H = 0;
   const size = () => { W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0); };
   size(); addEventListener('resize', size);
-  const N = reduce ? 0 : 260, P = [];
+  const N = 0, P = []; // 배경은 그냥 검은색 (성운 먼지 없음)
   for (let i = 0; i < N; i++) { const a = Math.random() * Math.PI * 2, r = 0.35 + Math.random() * 0.75; P.push({ a, r, s: 0.4 + Math.random() * 1.3, hue: Math.random() < 0.7 ? 205 : 40, sp: (Math.random() - 0.5) * 0.4, tw: Math.random() * 6 }); }
   const sparks = []; // COS가 흩어질 때·합쳐질 때 생기는 별가루
   let t0 = performance.now(), raf = 0;
@@ -160,14 +150,13 @@
     el.classList.add('out');
     setTimeout(() => { el.remove(); st.remove(); removeEventListener('resize', size); if (ac && ac.state !== 'closed') setTimeout(() => ac.close().catch(() => {}), 4000); }, 700);
   }
-  function placePlanet() { // ARTMOS의 O 자리에 행성(고리·위성)을 겹침
-    const o = $('.live .k4'), stg = $('.stage'), r = o.getBoundingClientRect(), s = stg.getBoundingClientRect(), pl = $('.planet');
-    const d = r.height * 0.78; Object.assign(pl.style, { width: d + 'px', height: d + 'px', left: (r.left - s.left + r.width / 2 - d / 2) + 'px', top: (r.top - s.top + r.height / 2 - d / 2) + 'px' });
-  }
   if (reduce) {
     $$('.live .k').forEach((c) => c.classList.add('on')); $$('.live .x').forEach((c) => c.remove()); $('.live .gap').remove();
-    placePlanet(); $('.planet').classList.add('on'); el.classList.add('copyon'); at(1500, finish);
-  } else {
+    $('.live').classList.add('big'); el.classList.add('copyon'); at(1500, finish);
+  } else start();
+  async function start() {
+    try { await Promise.race([document.fonts.load("40px 'ARTMOS Michroma'"), new Promise((r) => setTimeout(r, 700))]); } catch (e) {}
+    if (done) return;
     raf = requestAnimationFrame(frame); sound(0);
     $$('.art .ch').forEach((c, i) => at(T.art + i * 110, () => c.classList.add('on')));
     $$('.cos .ch').forEach((c, i) => at(T.cosmos + i * 70, () => c.classList.add('on')));
@@ -182,19 +171,13 @@
     at(T.hit - 40, () => {
       const live = $$('.live .k'); live.forEach((c) => c.classList.add('lit')); setTimeout(() => live.forEach((c) => c.classList.remove('lit')), 700);
       $('.flash').classList.add('on'); burstAt($('.live .k4'), 60, 5);
-      placePlanetAfterJoin();
+      $('.live').classList.add('big');
     });
-    at(T.ring + 200, () => { try { $('.planet .moon animateMotion').beginElement(); } catch (e) {} });
     at(T.copy, () => el.classList.add('copyon'));
     at(T.end, () => {
       if (soundOn && !audible()) { const b = $('.enter'); b.hidden = false; requestAnimationFrame(() => b.classList.add('show')); b.focus({ preventScroll: true }); at(T.end + 9000, finish); }
       else at(T.end + 900, finish);
     });
-  }
-  function placePlanetAfterJoin() { // 이동이 끝난 O(=ghost의 5번째 글자 자리)에 행성
-    const g = $$('.ghost .ch')[4], s = $('.stage').getBoundingClientRect(), r = g.getBoundingClientRect(), pl = $('.planet');
-    const d = r.height * 0.78; Object.assign(pl.style, { width: d + 'px', height: d + 'px', left: (r.left - s.left + r.width / 2 - d / 2) + 'px', top: (r.top - s.top + r.height / 2 - d / 2) + 'px' });
-    pl.classList.add('on');
   }
   el.addEventListener('click', (e) => {
     const b = e.target.closest('.enter');
