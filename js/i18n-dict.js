@@ -1,12 +1,12 @@
-// NEBULA 화면 문구 번역 (한국어 문장 = 키). 번역이 없는 문구는 한국어로 보입니다.
+// ARTMOS 화면 문구 번역 (한국어 문장 = 키). 번역이 없는 문구는 한국어로 보입니다.
 const T = {
   // ---------- 공통 / 홈 ----------
-  'NEBULA 네뷸라 — 살아 있는 예술이 태어나는 우주': ["NEBULA — A universe where living art is born", "NEBULA — 鲜活艺术诞生的宇宙", "NEBULA — 生きたアートが生まれる宇宙"],
-  '네뷸라': ['NEBULA', 'NEBULA', 'ネビュラ'],
+  'ARTMOS 아트모스 — 살아 있는 예술이 태어나는 우주': ["ARTMOS — A universe where living art is born", "ARTMOS — 鲜活艺术诞生的宇宙", "ARTMOS — 生きたアートが生まれる宇宙"],
+  '아트모스': ['ARTMOS', 'ARTMOS', 'アートモス'],
   '살아 있는 예술이 태어나는 우주.': ["a universe where living art is born.", "鲜活艺术诞生的宇宙。", "生きたアートが生まれる宇宙。"],
   '행성을 골라 착륙해 보세요.': ['Pick a planet and land.', '选择一颗行星，降落吧。', '惑星を選んで、着陸してみましょう。'],
   '드래그해서 둘러보기 · 행성을 눌러 착륙': ['Drag to look around · Click a planet to land', '拖动浏览 · 点击行星降落', 'ドラッグで見渡す · 惑星をクリックして着陸'],
-  'NEBULA(네뷸라)는 별이 태어나는 성운처럼, 살아 있는 예술이 태어나는 온라인 공간입니다.': ["Like a nebula where stars are born, NEBULA is an online space where living art is born.", "如同孕育恒星的星云，NEBULA 是鲜活艺术诞生的在线空间。", "星が生まれる星雲のように、NEBULA（ネビュラ）は生きたアートが生まれるオンラインの空間です。"],
+  'ARTMOS(아트모스)는 ART와 COSMOS를 합친 이름처럼, 살아 있는 예술로 이루어진 온라인 우주입니다.': ["As its name joins ART and COSMOS, ARTMOS is an online universe made of living art.", "正如其名由 ART 与 COSMOS 组成，ARTMOS 是由鲜活艺术构成的在线宇宙。", "ART と COSMOS をあわせた名前のとおり、ARTMOS（アートモス）は生きたアートでできたオンラインの宇宙です。"],
   '하루하루의 작은 고민에서 잠시 고개를 들어, 우주와 빛과 소리처럼 더 큰 것을 바라보는 곳. 시야가 넓어지면 생각과 마음의 폭도 함께 넓어진다고 믿습니다.': [
     'A place to look up from the small worries of each day and gaze at something bigger: the universe, light, sound. We believe that when your view widens, your thoughts and your heart widen with it.',
     '在这里，从每天的小烦恼中暂时抬起头，望向宇宙、光与声音这样更宏大的事物。我们相信，视野变宽，思想和心胸也会随之变宽。',
@@ -23,9 +23,9 @@ const T = {
   '최초의 행성': ['The First Planet', '最初的行星', '最初の惑星'],
   '최초의 방': ['The First Room', '最初的房间', '最初の部屋'],
   '빛 · 소리 · 우주 — 하나로 이어지는 개관 전시': ['Light · Sound · Universe — one continuous opening exhibition', '光 · 声 · 宇宙 — 连成一体的开馆展览', '光 · 音 · 宇宙 — ひとつにつながる開館展示'],
-  'NEBULA 개관 전시': ['NEBULA opening exhibition', 'NEBULA 开馆展览', 'NEBULA 開館展示'],
+  'ARTMOS 개관 전시': ['ARTMOS opening exhibition', 'ARTMOS 开馆展览', 'ARTMOS 開館展示'],
   '빛 · 소리 · 우주 — 세 개의 방으로 이루어진 개관 기획전': ['Light · Sound · Universe — an opening exhibition in three rooms', '光 · 声 · 宇宙 — 由三个展厅组成的开馆特展', '光・音・宇宙 — 三つの部屋からなる開館企画展'],
-  'NEBULA 기획전': ['NEBULA Exhibition', 'NEBULA 特展', 'NEBULA 企画展'],
+  'ARTMOS 기획전': ['ARTMOS Exhibition', 'ARTMOS 特展', 'ARTMOS 企画展'],
 
   // ---------- 전시 페이지 ----------
   '상태: 중첩 (superposition)': ['State: superposition', '状态：叠加 (superposition)', '状態：重ね合わせ (superposition)'],
@@ -75,8 +75,8 @@ const T = {
     'The table, map and mine-shaft scenes are illustrations to aid understanding and do not depict real places or people. Lines marked "exhibition text" are written for this exhibition and are not actual words of victims or bereaved families.',
     '饭桌、简图和矿井通道等场景是帮助理解的插画，并不再现真实的地点或人物。标为“展览文案”的句子为创作文字，并非遇难者或遗属的真实话语。',
     '食卓・略図・鉱山の通路の場面は理解を助けるためのイラストで、実在の場所や人物を再現したものではありません。「展示文」と記した文章は創作であり、犠牲者や遺族の実際の発言ではありません。'],
-  '작품: 진시영 · 김동선, 《빛쌀》, 2026 · 기획: NEBULA (VALIX LAB)': ['Artwork: Jin Siyoung · Kim Dongsun, Bitssal, 2026 · Curated by NEBULA (VALIX LAB)', '作品：Jin Siyoung · Kim Dongsun，《光之米》，2026 · 策划：NEBULA (VALIX LAB)', '作品：Jin Siyoung · Kim Dongsun《光の米》2026 · 企画：NEBULA（VALIX LAB）'],
-  '← NEBULA 행성계로 돌아가기': ['← Back to the NEBULA planets', '← 返回 NEBULA 行星系', '← NEBULA 惑星系にもどる'],
+  '작품: 진시영 · 김동선, 《빛쌀》, 2026 · 기획: ARTMOS (VALIX LAB)': ['Artwork: Jin Siyoung · Kim Dongsun, Bitssal, 2026 · Curated by ARTMOS (VALIX LAB)', '作品：Jin Siyoung · Kim Dongsun，《光之米》，2026 · 策划：ARTMOS (VALIX LAB)', '作品：Jin Siyoung · Kim Dongsun《光の米》2026 · 企画：ARTMOS（VALIX LAB）'],
+  '← ARTMOS 행성계로 돌아가기': ['← Back to the ARTMOS planets', '← 返回 ARTMOS 行星系', '← ARTMOS 惑星系にもどる'],
   '출처: ': ['Source: ', '出处：', '出典：'],
   '기록': ['RECORD', '记录', '記録'],
   '기록 읽기': ['Read the record', '阅读记录', '記録を読む'],
@@ -110,7 +110,7 @@ const T = {
   '소리 켜짐': ['Sound on', '声音开', 'サウンド オン'],
   '소리 켜기': ['Sound off', '打开声音', 'サウンド オフ'],
   '빛쌀 — 80년의 기억': ['Bitssal — 80 Years of Memory', '光之米 — 80 年的记忆', '光の米 — 80年の記憶'],
-  'N-003 · 진시영 · 김동선': ['N-003 · Jin Siyoung · Kim Dongsun', 'N-003 · Jin Siyoung · Kim Dongsun', 'N-003 · Jin Siyoung · Kim Dongsun'],
+  'A-003 · 진시영 · 김동선': ['A-003 · Jin Siyoung · Kim Dongsun', 'A-003 · Jin Siyoung · Kim Dongsun', 'A-003 · Jin Siyoung · Kim Dongsun'],
   '대구역': ['Daegu Station', '大邱站', '大邱駅'],
   '공회당 · 시투 사무실': ['Public Hall · Strike committee office', '公会堂 · 斗争委员会办公室', '公会堂 · 闘争委員会事務所'],
   '대구부청': ['Daegu City Hall', '大邱府厅', '大邱府庁'],
@@ -156,7 +156,7 @@ const T = {
   'AR 끝내기': ['Exit AR', '退出 AR', 'AR を終了'],
   '카메라를 쓸 수 없어요 (권한을 확인해 주세요)': ['Camera unavailable (check permissions)', '无法使用相机（请检查权限）', 'カメラを使えません（許可を確認してください）'],
   '체험 안내': ['How to play', '体验指南', '体験ガイド'],
-  '휴대폰으로 만나는 NEBULA': ['NEBULA on your phone', '用手机遇见 NEBULA', 'スマホで出会う NEBULA'],
+  '휴대폰으로 만나는 ARTMOS': ['ARTMOS on your phone', '用手机遇见 ARTMOS', 'スマホで出会う ARTMOS'],
   '나침반': ['Compass', '指南针', 'コンパス'], '기울이기': ['Tilt', '倾斜', '傾ける'], '흔들기': ['Shake', '摇晃', '振る'], '돌리기': ['Twist', '旋转', '回す'],
   '밀기': ['Swipe', '滑动', 'スワイプ'], '두 손가락': ['Two fingers', '双指', '二本指'], '후 불기': ['Blow', '吹气', '息を吹く'], '엎어 두기': ['Face down', '扣放', '伏せて置く'],
   '폰을 들고 몸을 돌리면 행성계가 방위를 따라 돌아요.': ['Hold the phone and turn around; the solar system turns with the compass.', '拿着手机转身，行星系会跟着方位转动。', 'スマホを持って体の向きを変えると、惑星系が方位に合わせて回ります。'],

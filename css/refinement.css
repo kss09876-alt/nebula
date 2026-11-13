@@ -1,4 +1,4 @@
-/* NEBULA refinement · additive UI layer, no canvas or sensor overrides.
+/* ARTMOS refinement · additive UI layer, no canvas or sensor overrides.
    Page bodies opt in; original exhibition palettes and magazine cover remain. */
 body.nebula-refined {
   --ref-line: rgba(226, 232, 255, .18);

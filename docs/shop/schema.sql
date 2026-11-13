@@ -1,4 +1,4 @@
--- NEBULA 컬렉트 — 작품·주문 (Supabase / Postgres) 초안. 아직 만들지 않음.
+-- ARTMOS 컬렉트 — 작품·주문 (Supabase / Postgres) 초안. 아직 만들지 않음.
 -- 가격·재고의 진짜 기준은 이 표. 화면(시트·JSON)은 보여 주기용이고, 결제 금액은 서버가 여기서 계산한다.
 
 create table if not exists public.works (

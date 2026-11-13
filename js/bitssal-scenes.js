@@ -1,7 +1,7 @@
-// N-003 · 빛쌀 — 장면 구성 (이야기 중심 · 기록은 짧게 · 인터랙션은 이야기에 맞춤)
+// A-003 · 빛쌀 — 장면 구성 (이야기 중심 · 기록은 짧게 · 인터랙션은 이야기에 맞춤)
 // 이야기 본문은 bitssal-story.js(순이, 가상의 인물). 여기서는 장면 순서·카드·짧은 기록·조작 안내·화면 문구(4개 언어)를 정한다.
 // 기록 수치는 바꾸지 말 것: 1,800명 이상 추정 / 유족회 3,500명 이상 / 신원 확인 127명 / 2009.11.17 결정 / 2010.3.30 결정
-import { STORY } from './bitssal-story.js?v=3';
+import { STORY } from './bitssal-story.js?v=4';
 
 // 장면마다 이야기 카드에 붙는 제목과 얼굴(쌀로 그린 초상)
 export const FACES = { prologue: ['suniOld'], life: ['suniChild'], hunger: ['mother'], demand: ['brother'], street: [null], spread: [null], erased: [null], boundary: ['brother'], mine: [null], truth: ['mother', 'suniOld'], share: ['suni44'], light: ['suniOld'] };
@@ -12,7 +12,7 @@ const T = {
     titles: { prologue: '한 톨', work: '작품', life: '밥상', hunger: '쌀독', demand: '쌀', street: '밤', spread: '번짐', erased: '낮은 목소리', boundary: '1950', mine: '한 그릇 더', truth: '7월', share: '주먹밥', light: '빛', records: "기록", archive: '아카이브' },
     heads: { prologue: ['한 그릇 더'], life: ['열 식구의 밥상'], hunger: ['아홉, 열'], demand: ['쌀 달라고 하러 간다'], street: ['등잔을 켜지 않은 밤'], spread: ['대구 일'], erased: ['낮아진 목소리'], boundary: ['저녁밥 해 놔라'], mine: ['돌아오지 않은 저녁'], truth: ['7월의 밥 한 그릇', '127명'], share: ['서로를 살리는 밥'], light: ['한 톨만큼만'] },
     chap: { life: '01', hunger: '02', demand: '03', street: '04', spread: '05', erased: '06', boundary: '07', mine: '08', truth: '09', share: '10', light: '11' },
-    p0: (touch) => `<p class="kicker">N-003 · 진시영 · 김동선 《빛쌀》</p><h1>빛쌀</h1><p class="lead">한 톨의 쌀이<br>한 사람의 이야기를 따라갑니다.</p><p class="hint">${touch ? '어둠 속 쌀알을 눌러 보세요. 이야기가 시작됩니다.' : '어둠 속 쌀알에 커서를 가져가 눌러 보세요. 이야기가 시작됩니다.'}</p>`,
+    p0: (touch) => `<p class="kicker">A-003 · 진시영 · 김동선 《빛쌀》</p><h1>빛쌀</h1><p class="lead">한 톨의 쌀이<br>한 사람의 이야기를 따라갑니다.</p><p class="hint">${touch ? '어둠 속 쌀알을 눌러 보세요. 이야기가 시작됩니다.' : '어둠 속 쌀알에 커서를 가져가 눌러 보세요. 이야기가 시작됩니다.'}</p>`,
     part1: "PART 1 · 순이의 이야기",
     part2: "<p class=\"kicker\">PART 2 · 작품과 기록</p><h2>이야기가 시작된 곳</h2><p>여기까지가 순이의 이야기입니다. 이제 이 이야기가 흘러나온 유리 조형물 《빛쌀》과, 이야기 뒤에 있는 실제 기록을 봅니다.</p>",
     recIntro: "<p class=\"kicker\">그때의 기록</p><h2>이야기 뒤의 사실</h2><p>순이의 이야기는 아래 기록 위에서 만들어졌습니다. 출처는 진실·화해를위한과거사정리위원회의 조사 결과입니다.</p>",
@@ -60,7 +60,7 @@ const T = {
     titles: { prologue: 'A grain', work: 'The work', life: 'The table', hunger: 'Rice jar', demand: 'Rice', street: 'Night', spread: 'Spreading', erased: 'Low voices', boundary: '1950', mine: 'One more bowl', truth: 'July', share: 'Rice balls', light: 'Light', records: "Records", archive: 'Archive' },
     heads: { prologue: ['One more bowl'], life: ['A table for ten'], hunger: ['Nine, ten'], demand: ['Going to ask for rice'], street: ['A night without the lamp'], spread: ['“The Daegu thing”'], erased: ['Lowered voices'], boundary: ['Have supper ready'], mine: ['The evening he did not return'], truth: ['A bowl of rice in July', '127'], share: ['Rice that keeps us alive'], light: ['Just one grain’s worth'] },
     chap: {},
-    p0: (touch) => `<p class="kicker">N-003 · Jin Siyoung · Kim Dongsun, Bitssal</p><h1>Bitssal</h1><p class="lead">A single grain of rice<br>follows one person’s story.</p><p class="hint">${touch ? 'Tap the grain in the dark. The story begins.' : 'Move your cursor to the grain in the dark and click it. The story begins.'}</p>`,
+    p0: (touch) => `<p class="kicker">A-003 · Jin Siyoung · Kim Dongsun, Bitssal</p><h1>Bitssal</h1><p class="lead">A single grain of rice<br>follows one person’s story.</p><p class="hint">${touch ? 'Tap the grain in the dark. The story begins.' : 'Move your cursor to the grain in the dark and click it. The story begins.'}</p>`,
     part1: "PART 1 · Suni’s story",
     part2: "<p class=\"kicker\">PART 2 · The work and the records</p><h2>Where the story began</h2><p>This is where Suni’s story ends. Now we look at the glass sculpture Bitssal that the story flowed from, and the real records behind it.</p>",
     recIntro: "<p class=\"kicker\">Records of the time</p><h2>The facts behind the story</h2><p>Suni’s story was built on the records below, from the findings of the Truth and Reconciliation Commission.</p>",
@@ -108,7 +108,7 @@ const T = {
     titles: { prologue: '一粒', work: '作品', life: '饭桌', hunger: '米缸', demand: '米', street: '夜', spread: '蔓延', erased: '低声', boundary: '1950', mine: '多盛一碗', truth: '七月', share: '饭团', light: '光', records: "记录", archive: '档案' },
     heads: { prologue: ['多盛一碗'], life: ['十口人的饭桌'], hunger: ['九、十'], demand: ['去要米'], street: ['没点灯的夜'], spread: ['“大邱的事”'], erased: ['压低的声音'], boundary: ['把晚饭做好'], mine: ['没有回来的傍晚'], truth: ['七月的一碗饭', '127人'], share: ['让彼此活下去的饭'], light: ['只要一粒米那么多'] },
     chap: {},
-    p0: (touch) => `<p class="kicker">N-003 · Jin Siyoung · Kim Dongsun《光之米》</p><h1>光之米</h1><p class="lead">一粒米，<br>跟随一个人的故事。</p><p class="hint">${touch ? '点一下黑暗中的米粒，故事就开始了。' : '把光标移到黑暗中的米粒上并点击，故事就开始了。'}</p>`,
+    p0: (touch) => `<p class="kicker">A-003 · Jin Siyoung · Kim Dongsun《光之米》</p><h1>光之米</h1><p class="lead">一粒米，<br>跟随一个人的故事。</p><p class="hint">${touch ? '点一下黑暗中的米粒，故事就开始了。' : '把光标移到黑暗中的米粒上并点击，故事就开始了。'}</p>`,
     part1: "PART 1 · 顺伊的故事",
     part2: "<p class=\"kicker\">PART 2 · 作品与记录</p><h2>故事开始的地方</h2><p>顺伊的故事到这里结束。接下来，我们来看故事流出的玻璃雕塑《光之米》，以及故事背后的真实记录。</p>",
     recIntro: "<p class=\"kicker\">当时的记录</p><h2>故事背后的事实</h2><p>顺伊的故事建立在以下记录之上，出处为真实·和解委员会的调查结果。</p>",
@@ -156,7 +156,7 @@ const T = {
     titles: { prologue: 'ひと粒', work: '作品', life: '食卓', hunger: '米びつ', demand: '米', street: '夜', spread: '広がり', erased: 'ひそめた声', boundary: '1950', mine: 'もう一杯', truth: '七月', share: 'おにぎり', light: '光', records: "記録", archive: 'アーカイブ' },
     heads: { prologue: ['もう一杯'], life: ['十人の食卓'], hunger: ['九つ、十'], demand: ['米をくれと言いに行く'], street: ['灯りをつけない夜'], spread: ['「大邱のこと」'], erased: ['ひそめた声'], boundary: ['夕飯、炊いといてくれ'], mine: ['帰らなかった夕方'], truth: ['七月のご飯一杯', '127人'], share: ['たがいを生かすご飯'], light: ['一粒ぶんだけ'] },
     chap: {},
-    p0: (touch) => `<p class="kicker">N-003 · Jin Siyoung · Kim Dongsun《光の米》</p><h1>光の米</h1><p class="lead">ひと粒のお米が、<br>ひとりの物語をたどります。</p><p class="hint">${touch ? '闇の中の米粒をタップしてください。物語が始まります。' : '闇の中の米粒にカーソルを近づけて押してください。物語が始まります。'}</p>`,
+    p0: (touch) => `<p class="kicker">A-003 · Jin Siyoung · Kim Dongsun《光の米》</p><h1>光の米</h1><p class="lead">ひと粒のお米が、<br>ひとりの物語をたどります。</p><p class="hint">${touch ? '闇の中の米粒をタップしてください。物語が始まります。' : '闇の中の米粒にカーソルを近づけて押してください。物語が始まります。'}</p>`,
     part1: "PART 1 · スニの物語",
     part2: "<p class=\"kicker\">PART 2 · 作品と記録</p><h2>物語がはじまった場所</h2><p>スニの物語はここまでです。ここからは、物語が流れ出たガラスの造形《光の米》と、物語の背後にある実際の記録を見ていきます。</p>",
     recIntro: "<p class=\"kicker\">当時の記録</p><h2>物語の背後にある事実</h2><p>スニの物語は、以下の記録をもとに作られました。出典は真実和解委員会の調査結果です。</p>",

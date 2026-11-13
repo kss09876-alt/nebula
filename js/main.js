@@ -1,10 +1,10 @@
-// NEBULA — 메인: 성운 가운데에서 태어난 전시 행성계
+// ARTMOS — 메인: 성운 가운데에서 태어난 전시 행성계
 import * as THREE from 'three';
-import { loadData, imageUrl, esc } from './data.js?v=26';
-import { hsound } from './home-sound.js?v=6';
-import { tr, lang, langSwitcher } from './i18n.js?v=5';
-import { IS_MOBILE } from './sensors.js?v=3';
-import { initHomeInterface } from './home-interface.js?v=3';
+import { loadData, imageUrl, esc } from './data.js?v=27';
+import { hsound } from './home-sound.js?v=7';
+import { tr, lang, langSwitcher } from './i18n.js?v=6';
+import { IS_MOBILE } from './sensors.js?v=4';
+import { initHomeInterface } from './home-interface.js?v=4';
 const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
 let calm = motionQuery.matches;
 try { calm ||= localStorage.getItem('nebula-calm') === 'true'; } catch (e) {}
@@ -31,8 +31,8 @@ scene.add(sun);
 const world = new THREE.Group();
 scene.add(world);
 
-const shortTitle = (t = '') => t.replace(/^\s*(?:(?:CELL|X|N)\s*-?\s*\d+\s*[·:|–-]\s*)+/i, '');
-const code = (i) => 'N-' + String(i + 1).padStart(3, '0');
+const shortTitle = (t = '') => t.replace(/^\s*(?:(?:CELL|X|N|A)\s*-?\s*\d+\s*[·:|–-]\s*)+/i, '');
+const code = (i) => 'A-' + String(i + 1).padStart(3, '0');
 
 // ---------- 공통 텍스처 ----------
 function canvasTex(w, h, draw) {
@@ -500,11 +500,11 @@ function sndGate(kicker, title, onStart) {
 // ---------- 언어 ----------
 langSwitcher(document.querySelector('.topbar nav'), { before: document.getElementById('btn-sound') });
 if (lang !== 'ko') {
-  document.title = tr('NEBULA 네뷸라 — 살아 있는 예술이 태어나는 우주');
-  document.querySelector('.hero-copy .lede').innerHTML = `<strong>${tr('네뷸라')}</strong> — ${tr('살아 있는 예술이 태어나는 우주.')}<br />${tr('행성을 골라 착륙해 보세요.')}`;
+  document.title = tr('ARTMOS 아트모스 — 살아 있는 예술이 태어나는 우주');
+  document.querySelector('.hero-copy .lede').innerHTML = `<strong>${tr('아트모스')}</strong> — ${tr('살아 있는 예술이 태어나는 우주.')}<br />${tr('행성을 골라 착륙해 보세요.')}`;
   document.querySelector('.hint').textContent = tr('드래그해서 둘러보기 · 행성을 눌러 착륙');
   const ap = document.querySelectorAll('#about-panel p');
-  if (ap[0]) ap[0].textContent = tr('NEBULA(네뷸라)는 별이 태어나는 성운처럼, 살아 있는 예술이 태어나는 온라인 공간입니다.');
+  if (ap[0]) ap[0].textContent = tr('ARTMOS(아트모스)는 ART와 COSMOS를 합친 이름처럼, 살아 있는 예술로 이루어진 온라인 우주입니다.');
   if (ap[1]) ap[1].textContent = tr(ap[1].textContent.trim());
   if (ap[2]) ap[2].textContent = tr(ap[2].textContent.trim());
 }
@@ -526,7 +526,7 @@ function autoSound() {
   if (hsound.pref === 'off') return;
   hsound.tryAuto().then((ok) => {
     if (ok) { GEST.forEach((ev) => removeEventListener(ev, firstGesture)); sndUI(); return; }
-    closeGate = sndGate('ONLINE INTERACTIVE EXHIBITION', 'NEBULA', (withSound) => {
+    closeGate = sndGate('ONLINE INTERACTIVE EXHIBITION', 'ARTMOS', (withSound) => {
       GEST.forEach((ev) => removeEventListener(ev, firstGesture));
       M.onGateEnter && M.onGateEnter();
       if (withSound) hsound.start().then(sndUI); else { hsound.stop(); sndUI(); }
@@ -559,7 +559,7 @@ document.querySelector('.orbit-dock').setAttribute('aria-busy', 'true');
     </li>`).join('');
   resize();
   last = performance.now();
-  if (IS_MOBILE) { const { initHomeMobile } = await import('./home-mobile.js?v=5'); initHomeMobile(Object.assign(M, { state, planets, world, camera, THREE, enter, hsound, code, shortTitle, canvas })); }
+  if (IS_MOBILE) { const { initHomeMobile } = await import('./home-mobile.js?v=6'); initHomeMobile(Object.assign(M, { state, planets, world, camera, THREE, enter, hsound, code, shortTitle, canvas })); }
   document.querySelector('.orbit-dock').setAttribute('aria-busy', 'false');
   document.body.dataset.loaded = 'true';
   autoSound();

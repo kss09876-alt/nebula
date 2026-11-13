@@ -1,4 +1,4 @@
-# NEBULA 유료화 구성 (초안)
+# ARTMOS 유료화 구성 (초안)
 
 지금 상태: **결제 꺼짐** (`js/config.js` → `paywall.enabled: false`). 모든 전시는 무료로 열려 있고, 앱 '마이 → 멤버십'은 가격과 '준비 중' 안내만 보여 줍니다.
 
@@ -29,7 +29,7 @@
 1. **권리**: 유료로 팔 전시의 작가·권리자 계약(해외 온라인 판매 포함). 계약 전 전시는 `paid`로 지정하지 않기.
 2. **사업자**: 사업자등록, 통신판매업 신고, 애플·구글 개발자 계정, 애플 소규모 개발자 할인 신청.
 3. **서버**: Supabase 프로젝트 생성 → `schema.sql` 실행 → 로그인 제공자 설정 → `webhook.ts` 배포.
-4. **결제**: RevenueCat에 상품 등록(`nebula.member.monthly`, `nebula.member.yearly`, `nebula.pass.day`(하루 입장권, 소모성)), 웹 결제 대행사 가입.
+4. **결제**: RevenueCat에 상품 등록(`artmos.member.monthly`, `artmos.member.yearly`, `artmos.pass.day`(하루 입장권, 소모성)), 웹 결제 대행사 가입.
 5. **연결**: `membership.js`의 `setProvider()`에 서버 구현을 끼움(구매 기록 조회·구매·복원).
 6. **전시 파일 보호**: 지금은 전시 내용이 공개 주소에 있어 화면 잠금만으로는 완전히 막을 수 없음. 유료 전시의 본문(blocks)은 서버가 구매 확인 뒤에만 내려 주도록 옮기기.
 7. **호스팅**: GitHub Pages → 자체 도메인 + Cloudflare Pages 등으로 이전, 앱 `server.url` 변경.

@@ -1,10 +1,10 @@
-// NEBULA 컬렉트 — 실물 작품 결제 (일반 결제, 토스페이먼츠 결제창 v2)
+// ARTMOS 컬렉트 — 실물 작품 결제 (일반 결제, 토스페이먼츠 결제창 v2)
 // 실물 상품이라 애플·구글 인앱결제 대상이 아님 → 앱 안에서도 일반 결제 가능.
 // 순서: ① 서버에 주문 만들기(가격·재고는 서버가 정함, 작품을 잠시 예약) → ② 토스 결제창 → ③ checkout.html 로 돌아와
 //       서버가 결제 승인(시크릿 키) + 금액 확인 → ④ 작품 '판매 완료', 주문 '결제 완료'.
 // 서버(Supabase Edge Function)가 준비되기 전에는 config.shop.pay.enabled = false → '구매하기' 버튼이 안 보이고 문의만.
 // 시험: 주소에 ?shoptest=1 → 이 기기에서만 주문·결제를 흉내 냄(예시 작품도 구매 흐름 시험 가능, 실제 결제 아님).
-import { CONFIG } from './config.js?v=22';
+import { CONFIG } from './config.js?v=23';
 
 const SH = CONFIG.shop || {}, PAY = SH.pay || {};
 export const SHOP_TEST = new URLSearchParams(location.search).has('shoptest') || (() => { try { return sessionStorage.getItem('nebula-shoptest') === '1'; } catch (e) { return false; } })();

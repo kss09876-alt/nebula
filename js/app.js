@@ -1,21 +1,21 @@
-// NEBULA 앱 화면 — 시작 화면 → 소개 → 로그인 → 닉네임 → 탭(전시·플레이·컬렉트·리워드·마이)
-// 전시 내용은 기존 NEBULA 페이지(cell.html, bitssal.html)를 같은 주소에서 그대로 불러옵니다.
+// ARTMOS 앱 화면 — 시작 화면 → 소개 → 로그인 → 닉네임 → 탭(전시·플레이·컬렉트·리워드·마이)
+// 전시 내용은 기존 ARTMOS 페이지(cell.html, bitssal.html)를 같은 주소에서 그대로 불러옵니다.
 // 데이터는 기존 data.js(구글 시트 → 백업 JSON)를 그대로 씁니다. 개인 기록은 기기 안(localStorage)에만 저장합니다.
-import { loadData, loadLocalData, esc } from './data.js?v=26';
-import { lang, LANGS } from './i18n.js?v=5';
+import { loadData, loadLocalData, esc } from './data.js?v=27';
+import { lang, LANGS } from './i18n.js?v=6';
 import { hasRing } from './planets.js?v=4';
 import { planetSrc, planetKey, onPlanet, planetBitmap, warm } from './planet-store.js?v=2';
 import { videoHTML, mountVideos, playVideo, stopVideos } from './video.js?v=2';
-import { IS_MOBILE, sensor } from './sensors.js?v=3';
+import { IS_MOBILE, sensor } from './sensors.js?v=4';
 import { createAppSky } from './app-sky.js?v=2';
 import { createAppSheet } from './app-sheet.js?v=2';
 import { createAppLanding } from './app-landing.js?v=1';
 import { createMotionPreference } from './app-preferences.js?v=1';
-import { createAppDiscover } from './app-discover.js?v=2';
-import { createExhibitShare } from './app-share.js?v=1';
+import { createAppDiscover } from './app-discover.js?v=3';
+import { createExhibitShare } from './app-share.js?v=2';
 import { APP_COPY } from './app-copy.js?v=1';
-import * as MB from './membership.js?v=4';
-import * as SHOP from './app-shop.js?v=2';
+import * as MB from './membership.js?v=5';
+import * as SHOP from './app-shop.js?v=3';
 const motionQuery = createMotionPreference();
 let nativeActive = true;
 
@@ -43,7 +43,7 @@ function wanderer() {
   const [a, b] = NAMES[lang] || NAMES.ko, r = (x) => x[Math.floor(Math.random() * x.length)];
   return `${r(a)} ${r(b)}`;
 }
-const LAUNCH = new Date('2026-10-05T00:00:00'); // NEBULA 개관 주의 월요일 → Vol.1
+const LAUNCH = new Date('2026-10-05T00:00:00'); // ARTMOS 개관 주의 월요일 → Vol.1
 const $ = (s) => document.querySelector(s);
 const view = $('#view'), tabsEl = $('#tabs');
 const store = { get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
@@ -71,7 +71,7 @@ function fmtTime(sec) { const m = Math.round(sec / 60); return m < 60 ? `${m}${t
 
 /* ---------- 전시 도우미 ---------- */
 let cells = [];
-const name = (c) => String(c.title || '').replace(/^\s*(?:(?:CELL|X|N)\s*-?\s*\d+\s*[·:|–-]\s*)+/i, '');
+const name = (c) => String(c.title || '').replace(/^\s*(?:(?:CELL|X|N|A)\s*-?\s*\d+\s*[·:|–-]\s*)+/i, '');
 const href = (c) => c.url || `cell.html?id=${encodeURIComponent(c.id)}`;
 const isOpen = (c) => c.status === 'open';
 const ringFx = (c) => ['prism', 'trio', 'stars'].includes(c.fx);
@@ -91,7 +91,7 @@ const playOf = (c) => { const p = PLAYS[c.id]; const l = p ? (p[lang] || p.ko) :
 /* ---------- 첫 실행: 소개 → 로그인 → 닉네임 ---------- */
 const ob = $('#onboard');
 function wall() {
-  const list = cells.length ? cells : [{ color: '#9db8ff', title: 'NEBULA' }];
+  const list = cells.length ? cells : [{ color: '#9db8ff', title: 'ARTMOS' }];
   const row = (k) => `<div class="row">${Array.from({ length: 9 }, (_, i) => poster(list[(i + k) % list.length])).join('')}</div>`;
   return `<div class="ob-wall"><div class="rows">${row(0)}${row(1)}${row(2)}</div></div>`;
 }
@@ -272,7 +272,7 @@ const screens = {
     return `
       <section class="mag-cover" style="--c:${esc(f.color || '#9db8ff')}" data-tiltzone>
         <div class="mc-top">
-          <button class="mc-mast nb-brand" data-vols aria-label="NEBULA · ${t('지난 호')}"><img class="nb-brand-mark" src="assets/nebula-mark.svg" alt=""/><span><b class="nb-brand-word">NEBULA</b><small class="nb-brand-caption">MONTHLY PLANET · No.${n}</small></span></button>
+          <button class="mc-mast nb-brand" data-vols aria-label="ARTMOS · ${t('지난 호')}"><img class="nb-brand-mark" src="assets/nebula-mark.svg" alt=""/><span><b class="nb-brand-word">ARTMOS</b><small class="nb-brand-caption">MONTHLY PLANET · No.${n}</small></span></button>
           <div class="icons"><button data-search aria-label="${t('전시 검색')}">${searchIcon}</button>${bell()}</div>
         </div>
         <div class="mc-stage">
@@ -329,7 +329,7 @@ const screens = {
         <p class="mag-label">${t('에디터의 편지')}</p>
         ${iss.letter ? String(iss.letter).split(/\n+/).map((x) => `<p>${esc(x)}</p>`).join('') : `<p>${esc(t('이번 달에도 행성 {n}곳이 궤도에 올랐습니다.').replace('{n}', issue.length))}</p>
         <p>${esc(t('하루의 작은 고민에서 잠시 고개를 들어, 더 큰 것을 바라보는 시간. 한 행성에 머무는 몇 분이 생각과 마음의 폭을 조금 넓혀 주기를 바랍니다.'))}</p>`}
-        <p class="sign">— NEBULA ${t('편집실')}</p>
+        <p class="sign">— ARTMOS ${t('편집실')}</p>
       </section>
 
       <section class="mag-sec mag-next">
@@ -337,13 +337,13 @@ const screens = {
         <p class="next-date">${esc(monthName(nextKey(k)))}</p>
         ${soon.length ? `<div class="hscroll">${soon.map((c) => `<button class="card" data-detail="${esc(c.id)}">${poster(c)}<p class="ct">${esc(name(c))}</p></button>`).join('')}</div>` : `<p class="small">${t('다음 호에서 새로운 행성을 만나요.')}</p>`}
         <button class="btn line" data-all style="margin-top:22px">${t('전체 행성')}</button>
-        <p class="colophon">NEBULA · MONTHLY PLANET No.${n} · ${esc(monthName(k))}</p>
+        <p class="colophon">ARTMOS · MONTHLY PLANET No.${n} · ${esc(monthName(k))}</p>
       </section>`;
   },
   play() {
     const open = cells.filter(isOpen).slice().reverse();
     const wk = (Date.now() - monday(Date.now())) / (7 * DAY);
-    return `<header class="page-h"><div><small class="nb-page-kicker">NEBULA · EXPERIENCE</small><h1>${t('플레이')}</h1></div><div class="icons">${bell()}</div></header>
+    return `<header class="page-h"><div><small class="nb-page-kicker">ARTMOS · EXPERIENCE</small><h1>${t('플레이')}</h1></div><div class="icons">${bell()}</div></header>
       <div class="plays">${open.map((c) => { const p = playOf(c); return `
         <div class="play" style="--c:${esc(c.color || '#9db8ff')}">
           <button class="art" data-detail="${esc(c.id)}" aria-label="${esc(name(c) + ' · ' + t('체험 방법'))}"><img class="pl" data-pl="${esc(planetKey(c))}" src="${planetSrc(c)}" decoding="async" alt="" draggable="false"><span class="timer" data-left="${esc(c.id)}">${left(c)}</span></button>
@@ -358,7 +358,7 @@ const screens = {
     const books = Array.from({ length: 6 }, (_, i) => { const w = base + i, hit = weekHas(w), c = hit && cells.find((x) => x.id === hit.id);
       return `<div class="book${hit ? ' done' : ''}${w === curW ? ' now' : ''}" style="--c:${esc((c && c.color) || '#8a3a3a')};--i:${i}"><i>${hit ? `<b>Vol. ${vol() - (curW - w)}</b>` : ''}</i><span>${t('n주차', w + 1)}</span></div>`; }).join('');
     const v = visits(), thisWeek = [...new Set(v.filter((x) => monday(x.at).getTime() === monday(Date.now()).getTime() && cells.some((cell) => cell.id === x.id)).map((x) => x.id))];
-    return `<header class="page-h"><div><small class="nb-page-kicker">NEBULA · VOYAGE</small><h1>${t('리워드')}</h1></div><button class="txt" data-guide>${t('참여 안내')}</button></header>
+    return `<header class="page-h"><div><small class="nb-page-kicker">ARTMOS · VOYAGE</small><h1>${t('리워드')}</h1></div><button class="txt" data-guide>${t('참여 안내')}</button></header>
       <section class="nb-week-card"><div><small>${t('이번 주의 궤도')}</small><strong>${Math.min(3, thisWeek.length)}<em> / 3</em></strong></div><p>${t(thisWeek.length >= 3 ? '이번 주 스탬프 완성!' : '목표까지 {n}곳').replace('{n}', Math.max(0, 3 - thisWeek.length))}</p><div class="nb-week-track"><i style="--w:${Math.min(100, thisWeek.length / 3 * 100)}%"></i></div></section>
       <p class="rw-h">${t('n주차, 함께 시작해요!', curW + 1)}</p>
       <div class="shelf">${books}<div class="book sp" style="--i:6"><i><b>SPECIAL</b></i><span>Special</span></div></div>
@@ -375,7 +375,7 @@ const screens = {
     const total = seen.reduce((s, [, x]) => s + (x.time || 0), 0), lk = likes().map((id) => cells.find((c) => c.id === id)).filter(Boolean);
     const { streak } = streakInfo();
     const avatar = `<svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="30" cy="25" r="15"/><rect x="21" y="19" width="18" height="12" rx="6" fill="#1c2240" stroke="none"/><path d="M24 22c1.5-1 3-1 4 0" stroke="#ffd68c"/><path d="M10 58c2-9 10-14 20-14s18 5 20 14"/></svg>`;
-    return `<header class="page-h"><div><small class="nb-page-kicker">NEBULA · MY ORBIT</small><h1>${t('내 궤도')}</h1></div><div class="icons">${clock}</div></header>
+    return `<header class="page-h"><div><small class="nb-page-kicker">ARTMOS · MY ORBIT</small><h1>${t('내 궤도')}</h1></div><div class="icons">${clock}</div></header>
       <div class="me"><span class="avatar">${avatar}</span><div><b>${esc(p.nick)}</b><p class="mesub">${new Date(p.since).toLocaleDateString(lang)} ${t('탑승')} · ${seen.length}${t('곳 착륙')}</p><button data-rename>${t('이름 바꾸기')} ›</button></div></div>
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('나의 기록')}</h2></div>
         <button class="lockcard v${streak >= 3 ? ' open' : ''}" data-report style="margin:18px 0 0">${lock}<div><small>${t('항해 리포트')}</small>${streak >= 3 ? `<em>${t('항해 리포트가 열렸어요')}</em>` : t('3주 연속 착륙하면 <em>항해 리포트</em>가 열려요')}</div></button>
@@ -389,7 +389,7 @@ const screens = {
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('언어')}</h2></div><div class="chips">${LANGS.map((l) => `<button data-lang="${l.id}" class="${l.id === lang ? 'on' : ''}">${l.name}</button>`).join('')}</div></section>
       <section class="sec"><button class="nb-preference" data-motion role="switch" aria-checked="${motionQuery.matches}" ${motionQuery.systemReduced ? 'disabled' : ''}><span><b>${t('모션 줄이기')}</b><small>${t(motionQuery.systemReduced ? '시스템에서 모션 감소를 사용 중이에요.' : '카드 기울기와 장식 애니메이션을 줄여요.')}</small></span><i class="nb-switch" aria-hidden="true"></i></button></section>
       <section class="sec"><div class="sec-h"><h2 class="h20">${t('체험 권한')}</h2></div><p class="small">${t('기울기·흔들기·마이크·카메라·위치는 전시 안에서 체험할 때만 쓰고, 기기 밖으로 저장하거나 보내지 않아요.')}</p></section>
-      <section class="sec list"><button class="row" data-clear><b>${t('관람 기록 지우기')}</b></button><div class="row"><b>${t('버전')}</b><span class="v">NEBULA ${VERSION}</span></div></section>`;
+      <section class="sec list"><button class="row" data-clear><b>${t('관람 기록 지우기')}</b></button><div class="row"><b>${t('버전')}</b><span class="v">ARTMOS ${VERSION}</span></div></section>`;
   },
 };
 
@@ -792,7 +792,7 @@ const landing = createAppLanding({
 const DKEY = `valix-data3-${lang}`;
 const pack = (data = { cells, blocks, ISSUES }) => JSON.stringify(data, (key, value) => key === 'group' ? undefined : value);
 const validData = (data) => data && Array.isArray(data.cells) && data.cells.length > 0 && data.cells.every((cell) => cell && typeof cell.id === 'string');
-function unpack(data) { cells = data.cells.map((cell) => ({ ...cell, artist: String(cell.artist || '').replace(/\bVALIX(?:\s+LAB)?\b/g, 'NEBULA') })); blocks = Array.isArray(data.blocks) ? data.blocks : []; ISSUES = data.ISSUES || {}; }
+function unpack(data) { cells = data.cells.map((cell) => ({ ...cell, artist: String(cell.artist || '').replace(/\bVALIX(?:\s+LAB)?\b/g, 'ARTMOS') })); blocks = Array.isArray(data.blocks) ? data.blocks : []; ISSUES = data.ISSUES || {}; }
 let pendingData = null;
 function applyPendingData(redraw = true) {
   if (!pendingData || !nativeActive || document.hidden || !viewer.hidden || sheet.isOpen || !ob.hidden) return;

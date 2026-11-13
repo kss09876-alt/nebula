@@ -1,5 +1,5 @@
-import { CONFIG } from './config.js?v=22';
-import { lang, tr } from './i18n.js?v=5';
+import { CONFIG } from './config.js?v=23';
+import { lang, tr } from './i18n.js?v=6';
 
 // 응답 본문을 읽는 동안에도 제한 시간을 유지 (느린 연결에서 시작이 멈추지 않게)
 async function fetchBody(url, type, timeout, label = 'data') {
@@ -43,7 +43,7 @@ function fetchFallback() {
 function fetchTranslations() {
   if (lang === 'ko') return Promise.resolve({});
   if (!translationsPromise) {
-    translationsPromise = fetchBody('data/i18n.json?v=1', 'json', 5000).catch((e) => {
+    translationsPromise = fetchBody('data/i18n.json?v=2', 'json', 5000).catch((e) => {
       translationsPromise = undefined;
       throw e;
     });
@@ -91,7 +91,7 @@ async function loadLiveData() {
       fb.blocks.filter((b) => b.extra && !blocks.some((x) => x.cell_id === b.cell_id && x.type === b.type)).forEach((b) => blocks.push(b));
     } catch (e2) {}
   } catch (e) {
-    console.warn('[NEBULA] 드라이브 시트를 읽지 못해 백업 데이터를 사용합니다:', e.message);
+    console.warn('[ARTMOS] 드라이브 시트를 읽지 못해 백업 데이터를 사용합니다:', e.message);
     const fb = await fetchFallback();
     cells = fb.cells; blocks = fb.blocks; source = 'fallback';
   }
@@ -122,10 +122,10 @@ async function prepareData(cellRows, blockRows, source, translations) {
     g.rooms.push(c);
   });
   groups.forEach((g) => g.rooms.sort((a, b) => g.members.indexOf(a.id) - g.members.indexOf(b.id)));
-  // 번호 다시 매기기 (N-001, N-002 …), 중복된 구/신 번호도 한 번에 제거
-  const shortTitle = (title) => String(title || '').replace(/^\s*(?:(?:CELL|X|N)[-\s]?\d+(?:-\d+)?\s*[·:|-]\s*)+/i, '');
+  // 번호 다시 매기기 (A-001, A-002 …), 중복된 구/신 번호도 한 번에 제거
+  const shortTitle = (title) => String(title || '').replace(/^\s*(?:(?:CELL|X|N|A)[-\s]?\d+(?:-\d+)?\s*[·:|-]\s*)+/i, '');
   top.forEach((c, i) => {
-    const code = 'N-' + String(i + 1).padStart(3, '0');
+    const code = 'A-' + String(i + 1).padStart(3, '0');
     c.code = code;
     c.title = `${code} · ${shortTitle(c.title)}`;
     if (c.isGroup) g_rooms(c, code);

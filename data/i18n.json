@@ -1,23 +1,23 @@
 {
- "_note": "NEBULA 번역 데이터. 시트에 title_en, body_zh 같은 칸이 있으면 그 칸이 우선합니다. 키: 셀ID:순서",
+ "_note": "ARTMOS 번역 데이터. 시트에 title_en, body_zh 같은 칸이 있으면 그 칸이 우선합니다. 키: 셀ID:순서",
  "cells": {
   "c001": {
    "en": {
     "title": "The First Room",
     "subtitle": "Quantum universe — everything began from a single point",
-    "artist": "NEBULA Exhibition",
+    "artist": "ARTMOS Exhibition",
     "period": ""
    },
    "zh": {
     "title": "最初的房间",
     "subtitle": "量子宇宙 — 一切都始于一个点",
-    "artist": "NEBULA 特展",
+    "artist": "ARTMOS 特展",
     "period": ""
    },
    "ja": {
     "title": "最初の部屋",
     "subtitle": "量子宇宙 — すべてはひとつの点から始まった",
-    "artist": "NEBULA 企画展",
+    "artist": "ARTMOS 企画展",
     "period": ""
    }
   },
@@ -25,19 +25,19 @@
    "en": {
     "title": "Cross-sections of Light",
     "subtitle": "A record of light held in a rectangle",
-    "artist": "NEBULA Exhibition",
+    "artist": "ARTMOS Exhibition",
     "period": ""
    },
    "zh": {
     "title": "光的截面",
     "subtitle": "关在方框里的光的记录",
-    "artist": "NEBULA 特展",
+    "artist": "ARTMOS 特展",
     "period": ""
    },
    "ja": {
     "title": "光の断面",
     "subtitle": "四角の中に閉じこめた光の記録",
-    "artist": "NEBULA 企画展",
+    "artist": "ARTMOS 企画展",
     "period": ""
    }
   },
@@ -45,19 +45,19 @@
    "en": {
     "title": "Map of Sound",
     "subtitle": "Putting the sounds of a city on a planet",
-    "artist": "NEBULA Exhibition",
+    "artist": "ARTMOS Exhibition",
     "period": ""
    },
    "zh": {
     "title": "声音的地图",
     "subtitle": "把城市的声音装进行星",
-    "artist": "NEBULA 特展",
+    "artist": "ARTMOS 特展",
     "period": ""
    },
    "ja": {
     "title": "音の地図",
     "subtitle": "街の音を惑星に込める",
-    "artist": "NEBULA 企画展",
+    "artist": "ARTMOS 企画展",
     "period": ""
    }
   },
@@ -498,17 +498,17 @@
    "en": {
     "title": "",
     "body": "Lift your head, look a little wider, listen a little farther. Your heart will widen just as much.",
-    "caption": "NEBULA"
+    "caption": "ARTMOS"
    },
    "zh": {
     "title": "",
     "body": "抬起头，看得更宽一些，听得更远一些。你的心胸也会随之变宽。",
-    "caption": "NEBULA"
+    "caption": "ARTMOS"
    },
    "ja": {
     "title": "",
     "body": "顔を上げて、もう少し広く見て、もう少し遠くまで聴いてみてください。心の幅も、そのぶん広がるはずです。",
-    "caption": "NEBULA"
+    "caption": "ARTMOS"
    }
   },
   "c003:8": {
@@ -667,17 +667,17 @@
   "c004:9": {
    "en": {
     "title": "",
-    "body": "This is an imagined exhibition put together to demonstrate the NEBULA platform. It is not affiliated with any actual exhibition or rights holder.",
+    "body": "This is an imagined exhibition put together to demonstrate the ARTMOS platform. It is not affiliated with any actual exhibition or rights holder.",
     "caption": ""
    },
    "zh": {
     "title": "",
-    "body": "本展览是为展示 NEBULA 平台而临时构成的虚拟特展，与任何真实展览或权利人无关。",
+    "body": "本展览是为展示 ARTMOS 平台而临时构成的虚拟特展，与任何真实展览或权利人无关。",
     "caption": ""
    },
    "ja": {
     "title": "",
-    "body": "この展示は NEBULA プラットフォームのデモのために構成した架空の企画展であり、実際の展示や権利者とは関係ありません。",
+    "body": "この展示は ARTMOS プラットフォームのデモのために構成した架空の企画展であり、実際の展示や権利者とは関係ありません。",
     "caption": ""
    }
   },
