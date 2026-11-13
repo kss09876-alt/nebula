@@ -1,11 +1,11 @@
--- NEBULA 구매 기록 (Supabase / Postgres) — 초안
+-- ARTMOS 구매 기록 (Supabase / Postgres) — 초안
 -- 사용자는 Supabase Auth(auth.users)가 관리. 여기에는 '무엇을 볼 수 있는지'만 저장.
 create table if not exists public.entitlements (
   id          bigint generated always as identity primary key,
   user_id     uuid not null references auth.users(id) on delete cascade,
   kind        text not null check (kind in ('member', 'pass')),     -- 구독 / 하루 입장권
   cell_id     text,                                                -- pass일 때 전시 id (예: c005)
-  product_id  text not null,                                       -- nebula.member.monthly 등
+  product_id  text not null,                                       -- artmos.member.monthly 등
   source      text not null check (source in ('app_store', 'play_store', 'web')),
   external_id text not null,                                       -- 스토어·결제사의 거래 번호 (중복 방지)
   starts_at   timestamptz not null default now(),

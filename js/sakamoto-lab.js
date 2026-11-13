@@ -1,11 +1,11 @@
-// N-004 async · 류이치 사카모토 — 센서로 즐기는 소리 실험 4가지 (모두 Web Audio 실시간 합성, 원곡 음원 없음)
+// A-004 async · 류이치 사카모토 — 센서로 즐기는 소리 실험 4가지 (모두 Web Audio 실시간 합성, 원곡 음원 없음)
 //  async   : 어긋난 박자 — 일곱 개의 추가 조금씩 다른 박자로 흔들리며 울림. 기울이면 더 어긋나고, 흔들면 다시 맞춰짐, 엎어두면 고요
 //  rain    : 양동이를 쓰고 빗소리 듣기 — 기울이면 바람·빗줄기, 누르면 빗방울 음, 엎어두면(또는 버튼) 양동이 속 빗소리
 //  forest  : 세계의 소리 360° — 다섯 개의 소리가 둘러쌈. 몸을 돌리면(나침반) 그쪽 소리가 커지고, 앞으로 기울이면 가까이
 //  silence : 고요 — 폰을 엎어 두거나 버튼을 누르고 10초. 끝나면 한 음(라 A)과 문장
 // 센서 값은 기기 안에서만 쓰고 저장·전송하지 않음
-import { IS_MOBILE, sensor } from './sensors.js?v=3';
-import { lang } from './i18n.js?v=5';
+import { IS_MOBILE, sensor } from './sensors.js?v=4';
+import { lang } from './i18n.js?v=6';
 
 const W = {
   ko: { start: '눌러서 소리 켜기', drift: '어긋남', resync: '다시 맞추기', synced: '맞춤', quiet: '고요', mute: '추를 누르면 그 소리만 끄고 켤 수 있어요',

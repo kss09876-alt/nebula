@@ -22,7 +22,7 @@ export function createExhibitShare({ sheet, name, esc, t, lang, toast }) {
     const isCurrent = () => token === request && sheet.isOpen && sheet.revision === revision;
     const url = linkFor(cell);
     if (navigator.share) {
-      try { await navigator.share({ title: `NEBULA · ${name(cell)}`, text: name(cell), url }); return; }
+      try { await navigator.share({ title: `ARTMOS · ${name(cell)}`, text: name(cell), url }); return; }
       catch (error) { if (error.name === 'AbortError') return; }
     }
     if (!isCurrent()) return;

@@ -1,7 +1,7 @@
-# NEBULA 네뷸라 — Online Interactive Exhibition
+# ARTMOS 아트모스 — Online Interactive Exhibition
 
 **살아 있는 예술이 태어나는 우주.**
-별이 태어나는 성운처럼, 전시 하나하나가 행성으로 태어나 궤도를 도는 온라인 인터랙티브 전시 플랫폼. 웹과 앱 화면의 이름은 **NEBULA**로 통일합니다.
+별이 태어나는 성운처럼, 전시 하나하나가 행성으로 태어나 궤도를 도는 온라인 인터랙티브 전시 플랫폼. 웹과 앱 화면의 이름은 **ARTMOS**로 통일합니다.
 
 - **프론트엔드**: GitHub Pages (정적 HTML/JS, 빌드 없음, 로컬 Three.js 모듈)
 - **콘텐츠 서버(CMS)**: Google Drive `THE CELL (online exhibition)` 폴더
@@ -12,7 +12,7 @@
 시트를 고치면 **재배포 없이** 사이트에 바로 반영됩니다 (새로고침).
 시트를 읽지 못하면 `data/cells.json` 백업 데이터로 표시됩니다.
 
-## NEBULA 앱
+## ARTMOS 앱
 
 [앱 웹 화면](https://vailixlab.github.io/nebula/app.html)은 월간 전시 매거진과 플레이·리워드·내 궤도를 제공합니다. 전시 검색·공개/예정/좋아요 필터·정렬, 표지 버튼/스와이프, 최근 전시 바로가기, 전시 공유·링크 복사, 모션 감소 설정을 지원합니다. 기존 `valix-*`/`xpace-*` 기기 저장 키는 항해명·좋아요·관람 기록이 사라지지 않도록 유지합니다. 로그인 연동은 아직 준비 중입니다.
 
@@ -38,7 +38,7 @@ data/cells.json  백업 데이터
 | id | 고유 ID (예: c001). 블록 시트의 cell_id와 연결 |
 | order | 그리드 순서 |
 | status | `open` 공개 / `coming` 예정(희미한 행성) / `hidden` 숨김 |
-| title, subtitle, artist, period, summary | 표시 텍스트 (title은 `N-001 · 제목` 형식, 앞의 번호는 화면에서 자동으로 붙음) |
+| title, subtitle, artist, period, summary | 표시 텍스트 (title은 `A-001 · 제목` 형식, 앞의 번호는 화면에서 자동으로 붙음) |
 | color | 행성·포인트 색 (#hex) |
 | thumbnail | 행성 표면 이미지 (드라이브 파일 ID 또는 공유 링크, 가로 2:1 권장) |
 | bgm | 배경음악. Spotify 앨범·트랙·플레이리스트 링크(공식 임베드 플레이어) 또는 **사용 허락을 받은** 오디오 파일(드라이브 링크/mp3 URL), 또는 `ambient:cosmos` / `ambient:light`(브라우저에서 실시간 합성하는 오리지널 앰비언트) |

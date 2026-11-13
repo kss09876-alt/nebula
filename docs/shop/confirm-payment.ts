@@ -1,4 +1,4 @@
-// NEBULA 결제 승인 (Supabase Edge Function 뼈대, 초안 — 아직 배포하지 않음)
+// ARTMOS 결제 승인 (Supabase Edge Function 뼈대, 초안 — 아직 배포하지 않음)
 // checkout.html 이 successUrl 로 받은 paymentKey·orderId·amount 를 보냄 → 주문 금액과 같은지 확인 → 토스에 승인 요청.
 // 시크릿 키(TOSS_SECRET_KEY = test_sk_… / live_sk_…)는 이 함수의 환경 변수에만 둔다.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';

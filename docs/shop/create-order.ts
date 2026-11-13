@@ -1,4 +1,4 @@
-// NEBULA 주문 만들기 (Supabase Edge Function 뼈대, 초안 — 아직 배포하지 않음)
+// ARTMOS 주문 만들기 (Supabase Edge Function 뼈대, 초안 — 아직 배포하지 않음)
 // 화면이 보낸 work_id 로 작품을 잡아 두고, 금액은 서버 표(works)에서 계산해 돌려준다. 화면이 보낸 금액은 쓰지 않음.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);

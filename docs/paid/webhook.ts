@@ -1,4 +1,4 @@
-// NEBULA 결제 알림 받기 (Supabase Edge Function 뼈대, 초안 — 아직 배포하지 않음)
+// ARTMOS 결제 알림 받기 (Supabase Edge Function 뼈대, 초안 — 아직 배포하지 않음)
 // RevenueCat(앱 인앱결제)과 웹 결제 대행사가 '결제됨·갱신됨·환불됨'을 알려 오면 구매 기록(entitlements)에 적는다.
 // 배포 전 할 일: 비밀 값(환경 변수) 설정, 웹 결제 대행사 서명 검증 추가, 실제 이벤트로 시험.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
 
   const userId = event.app_user_id;                 // 앱에서 RevenueCat에 로그인 사용자 id를 넘겨 둠
   const product = String(event.product_id || '');
-  const isPass = product.startsWith('nebula.pass'); // 하루 입장권(소모성 상품): 구매 후 30일 안에 입장, 입장하면 enter_pass()가 24시간으로 바꿈
+  const isPass = product.startsWith('artmos.pass'); // 하루 입장권(소모성 상품): 구매 후 30일 안에 입장, 입장하면 enter_pass()가 24시간으로 바꿈
   const row = {
     user_id: userId,
     kind: isPass ? 'pass' : 'member',

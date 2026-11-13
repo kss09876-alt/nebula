@@ -1,8 +1,8 @@
 // 결제창에서 돌아오는 페이지 (토스페이먼츠 successUrl / failUrl)
 // 성공: 서버에 승인 요청(서버가 주문 금액과 비교) → 주문 완료 표시. 실패: 사유 표시 + 다시 시도.
-import { confirm, orders } from './shop-pay.js?v=1';
-import { lang } from './i18n.js?v=5';
-import { esc } from './data.js?v=26';
+import { confirm, orders } from './shop-pay.js?v=2';
+import { lang } from './i18n.js?v=6';
+import { esc } from './data.js?v=27';
 
 const W = {
   ko: { ok: '소장이 시작됐어요', okT: '작품을 안전하게 포장해 운송 일정을 연락드릴게요. 소장 증명서는 나의 컬렉션 → 소장 내역에서 볼 수 있어요.', fail: '소장이 완료되지 않았어요', failT: '결제가 취소되었거나 실패했어요. 잠시 맡아 둔 작품은 곧 다시 소장 가능 상태가 돼요.', err: '결제 확인에 실패했어요', errT: '결제가 승인되지 않았다면 자동으로 취소돼요. 문제가 계속되면 소장 번호를 알려 주세요.', no: '소장 번호', amt: '결제 금액', work: '작품', reason: '사유', back: '나의 컬렉션으로', test: '시험 모드 — 실제 결제가 아니에요' },
