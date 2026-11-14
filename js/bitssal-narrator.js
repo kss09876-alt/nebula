@@ -19,7 +19,7 @@ export function createNarrator({ lang, onStart, onEnd, key = 'artmos-bitssal-nar
   if (syn) { pickVoice(); syn.addEventListener && syn.addEventListener('voiceschanged', pickVoice); }
 
   // 문단 → 문장 (긴 문장이 중간에 끊기는 브라우저가 있어 문장 단위로 나눔)
-  const sentences = (t) => t.replace(/\s+/g, ' ').trim().split(/(?<=[.!?。！？…])\s*/).map((s) => s.trim()).filter(Boolean);
+  const sentences = (t) => (t.replace(/\s+/g, ' ').trim().match(/[^.!?。！？…]+[.!?。！？…]*/g) || []).map((s) => s.trim()).filter(Boolean); // 옛 iPhone(사파리 16.3 이하)도 되게 lookbehind 안 씀
   const paras = (el) => [...el.querySelectorAll('p')].filter((p) => !p.matches('.st-who, .chap, .note, .src, .st-next') && p.textContent.trim());
 
   function clearMarks() { document.querySelectorAll('.speaking').forEach((p) => p.classList.remove('speaking')); document.querySelectorAll('.card.story.narrating').forEach((c) => c.classList.remove('narrating')); }

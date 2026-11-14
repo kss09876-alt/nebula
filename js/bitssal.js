@@ -8,7 +8,7 @@ import { IS_MOBILE, sensor, startCamera, startMic, getPosition, distanceKm, keep
 import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=5';
 import { facePoints, drawPortrait } from './bitssal-faces.js?v=3';
 import * as MB from './membership.js?v=6';
-import { createNarrator } from './bitssal-narrator.js?v=1';
+import { createNarrator } from './bitssal-narrator.js?v=2';
 // 화면 문구 (읽기 → 체험 · 내레이션)
 const LX = ({
   ko: { play: '체험', next: '이야기를 다 읽으면, 아래에서 직접 해 볼 수 있어요.', narr: '내레이션', listen: '듣기', stop: '멈춤', chapter: '장' },
