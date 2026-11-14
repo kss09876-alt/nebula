@@ -207,24 +207,26 @@ export function buildScenes({ lang, IS_MOBILE: M, TOUCH, PH, VD, photo, vid, SRC
   const L = T[lang] || T.ko, SY = STORY[lang] || STORY.ko;
   const story = (id, k, at) => { const s = SY[id][k]; const chap = (T.ko.chap[id] ? `${T.ko.chap[id]} · ` : '') + (L.titles[id] || ''); return { at, kind: 'story', chap: id === 'prologue' ? '' : chap, head: L.heads[id][k], who: s.who, html: s.html, face: FACES[id][k], first: id === 'prologue' }; };
   const rec = (id, at, src, tone) => { const r = L.rec[id]; return { at, kind: 'record', title: r[0], html: `<p>${r[1]}</p>${r[2] ? `<p class="quiet">${r[2]}</p>` : ''}`, src, tone }; };
-  const ia = (id, at) => ({ at, html: L.ia[id](M, TOUCH) });
+  const ia = (id, at) => ({ at, play: true, html: L.ia[id](M, TOUCH) });
+  // 장 여는 표지: 화면 가운데 번호·제목만 (다른 그림과 겹치지 않게 카드 흐름 안에 둠)
+  const open = (id) => ({ at: 0, kind: 'open', num: T.ko.chap[id] || '', title: L.titles[id] || '' });
   const mobBtn = (cls, label, note) => (M ? `<button class="act-btn ${cls}">${label}</button>${note ? `<p class="note">${note}</p>` : ''}` : '');
   const V = (k, id, at) => ({ at, ...vid(id, L.vids[k][1], L.vids[k][0]) });
   // PART 1 — 순이의 이야기 (이야기와 조작만, 기록·사진·영상 없음)
   // PART 2 — 작품 《빛쌀》과 기록 (조형물·사진·영상·짧은 기록·아카이브)
   const SCENES = [
     { id: 'prologue', part: 1, h: 220, cards: [{ at: 0.05, html: L.p0(TOUCH).replace('<h1>', `<p class="chap">${L.part1}</p><h1>`) }, story('prologue', 0, 0.42)] },
-    { id: 'life', part: 1, h: 220, cards: [story('life', 0, 0.05), ia('life', 0.5)] },
-    { id: 'hunger', part: 1, h: 220, cards: [story('hunger', 0, 0.05), ia('hunger', 0.5)] },
-    { id: 'demand', part: 1, h: 220, cards: [story('demand', 0, 0.05), ia('demand', 0.5)] },
-    { id: 'street', part: 1, h: 360, cards: [story('street', 0, 0.04), ia('street', 0.76)] },
-    { id: 'spread', part: 1, h: 200, cards: [story('spread', 0, 0.06), ...(M ? [{ at: 0.55, html: `${mobBtn('geo-btn', L.mob.geo)}<p class="geo-out"></p><p class="note">${L.mob.geoNote}</p>` }] : [])] },
-    { id: 'erased', part: 1, h: 220, cards: [story('erased', 0, 0.05), ia('erased', 0.5)] },
-    { id: 'boundary', part: 1, h: 240, cards: [{ at: 0.04, html: L.bTitle }, story('boundary', 0, 0.26), { at: 0.7, kind: 'choice', html: L.choice[0], summary: L.choice[1] }] },
-    { id: 'mine', part: 1, h: 400, cards: [{ at: 0.03, html: L.ia.mine(M, TOUCH) }, story('mine', 0, 0.2), { at: 0.86, html: L.mineEnd + (M ? `<p class="try center">${L.mob.bow}</p>` : '') }] },
-    { id: 'truth', part: 1, h: 340, cards: [story('truth', 0, 0.04), ia('truth', 0.36), story('truth', 1, 0.64)] },
-    { id: 'share', part: 1, h: 240, cards: [story('share', 0, 0.05), ia('share', 0.48), { at: 0.76, html: L.quote }] },
-    { id: 'light', part: 1, h: 340, cards: [story('light', 0, 0.04), { at: 0.3, html: L.ia.light() + mobBtn('mic-btn', L.mob.mic) + mobBtn('ar-btn', L.mob.ar, L.mob.arNote) }, { at: 0.55, kind: 'input' }, { at: 0.86, html: L.end }] },
+    { id: 'life', part: 1, h: 220, cards: [open('life'), story('life', 0, 0.05), ia('life', 0.5)] },
+    { id: 'hunger', part: 1, h: 220, cards: [open('hunger'), story('hunger', 0, 0.05), ia('hunger', 0.5)] },
+    { id: 'demand', part: 1, h: 220, cards: [open('demand'), story('demand', 0, 0.05), ia('demand', 0.5)] },
+    { id: 'street', part: 1, h: 360, cards: [open('street'), story('street', 0, 0.04), ia('street', 0.76)] },
+    { id: 'spread', part: 1, h: 200, cards: [open('spread'), story('spread', 0, 0.06), ...(M ? [{ at: 0.55, play: true, html: `${mobBtn('geo-btn', L.mob.geo)}<p class="geo-out"></p><p class="note">${L.mob.geoNote}</p>` }] : [])] },
+    { id: 'erased', part: 1, h: 220, cards: [open('erased'), story('erased', 0, 0.05), ia('erased', 0.5)] },
+    { id: 'boundary', part: 1, h: 240, cards: [open('boundary'), { at: 0.04, html: L.bTitle }, story('boundary', 0, 0.26), { at: 0.7, kind: 'choice', html: L.choice[0], summary: L.choice[1] }] },
+    { id: 'mine', part: 1, h: 400, cards: [open('mine'), story('mine', 0, 0.05), { at: 0.4, play: true, html: L.ia.mine(M, TOUCH) }, { at: 0.86, html: L.mineEnd + (M ? `<p class="try center">${L.mob.bow}</p>` : '') }] },
+    { id: 'truth', part: 1, h: 340, cards: [open('truth'), story('truth', 0, 0.04), ia('truth', 0.36), story('truth', 1, 0.64)] },
+    { id: 'share', part: 1, h: 240, cards: [open('share'), story('share', 0, 0.05), ia('share', 0.48), { at: 0.76, html: L.quote }] },
+    { id: 'light', part: 1, h: 340, cards: [open('light'), story('light', 0, 0.04), { at: 0.3, play: true, html: L.ia.light() + mobBtn('mic-btn', L.mob.mic) + mobBtn('ar-btn', L.mob.ar, L.mob.arNote) }, { at: 0.55, kind: 'input' }, { at: 0.86, html: L.end }] },
     { id: 'work', part: 2, h: 420, cards: [{ at: 0.03, html: L.part2 }, { at: 0.16, html: L.work0 + (M ? `<p class="try">${L.workTilt}</p>` : '') }, { at: 0.3, kind: 'carousel', items: L.workItems.map(([t, d], k) => ({ id: PH[k], t, d })) }, { at: 0.52, ...vid(VD.main, L.workVid[1], L.workVid[0]) }, V('acc', VD.acc, 0.66), V('dark', VD.dark, 0.78), V('light', VD.light, 0.9)] },
     { id: 'records', part: 2, h: 420, cards: [{ at: 0.03, html: L.recIntro }, ...['hunger', 'demand', 'street', 'spread', 'erased', 'mine', 'truth'].map((k, i) => { const r = L.rec[k]; return { at: 0.14 + i * 0.11, kind: 'record', title: r[0], html: `<p>${r[1]}</p>`, src: ['mine', 'truth'].includes(k) ? SRC2 : SRC1 }; }), { at: 0.94, html: `<p class="note">${L.recNote}</p>` }] },
     { id: 'archive', part: 2, h: 270, cards: [{ at: 0.06, kind: 'archive' }] },

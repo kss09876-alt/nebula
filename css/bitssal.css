@@ -329,3 +329,33 @@ body::before { content: ''; position: fixed; inset: -50%; z-index: 2; pointer-ev
 
 /* 유료 안내(입장권·멤버십): 장 제목 번쩍임 위로 */
 #paywall { position: relative; z-index: 7; background: #0a0b0c; }
+
+/* ---------- 읽기 → 체험 장 구성 · 내레이션 (2026-11-14) ---------- */
+/* 장 표지: 화면 가운데 번호와 제목만. 카드 흐름 안에 있어서 다른 그림과 겹치지 않음 */
+.card.chap-open { left: 0; right: 0; width: auto; height: 72vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; pointer-events: none; background: none; border: 0; box-shadow: none; }
+.card.chap-open small { font-size: 12px; font-weight: 700; letter-spacing: .4em; color: var(--warm); margin-bottom: 16px; }
+.card.chap-open b { font-family: 'Nanum Myeongjo', 'Noto Serif KR', 'Noto Serif SC', 'Noto Serif JP', 'AppleMyungjo', serif; font-weight: 700; font-size: clamp(34px, 5.6vw, 72px); color: #fff4dc; letter-spacing: .06em; text-shadow: 0 0 40px rgba(255,200,120,.3), 0 4px 30px rgba(0,0,0,.8); }
+.card.chap-open i { display: block; width: 1px; height: 0; margin-top: 26px; background: linear-gradient(rgba(255,214,150,.6), rgba(255,214,150,0)); transition: height 1.4s var(--ease) .4s; }
+.card.chap-open.in i { height: 70px; }
+@media (max-width: 760px) { .card.chap-open { left: 0; right: 0; height: 64vh; } }
+/* 체험 카드 표시 */
+.card.play .play-tag { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 4px 11px; border: 1px solid rgba(255,214,150,.4); border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .18em; color: var(--warm); }
+.card.play .play-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--warm); box-shadow: 0 0 10px var(--warm); }
+.card.story .st-next { margin-top: 16px; font-size: 13px; color: var(--muted); letter-spacing: .02em; }
+/* 듣기 버튼 · 읽는 문단 표시 */
+.card.story .st-listen { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 7px 14px; border: 1px solid rgba(255,214,150,.3); border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--warm); background: rgba(255,214,150,.06); }
+.card.story .st-listen i { width: 0; height: 0; border-left: 8px solid currentColor; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+.card.story .st-listen.on i { width: 8px; height: 9px; border: 0; border-left: 3px solid currentColor; border-right: 3px solid currentColor; }
+.card.story.narrating p:not(.st-who):not(.chap):not(.note):not(.st-next) { color: rgba(243,233,214,.55); transition: color .5s; }
+.card.story.narrating p.speaking { color: #fff4dc !important; }
+.bs-narr { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--muted); }
+.bs-narr i { width: 10px; height: 10px; border-radius: 50%; border: 2px solid currentColor; }
+.bs-narr.on { color: var(--rice); border-color: rgba(255,248,230,.45); }
+.bs-narr.on i { background: currentColor; box-shadow: 0 0 8px currentColor; }
+@media (max-width: 760px) { .bs-narr { padding: 7px 10px; } .bs-narr span { display: none; } }
+/* 읽는 동안: 숫자·라벨·말풍선은 숨김 (한 번에 하나만 보이게) */
+body.phase-read #hud > div, body.phase-read #labels, body.phase-read .hud-tip { opacity: 0 !important; pointer-events: none !important; transition: opacity .5s; }
+@media (prefers-reduced-motion: reduce) { .card.chap-open i { transition: none; } }
+body.phase-open #hud > div, body.phase-open #labels { opacity: 0 !important; pointer-events: none !important; transition: opacity .5s; }
+.card.story p.st-next { font-family: inherit !important; font-size: 13px !important; line-height: 1.6 !important; color: var(--muted) !important; }
+@media (max-width: 760px) { .card.play { padding: 16px 16px 14px; border-radius: 10px; background: rgba(5,5,5,.66); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); } }
