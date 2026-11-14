@@ -380,3 +380,5 @@ body.phase-open #hud > div, body.phase-open #labels { opacity: 0 !important; poi
 @media (prefers-reduced-motion: reduce) { .card.chap-open small, .card.chap-open b { transition: none; opacity: 1; transform: none; } }
 /* 내레이션 버튼은 지금 쓰지 않음 */
 .bs-narr, .st-listen { display: none !important; }
+/* 지나간 장 표지·이야기 카드는 사라짐 → 다음 것만 보이게 */
+.card.story.past, .card.chap-open.past { opacity: 0 !important; transform: translateY(-16px) !important; transition: opacity .8s var(--ease), transform .8s var(--ease); pointer-events: none; }

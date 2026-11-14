@@ -185,16 +185,14 @@ function runSeq(c) {
   if (c._seq) return; c._seq = true;
   const ps = seqParas(c);
   if (SEQ_RM) { ps.forEach((p) => p.classList.add('shown')); unlockAfter(c); return; }
-  let i = 0, wait = 1400; // 처음엔 쌀알 얼굴이 그려질 시간
+  // 쌀알 얼굴이 먼저 그려지고(1.4초) → 문단이 함께 나타남 → 읽을 시간이 지나면 체험이 열림
+  const chars = ps.reduce((n, p) => n + p.textContent.trim().length, 0);
+  let wait = 1400, read = Math.max(4000, Math.min(14000, chars * (lang === 'en' ? 18 : 45))), shown = false;
   const tick = () => {
     if (!c.classList.contains('in')) { setTimeout(tick, 400); return; } // 화면 밖이면 멈춤
-    if (wait > 0) { wait -= 200; setTimeout(tick, 200); return; }
-    if (i >= ps.length) { unlockAfter(c); return; }
-    const p = ps[i++]; p.classList.add('shown');
-    if (i >= ps.length) { setTimeout(() => unlockAfter(c), 600); return; } // 마지막 문단까지 보이면 곧 체험이 열림
-    const n = p.textContent.trim().length;
-    wait = i >= ps.length ? 600 : Math.min(7000, 1600 + n * (lang === 'en' ? 22 : 55)); // 읽을 시간만큼 기다림
-    setTimeout(tick, 200);
+    if (!shown) { if ((wait -= 200) > 0) { setTimeout(tick, 200); return; } shown = true; ps.forEach((p, k) => setTimeout(() => p.classList.add('shown'), k * 350)); }
+    if ((read -= 200) > 0) { setTimeout(tick, 200); return; }
+    unlockAfter(c);
   };
   tick();
 }
@@ -349,7 +347,7 @@ function applyFace(id) {
   const sc = R * (mobile ? 0.55 : 0.62), fx = CX, fy = mobile ? CY - R * 0.32 : CY - R * 0.05, k = face.k;
   const n = face.pts.length;
   for (let j = 0; j < n; j++) { const q = face.pts[j], i = j + 1, kj = Math.max(0, Math.min(1, k * 1.7 - (j / n) * 0.7)); TX[i] = lerp(TX[i], fx + q.x * sc, kj); TY[i] = lerp(TY[i], fy + q.y * sc, kj); TA[i] = lerp(TA[i], q.a, kj); if (kj > 0.5) C[i] = face.col === 3 ? 3 : q.c; TROT[i] = q.r; }
-  for (let i = face.pts.length + 1; i < N; i++) TA[i] *= 1 - 0.65 * k;
+  for (let i = face.pts.length + 1; i < N; i++) TA[i] *= 1 - 0.97 * k; // 얼굴을 그리는 동안 다른 쌀알은 거의 끔
 }
 // 주먹밥
 function initBalls() { state.balls = Array.from({ length: 10 }, (_, k) => ({ a: (k / 10) * Math.PI * 2, r: 0.75, tr: 0.75, ta: (k / 10) * Math.PI * 2, size: 1 })); }
@@ -668,6 +666,7 @@ function draw(now) {
   const sc = SCENES[cur], id = sc.id, p = curP;
   { const tl = IS_MOBILE && sensor.on ? Math.min(1, Math.abs(sensor.tiltX) + Math.abs(sensor.tiltY)) : 0; state.flowT += dt * 0.03 * (1 + tl * 3.5); }
   readCard = findReadCard();
+  sections[cur].querySelectorAll(':scope > .card.story, :scope > .card.chap-open').forEach((el) => { const r = el.getBoundingClientRect(); el.classList.toggle('past', r.bottom < innerHeight * (el.classList.contains('chap-open') ? 0.42 : 0.3)); });
   const reading = !!readCard; hold = reading || !!sections[cur].querySelector(':scope > .card.play.locked'); state.readK = Math.max(0, Math.min(1, (state.readK || 0) + (reading ? dt * 2.5 : -dt * 2)));
   document.body.classList.toggle('phase-read', reading);
   // 장 표지가 화면 가운데 있으면 쌀알·장면 그림을 거의 꺼서 제목만 보이게
@@ -690,7 +689,7 @@ function draw(now) {
   prog.children[cur].querySelector('i').style.width = Math.round(p * 100) + '%';
 
   if (!state.ar) { g.fillStyle = id === 'mine' ? '#020202' : '#050505'; g.fillRect(0, 0, W, H); }
-  g.globalAlpha = 1 - Math.max(0.75 * state.readK, 0.9 * state.openK); drawBackdrop(id, p, t); g.globalAlpha = 1; // 읽는 동안 장면 그림은 뒤로 물러남
+  g.globalAlpha = 1 - Math.max(0.97 * state.readK, 0.95 * state.openK); drawBackdrop(id, p, t); g.globalAlpha = 1; // 읽는 동안 장면 그림은 뒤로 물러남
   const wander = TOUCH && !ptr.in; // 터치: 누르지 않을 땐 손전등이 천천히 바닥을 훑음
   const torch = id === 'mine' && !hold && (ptr.in || TOUCH) ? state.torch || 0 : 0, tx = wander ? CX + Math.sin(t * 0.5) * R * 0.7 : ptr.x, ty = wander ? CY + R * 0.62 + Math.sin(t * 0.9) * R * 0.08 : ptr.y;
   // 모바일: 기울이면 쌀알이 낮은 쪽으로 쏠리고(밥상·굶주림 장면에선 그릇에서 쏟아짐), 흔들면 떨림. 광산·진실규명 장에서는 쓰지 않음
@@ -722,7 +721,7 @@ function draw(now) {
     if (A[i] < 0.01) continue;
     if (face.k > 0.3 && i > 0 && i <= FN) { const d = ((TROT[i] - ROT[i]) % Math.PI + Math.PI * 1.5) % Math.PI - Math.PI / 2; ROT[i] += d * 0.12; }
     else if (!state.freeze) ROT[i] += (R3[i] - 0.5) * 0.01;
-    let al = A[i] * (1 - 0.85 * state.openK);
+    let al = A[i] * (1 - 0.98 * state.openK);
     if (torch > 0) { const d = Math.hypot(X[i] - tx, Y[i] - ty); al *= lerp(1, d < 150 ? 1.25 - d / 300 : 0.12, torch); }
     if (al < 0.01) continue;
     const k = 0.4 + R1[i], jx = sh ? (Math.random() - 0.5) * sh * 16 : 0, jy = sh ? (Math.random() - 0.5) * sh * 16 : 0;
