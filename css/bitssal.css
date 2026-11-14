@@ -382,3 +382,32 @@ body.phase-open #hud > div, body.phase-open #labels { opacity: 0 !important; poi
 .bs-narr, .st-listen { display: none !important; }
 /* 지나간 장 표지·이야기 카드는 사라짐 → 다음 것만 보이게 */
 .card.story.past, .card.chap-open.past { opacity: 0 !important; transform: translateY(-16px) !important; transition: opacity .8s var(--ease), transform .8s var(--ease); pointer-events: none; }
+/* 휴대폰: 이야기 카드 위쪽은 쌀알 얼굴 자리(투명), 글은 그 아래 상자에 — 얼굴과 글이 겹치지 않게 */
+.card.story .st-stage { display: none; }
+@media (max-width: 819px) {
+  .card.story { padding: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+  .card.story .st-stage { display: block; height: min(46vh, 380px); }
+  .card.story .st-box { padding: 20px 20px 16px; background: linear-gradient(180deg, rgba(36,29,20,.94), rgba(20,16,11,.94)); border: 1px solid rgba(255,214,150,.22); border-radius: 6px; box-shadow: 0 30px 60px rgba(0,0,0,.45); }
+  .card.story[data-face] .st-face { display: none; } /* 큰 얼굴이 바로 위에 있으니 작은 초상은 숨김 */
+  .card.story[data-face] .st-top { gap: 0; }
+}
+
+/* ---------- 전체 다듬기 (2026-11-14) ---------- */
+/* 입장 화면: 뒤의 글이 비치지 않게 */
+.snd-gate { background: radial-gradient(circle at 50% 45%, rgba(14,12,9,.96), rgba(0,0,0,.99)) !important; }
+@media (max-width: 819px) {
+  /* 상단 머리: 아래로 지나가는 글이 비치지 않게 */
+  .bs-top { background: linear-gradient(180deg, rgba(5,5,5,.97) 70%, rgba(5,5,5,0)); padding-bottom: 22px; }
+  /* 체험 카드: 화면 아래에 고정되는 안내 */
+  .card.play.docked { position: fixed; top: auto !important; bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; right: 12px; z-index: 8; max-height: 36vh; overflow: auto; opacity: 1; transform: none; padding: 14px 16px 12px; border: 1px solid rgba(255,214,150,.22); background: rgba(8,7,5,.9); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); font-size: 14px; animation: dockIn .5s var(--ease); }
+  .card.play.docked.locked { opacity: .85 !important; filter: none; }
+  .card.play.docked p { margin-bottom: 8px; line-height: 1.55; }
+  .card.play.docked .play-tag { margin-bottom: 8px; }
+  @keyframes dockIn { from { transform: translateY(30px); opacity: 0; } }
+  /* 글 카드(인용·끝맺음·작품 설명 등): 쌀알 그림 위에서도 읽히게 어두운 바탕 */
+  .card:not(.story):not(.chap-open):not(.play):not(.rec):not(.choice):not(.arch):not(.car):not(.vd):not(.ph) { padding: 16px; border-radius: 10px; background: rgba(5,5,5,.74); }
+  /* 큰 연도 숫자는 휴대폰에선 카드와 겹쳐서 숨김 */
+  .hud-year { display: none !important; }
+}
+/* 상단 머리 아래로 지나가는 글이 비치지 않게 (PC) */
+.bs-top { background: linear-gradient(180deg, rgba(5,5,5,.96) 55%, rgba(5,5,5,0)); }

@@ -63,7 +63,9 @@ function relayout() {
     let prev = null;
     cards.forEach((c) => {
       // 장 표지 → 이야기, 이야기 → 체험 사이는 한 화면 가까이 띄워서 서로 겹쳐 보이지 않게
-      const extra = prev && ((prev.classList.contains('story') && !c.classList.contains('story')) || prev.classList.contains('chap-open')) ? innerHeight * (prev.classList.contains('chap-open') ? 0.55 : 0.9) : 0;
+      // 다른 종류로 넘어갈 때는 넉넉히 띄움 → 한 화면에 한 가지만
+      const P = (k) => prev && prev.classList.contains(k), C = (k) => c.classList.contains(k);
+      const extra = !prev ? 0 : P('chap-open') ? innerHeight * 0.55 : P('story') && !C('story') ? innerHeight * 0.9 : P('play') ? innerHeight * 0.6 : C('story') ? innerHeight * 0.6 : 0;
       const top = Math.max(+c.dataset.at * base, y + extra); c.style.top = `${Math.round(top)}px`; y = top + c.offsetHeight + gap; prev = c;
     });
     sc.style.height = `${Math.round(Math.max(base, y + innerHeight * 0.7))}px`; // 체험 뒤에도 한 화면 가까이 머물 자리
@@ -78,7 +80,7 @@ if (window.ResizeObserver) { const ro = new ResizeObserver(relSoon); document.qu
 function cardHTML(s, c, si, ci) {
   const pos = `style="top:${c.at * 100}%" data-at="${c.at}"`;
   const src = c.src ? `<p class="src">${tr('출처: ')}${esc(c.src)}</p>` : '';
-  if (c.kind === 'story') return `<article class="card story" ${pos}${c.face ? ` data-face="${c.face}"` : ''}>${c.chap ? `<p class="chap">${esc(c.chap)}</p>` : ''}<div class="st-top">${c.face ? `<canvas class="st-face" data-face="${c.face}" aria-hidden="true"></canvas>` : ''}<div><p class="st-who"><b>${esc(LABEL)}</b>${esc(c.who)}</p><h2>${esc(c.head)}</h2></div></div>${c.html}${c.first ? `<p class="note st-note">${esc(NOTE)}</p>` : ''}${s.cards.some((d) => d.play && d.at > c.at) ? `<p class="st-next">↓ ${esc(LX.next)}</p>` : ''}</article>`;
+  if (c.kind === 'story') return `<article class="card story" ${pos}${c.face ? ` data-face="${c.face}"` : ''}>${c.face ? '<div class="st-stage" aria-hidden="true"></div>' : ''}<div class="st-box">${c.chap ? `<p class="chap">${esc(c.chap)}</p>` : ''}<div class="st-top">${c.face ? `<canvas class="st-face" data-face="${c.face}" aria-hidden="true"></canvas>` : ''}<div><p class="st-who"><b>${esc(LABEL)}</b>${esc(c.who)}</p><h2>${esc(c.head)}</h2></div></div>${c.html}${c.first ? `<p class="note st-note">${esc(NOTE)}</p>` : ''}${s.cards.some((d) => d.play && d.at > c.at) ? `<p class="st-next">↓ ${esc(LX.next)}</p>` : ''}</div></article>`;
   if (c.kind === 'record') return `<article class="card rec brief ${c.tone || ''}" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3>${c.html}${src}</article>`;
   if (c.kind === 'reveal') return `<article class="card rec reveal-rec" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3><div class="blur">${c.html}</div><button class="rv-btn">${tr('기록 읽기')}</button>${src}</article>`;
   if (c.kind === 'correct') return `<article class="card rec reveal-rec correct" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3><div class="blur">${c.html}</div><button class="rv-btn">${tr('기록 읽기')}</button><button class="fix-btn" hidden>${tr('기록 바로잡기')}</button><p class="fix-note" hidden>${esc(c.fix)}</p>${src}</article>`;
@@ -248,7 +250,7 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let W = 0, H = 0, DPR = Math.min(devicePixelRatio, 2), CX = 0, CY = 0, R = 0, mobile = false;
 function resize() {
   W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; g.setTransform(DPR, 0, 0, DPR, 0, 0);
-  mobile = W < 820; CX = mobile ? W / 2 : W * 0.64; CY = mobile ? H * 0.42 : H * 0.5; R = Math.min(mobile ? W * 0.42 : W * 0.3, H * 0.36);
+  mobile = W < 820; CX = mobile ? W / 2 : W * 0.64; CY = mobile ? H * 0.38 : H * 0.5; /* 휴대폰: 아래쪽은 체험 안내 자리 */ R = Math.min(mobile ? W * 0.42 : W * 0.3, H * 0.36);
 }
 resize(); addEventListener('resize', resize);
 
@@ -342,9 +344,15 @@ function applyFace(id) {
   else if (want) face.k = Math.min(want.max || 1, face.k + 0.025);
   else face.k = Math.max(0, face.k - 0.04);
   if (want) face.col = want.col;
-  if (face.k <= 0 || !face.pts) return;
+  if (face.k <= 0 || !face.pts) { face.lastFy = null; return; }
   TA[0] *= 1 - face.k; // 첫 쌀알(빛)이 얼굴을 가리지 않게
-  const sc = R * (mobile ? 0.55 : 0.62), fx = CX, fy = mobile ? CY - R * 0.32 : CY - R * 0.05, k = face.k;
+  let sc = R * (mobile ? 0.55 : 0.62), fx = CX, fy = mobile ? CY - R * 0.32 : CY - R * 0.05; const k = face.k;
+  // 휴대폰: 이야기 카드 위쪽의 빈 자리(.st-stage)에 얼굴을 그려 글과 겹치지 않게, 스크롤하면 카드와 함께 움직임
+  const stage = mobile && readCard ? readCard.querySelector('.st-stage') : null;
+  if (stage) { const r = stage.getBoundingClientRect(); sc = Math.min(r.height * 0.42, W * 0.4); fy = r.top + r.height / 2 - sc * 0.1; face.fy = fy; face.sc = sc; }
+  else if (mobile && face.fy != null && !readCard) { fy = face.fy; sc = face.sc; }
+  if (mobile && face.lastFy != null && Math.abs(fy - face.lastFy) < 600) { const dy = fy - face.lastFy; for (let i = 1; i <= FN; i++) Y[i] += dy; } // 카드와 함께 그대로 따라 움직임
+  face.lastFy = mobile ? fy : null;
   const n = face.pts.length;
   for (let j = 0; j < n; j++) { const q = face.pts[j], i = j + 1, kj = Math.max(0, Math.min(1, k * 1.7 - (j / n) * 0.7)); TX[i] = lerp(TX[i], fx + q.x * sc, kj); TY[i] = lerp(TY[i], fy + q.y * sc, kj); TA[i] = lerp(TA[i], q.a, kj); if (kj > 0.5) C[i] = face.col === 3 ? 3 : q.c; TROT[i] = q.r; }
   for (let i = face.pts.length + 1; i < N; i++) TA[i] *= 1 - 0.97 * k; // 얼굴을 그리는 동안 다른 쌀알은 거의 끔
@@ -666,6 +674,13 @@ function draw(now) {
   const sc = SCENES[cur], id = sc.id, p = curP;
   { const tl = IS_MOBILE && sensor.on ? Math.min(1, Math.abs(sensor.tiltX) + Math.abs(sensor.tiltY)) : 0; state.flowT += dt * 0.03 * (1 + tl * 3.5); }
   readCard = findReadCard();
+  // 휴대폰: 체험 카드에 닿으면 화면 아래에 고정 → 위쪽 그림을 가리지 않고 보면서 해 볼 수 있게
+  if (mobile) document.querySelectorAll('.card.play').forEach((pc) => {
+    const sr = pc.parentElement.getBoundingClientRect(), top = sr.top + (parseFloat(pc.style.top) || 0);
+    let nx = pc.nextElementSibling; while (nx && !nx.classList.contains('card')) nx = nx.nextElementSibling;
+    const nextTop = nx ? sr.top + (parseFloat(nx.style.top) || 0) : Infinity;
+    pc.classList.toggle('docked', top < innerHeight * 0.72 && sr.bottom > innerHeight * 0.9 && nextTop > innerHeight * 0.9); // 다음 카드·다음 장이 보이기 전에 내려감
+  });
   sections[cur].querySelectorAll(':scope > .card.story, :scope > .card.chap-open').forEach((el) => { const r = el.getBoundingClientRect(); el.classList.toggle('past', r.bottom < innerHeight * (el.classList.contains('chap-open') ? 0.42 : 0.3)); });
   const reading = !!readCard; hold = reading || !!sections[cur].querySelector(':scope > .card.play.locked'); state.readK = Math.max(0, Math.min(1, (state.readK || 0) + (reading ? dt * 2.5 : -dt * 2)));
   document.body.classList.toggle('phase-read', reading);
