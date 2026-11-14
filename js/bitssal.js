@@ -8,13 +8,12 @@ import { IS_MOBILE, sensor, startCamera, startMic, getPosition, distanceKm, keep
 import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=5';
 import { facePoints, drawPortrait } from './bitssal-faces.js?v=3';
 import * as MB from './membership.js?v=6';
-import { createNarrator } from './bitssal-narrator.js?v=2';
 // 화면 문구 (읽기 → 체험 · 내레이션)
 const LX = ({
-  ko: { play: '체험', next: '이야기를 다 읽으면, 아래에서 직접 해 볼 수 있어요.', narr: '내레이션', listen: '듣기', stop: '멈춤', chapter: '장' },
-  en: { play: 'Experience', next: 'When you finish reading, try it yourself just below.', narr: 'Narration', listen: 'Listen', stop: 'Stop', chapter: 'Chapter' },
-  zh: { play: '体验', next: '读完故事后，可以在下方亲自体验。', narr: '旁白', listen: '收听', stop: '停止', chapter: '第' },
-  ja: { play: '体験', next: '読み終えたら、すぐ下で体験できます。', narr: 'ナレーション', listen: '聴く', stop: '停止', chapter: '章' },
+  ko: { play: '체험', wait: '위의 이야기를 다 읽으면 체험이 열려요', next: '이야기를 다 읽으면, 아래에서 직접 해 볼 수 있어요.', narr: '내레이션', listen: '듣기', stop: '멈춤', chapter: '장' },
+  en: { play: 'Experience', wait: 'This opens once you finish the story above', next: 'When you finish reading, try it yourself just below.', narr: 'Narration', listen: 'Listen', stop: 'Stop', chapter: 'Chapter' },
+  zh: { play: '体验', wait: '读完上面的故事后即可体验', next: '读完故事后，可以在下方亲自体验。', narr: '旁白', listen: '收听', stop: '停止', chapter: '第' },
+  ja: { play: '体験', wait: '上の物語を読み終えると体験できます', next: '読み終えたら、すぐ下で体験できます。', narr: 'ナレーション', listen: '聴く', stop: '停止', chapter: '章' },
 })[lang] || {};
 const SRC1 = tr('진실·화해를위한과거사정리위원회, 「대구10월사건 관련 민간인 희생 사건」');
 const SRC2 = tr('진실·화해를위한과거사정리위원회, 「경산 코발트광산 사건」');
@@ -56,7 +55,7 @@ else MB.enter(CELL).then(MB.passChip); // 입장권이면 이때 24시간 시작
 if (window === window.top) import('./app-shop.js?v=4').then((SHOP) => SHOP.loadShop().then(() => { const box = document.querySelector('.bs-credits > div'), html = SHOP.collectBannerHTML(CELL.id); if (box && html) box.insertAdjacentHTML('afterbegin', html); })).catch(() => {}); // 웹에서만
 // 카드가 길어져도(작은 화면·번역·이야기 카드) 서로 겹치지 않게: 원래 자리보다 위로는 안 올리고, 앞 카드 밑으로만 밀어냄. 모자라면 장면을 늘림
 function relayout() {
-  const gap = Math.max(28, innerHeight * 0.06);
+  const gap = Math.max(40, innerHeight * 0.1);
   document.querySelectorAll('.scene').forEach((sc) => {
     const base = (+sc.dataset.h / 100) * innerHeight;
     const cards = [...sc.querySelectorAll(':scope > .card')].sort((a, b) => a.dataset.at - b.dataset.at);
@@ -64,10 +63,10 @@ function relayout() {
     let prev = null;
     cards.forEach((c) => {
       // 장 표지 → 이야기, 이야기 → 체험 사이는 한 화면 가까이 띄워서 서로 겹쳐 보이지 않게
-      const extra = prev && ((prev.classList.contains('story') && !c.classList.contains('story')) || prev.classList.contains('chap-open')) ? innerHeight * 0.42 : 0;
+      const extra = prev && ((prev.classList.contains('story') && !c.classList.contains('story')) || prev.classList.contains('chap-open')) ? innerHeight * (prev.classList.contains('chap-open') ? 0.55 : 0.9) : 0;
       const top = Math.max(+c.dataset.at * base, y + extra); c.style.top = `${Math.round(top)}px`; y = top + c.offsetHeight + gap; prev = c;
     });
-    sc.style.height = `${Math.round(Math.max(base, y + innerHeight * 0.25))}px`;
+    sc.style.height = `${Math.round(Math.max(base, y + innerHeight * 0.7))}px`; // 체험 뒤에도 한 화면 가까이 머물 자리
   });
 }
 let relT = 0; const relSoon = () => { cancelAnimationFrame(relT); relT = requestAnimationFrame(relayout); };
@@ -79,7 +78,7 @@ if (window.ResizeObserver) { const ro = new ResizeObserver(relSoon); document.qu
 function cardHTML(s, c, si, ci) {
   const pos = `style="top:${c.at * 100}%" data-at="${c.at}"`;
   const src = c.src ? `<p class="src">${tr('출처: ')}${esc(c.src)}</p>` : '';
-  if (c.kind === 'story') return `<article class="card story" ${pos}${c.face ? ` data-face="${c.face}"` : ''}>${c.chap ? `<p class="chap">${esc(c.chap)}</p>` : ''}<div class="st-top">${c.face ? `<canvas class="st-face" data-face="${c.face}" aria-hidden="true"></canvas>` : ''}<div><p class="st-who"><b>${esc(LABEL)}</b>${esc(c.who)}</p><h2>${esc(c.head)}</h2></div></div>${c.html}${c.first ? `<p class="note st-note">${esc(NOTE)}</p>` : ''}${s.cards.some((d) => d.play && d.at > c.at) ? `<p class="st-next">↓ ${esc(LX.next)}</p>` : ''}<button class="st-listen" type="button" aria-pressed="false"><i aria-hidden="true"></i><span>${esc(LX.listen)}</span></button></article>`;
+  if (c.kind === 'story') return `<article class="card story" ${pos}${c.face ? ` data-face="${c.face}"` : ''}>${c.chap ? `<p class="chap">${esc(c.chap)}</p>` : ''}<div class="st-top">${c.face ? `<canvas class="st-face" data-face="${c.face}" aria-hidden="true"></canvas>` : ''}<div><p class="st-who"><b>${esc(LABEL)}</b>${esc(c.who)}</p><h2>${esc(c.head)}</h2></div></div>${c.html}${c.first ? `<p class="note st-note">${esc(NOTE)}</p>` : ''}${s.cards.some((d) => d.play && d.at > c.at) ? `<p class="st-next">↓ ${esc(LX.next)}</p>` : ''}</article>`;
   if (c.kind === 'record') return `<article class="card rec brief ${c.tone || ''}" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3>${c.html}${src}</article>`;
   if (c.kind === 'reveal') return `<article class="card rec reveal-rec" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3><div class="blur">${c.html}</div><button class="rv-btn">${tr('기록 읽기')}</button>${src}</article>`;
   if (c.kind === 'correct') return `<article class="card rec reveal-rec correct" ${pos}><p class="rec-label">${tr('기록')}</p><h3>${esc(c.title)}</h3><div class="blur">${c.html}</div><button class="rv-btn">${tr('기록 읽기')}</button><button class="fix-btn" hidden>${tr('기록 바로잡기')}</button><p class="fix-note" hidden>${esc(c.fix)}</p>${src}</article>`;
@@ -121,17 +120,8 @@ let sndUserOff = (() => { try { return localStorage.getItem('xpace-sound') === '
 function sndUI() { sndBtn.classList.toggle('on', sound.on); sndBtn.setAttribute('aria-pressed', String(sound.on)); sndBtn.querySelector('span').textContent = sound.on ? tr('소리 켜짐') : tr('소리 켜기'); }
 sndBtn.addEventListener('click', (e) => { e.stopPropagation(); const v = sound.toggle(); sndUserOff = !v; try { localStorage.setItem('xpace-sound', v ? 'on' : 'off'); } catch (e2) {} setTimeout(sndUI, 30); });
 // 내레이션: 순이의 이야기를 읽어 줌 (기기 음성). 말하는 동안 배경 소리는 낮춤
-const narr = createNarrator({ lang, onStart: () => sound.duck(0.35), onEnd: () => { if (!state.videoOn && lb.hidden) sound.duck(1); } });
-const narrBtn = document.createElement('button');
-narrBtn.className = 'bs-narr'; narrBtn.type = 'button'; narrBtn.hidden = !narr.ok;
-narrBtn.innerHTML = `<i aria-hidden="true"></i><span>${esc(LX.narr)}</span>`;
-function narrUI() { narrBtn.classList.toggle('on', narr.on); narrBtn.setAttribute('aria-pressed', String(narr.on)); document.querySelectorAll('.st-listen').forEach((b) => { const me = narr.card === b.closest('.card'); b.classList.toggle('on', me); b.setAttribute('aria-pressed', String(me)); b.querySelector('span').textContent = me ? LX.stop : LX.listen; }); }
-narrBtn.addEventListener('click', (e) => { e.stopPropagation(); narr.unlock(); narr.toggle(); narrUI(); });
-sndBtn.after(narrBtn);
-document.querySelectorAll('.st-listen').forEach((b) => { b.hidden = !narr.ok; b.addEventListener('click', (e) => { e.stopPropagation(); const c = b.closest('.card'); if (narr.card === c) narr.stop(); else { narr.unlock(); narr.play(c); } narrUI(); }); });
-setInterval(narrUI, 500);
-addEventListener('visibilitychange', () => { if (document.hidden) narr.stop(); });
-['pointerdown', 'keydown'].forEach((ev) => addEventListener(ev, function nu() { ['pointerdown', 'keydown'].forEach((x) => removeEventListener(x, nu, true)); narr.unlock(); }, true));
+// 내레이션(기기 음성)은 껐음 — ElevenLabs 녹음이 준비되면 녹음 파일로 다시 붙임 (bitssal-narrator.js는 남겨 둠)
+const narr = { follow() {}, stop() {}, unlock() {}, set() {}, card: null };
 const GEST = ['pointerdown', 'keydown', 'touchstart'];
 const firstGesture = (e) => {
   if (e.target && e.target.closest && e.target.closest('.bs-snd, .snd-gate')) return; // 버튼은 자체 처리
@@ -179,6 +169,36 @@ function jump(id) { const el = document.getElementById('s-' + id); if (el) windo
 const reading = new Set(); // 이야기 카드를 읽는 동안 화면 위 큰 숫자·라벨을 흐리게 (작은 화면)
 const io = new IntersectionObserver((es) => { es.forEach((e) => { e.target.classList.toggle('in', e.isIntersecting); if (e.target.classList.contains('story')) { if (e.isIntersecting) reading.add(e.target); else reading.delete(e.target); } }); document.body.classList.toggle('reading', reading.size > 0); }, { rootMargin: '-12% 0px -12% 0px' });
 document.querySelectorAll('.card').forEach((c) => io.observe(c));
+
+// 이야기 문단은 하나씩: 카드가 보이면 얼굴이 먼저 그려지고, 그다음 문단을 읽을 만큼 시간을 두고 차례로 띄움.
+// 화면에서 카드가 벗어나면 기다렸다가 돌아오면 이어서. 다 읽으면 그 장의 체험이 열림.
+const SEQ_RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const seqParas = (c) => [...c.querySelectorAll('p')].filter((p) => !p.matches('.st-who, .chap'));
+document.querySelectorAll('.card.story').forEach((c) => { c.classList.add('seq'); seqParas(c).forEach((p) => p.classList.add('seq-p')); });
+// 체험 카드는 바로 앞 이야기 카드를 다 읽을 때까지 잠김
+document.querySelectorAll('.scene').forEach((sc) => {
+  const cards = [...sc.querySelectorAll(':scope > .card')].sort((a, b) => a.dataset.at - b.dataset.at); let lastStory = null;
+  cards.forEach((c) => { if (c.classList.contains('story')) lastStory = c; else if (c.classList.contains('play') && lastStory) { c._story = lastStory; (lastStory._plays = lastStory._plays || []).push(c); c.classList.add('locked'); c.insertAdjacentHTML('afterbegin', `<p class="lock-note">${esc(LX.wait)}</p>`); } });
+});
+function unlockAfter(c) { c.classList.add('done'); (c._plays || []).forEach((pl) => { pl.classList.remove('locked'); pl.classList.add('opened'); }); }
+function runSeq(c) {
+  if (c._seq) return; c._seq = true;
+  const ps = seqParas(c);
+  if (SEQ_RM) { ps.forEach((p) => p.classList.add('shown')); unlockAfter(c); return; }
+  let i = 0, wait = 1400; // 처음엔 쌀알 얼굴이 그려질 시간
+  const tick = () => {
+    if (!c.classList.contains('in')) { setTimeout(tick, 400); return; } // 화면 밖이면 멈춤
+    if (wait > 0) { wait -= 200; setTimeout(tick, 200); return; }
+    if (i >= ps.length) { unlockAfter(c); return; }
+    const p = ps[i++]; p.classList.add('shown');
+    if (i >= ps.length) { setTimeout(() => unlockAfter(c), 600); return; } // 마지막 문단까지 보이면 곧 체험이 열림
+    const n = p.textContent.trim().length;
+    wait = i >= ps.length ? 600 : Math.min(7000, 1600 + n * (lang === 'en' ? 22 : 55)); // 읽을 시간만큼 기다림
+    setTimeout(tick, 200);
+  };
+  tick();
+}
+{ const so = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) runSeq(e.target); }), { threshold: 0.35 }); document.querySelectorAll('.card.story').forEach((c) => so.observe(c)); }
 
 // 기록 읽기 / 바로잡기
 document.querySelectorAll('.reveal-rec').forEach((c) => {
@@ -375,7 +395,7 @@ const TARGETS = {
     hideAll(gi);
   },
   hunger(p) {
-    state.hold = ptrDown && !readCard ? Math.min(1, state.hold + 0.02) : Math.max(0, state.hold - 0.03);
+    state.hold = ptrDown && !hold ? Math.min(1, state.hold + 0.02) : Math.max(0, state.hold - 0.03);
     const gone = Math.max(0, seg(p, 0.1, 0.9) - 0.25 * state.hold * (1 - seg(p, 0.6, 0.9))), sx = CX + R * 1.05, sy = CY + R * 0.75;
     for (let i = 0; i < 140; i++) {
       const b = bowlPos(i % 10), ang = R2[i] * 6.28, rr = Math.sqrt(R3[i]) * 16;
@@ -629,7 +649,7 @@ function placeLabels(id, p) {
 // ---------------- 루프 ----------------
 let last = performance.now();
 // 지금 읽고 있는 이야기 카드 (화면 가운데 띠에 걸친 것) → 읽기 단계
-let readCard = null;
+let readCard = null, hold = false; // hold: 지금은 체험을 받지 않음 (읽는 중이거나 아직 이야기를 다 읽지 않음)
 function findReadCard() {
   const band0 = innerHeight * 0.22, band1 = innerHeight * 0.78; let best = null, bd = 1e9;
   sections[cur].querySelectorAll(':scope > .card.story').forEach((el) => { const r = el.getBoundingClientRect(); if (r.bottom < band0 || r.top > band1) return; const d = Math.abs(r.top + r.height / 2 - innerHeight / 2); if (d < bd) { bd = d; best = el; } });
@@ -648,7 +668,7 @@ function draw(now) {
   const sc = SCENES[cur], id = sc.id, p = curP;
   { const tl = IS_MOBILE && sensor.on ? Math.min(1, Math.abs(sensor.tiltX) + Math.abs(sensor.tiltY)) : 0; state.flowT += dt * 0.03 * (1 + tl * 3.5); }
   readCard = findReadCard();
-  const reading = !!readCard; state.readK = Math.max(0, Math.min(1, (state.readK || 0) + (reading ? dt * 2.5 : -dt * 2)));
+  const reading = !!readCard; hold = reading || !!sections[cur].querySelector(':scope > .card.play.locked'); state.readK = Math.max(0, Math.min(1, (state.readK || 0) + (reading ? dt * 2.5 : -dt * 2)));
   document.body.classList.toggle('phase-read', reading);
   // 장 표지가 화면 가운데 있으면 쌀알·장면 그림을 거의 꺼서 제목만 보이게
   const opening = !reading && [...sections[cur].querySelectorAll(':scope > .card.chap-open')].some((el) => { const r = el.getBoundingClientRect(); return r.top < innerHeight * 0.5 && r.bottom > innerHeight * 0.45; });
@@ -672,18 +692,18 @@ function draw(now) {
   if (!state.ar) { g.fillStyle = id === 'mine' ? '#020202' : '#050505'; g.fillRect(0, 0, W, H); }
   g.globalAlpha = 1 - Math.max(0.75 * state.readK, 0.9 * state.openK); drawBackdrop(id, p, t); g.globalAlpha = 1; // 읽는 동안 장면 그림은 뒤로 물러남
   const wander = TOUCH && !ptr.in; // 터치: 누르지 않을 땐 손전등이 천천히 바닥을 훑음
-  const torch = id === 'mine' && !reading && (ptr.in || TOUCH) ? state.torch || 0 : 0, tx = wander ? CX + Math.sin(t * 0.5) * R * 0.7 : ptr.x, ty = wander ? CY + R * 0.62 + Math.sin(t * 0.9) * R * 0.08 : ptr.y;
+  const torch = id === 'mine' && !hold && (ptr.in || TOUCH) ? state.torch || 0 : 0, tx = wander ? CX + Math.sin(t * 0.5) * R * 0.7 : ptr.x, ty = wander ? CY + R * 0.62 + Math.sin(t * 0.9) * R * 0.08 : ptr.y;
   // 모바일: 기울이면 쌀알이 낮은 쪽으로 쏠리고(밥상·굶주림 장면에선 그릇에서 쏟아짐), 흔들면 떨림. 광산·진실규명 장에서는 쓰지 않음
-  const calm = reading || id === 'boundary' || id === 'mine' || id === 'truth';
+  const calm = hold || id === 'boundary' || id === 'mine' || id === 'truth';
   const gx = IS_MOBILE && sensor.on && !calm ? sensor.tiltX : 0, gy = IS_MOBILE && sensor.on && !calm ? sensor.tiltY : 0, sh = IS_MOBILE && !calm ? sensor.shake : 0;
   // 밥상: 폰을 기울인 쪽 그릇에 밥이 담김
-  if (IS_MOBILE && sensor.on && !reading && id === 'life' && Math.abs(gx) > 0.3) {
+  if (IS_MOBILE && sensor.on && !hold && id === 'life' && Math.abs(gx) > 0.3) {
     let changed = false;
     BOWLS.forEach((b, k) => { if (Math.sign(Math.cos(b.a)) === Math.sign(gx) && Math.abs(Math.cos(b.a)) > 0.2 && state.bowls[k] < 1) { state.bowls[k] = Math.min(1, state.bowls[k] + dt * 0.5 * Math.abs(gx)); changed = true; } });
     if (changed && now - (state.rt || 0) > 160) { state.rt = now; sound.rattle(0.2 + Math.abs(gx) * 0.3); sensor.vibrate(6); const done = state.bowls.filter((v) => v >= 1).length; document.querySelectorAll('.bowl-n').forEach((n) => (n.textContent = done)); if (done === 10 && !state.bowlTip) { state.bowlTip = true; sound.ping('bowlsDone'); showTip(UI.bowlsDone, UI.bowlsDoneT, { getBoundingClientRect: () => ({ left: CX - 120, top: CY + R * 0.7 }) }); } }
   }
   // 통행금지의 밤: 움직이지 않고 기다리면 새벽이 옴 (폰은 기울기·흔들림, PC는 마우스)
-  if (id === 'street' && !reading && sections[cur].querySelector('.card.play.in') && !state.dawn) {
+  if (id === 'street' && !hold && sections[cur].querySelector('.card.play.in') && !state.dawn) {
     const still = IS_MOBILE && sensor.on ? Math.abs(sensor.tiltX - (state.ptx ?? 0)) + Math.abs(sensor.tiltY - (state.pty ?? 0)) < 0.004 && sensor.shake < 0.05 : now - ptr.t > 700;
     state.wait = Math.max(0, Math.min(1, state.wait + (still ? dt / 6 : -dt / 2)));
     if (now - (state.wt || 0) > 200) { state.wt = now; document.querySelectorAll('.wait-n').forEach((el) => (el.textContent = Math.round(state.wait * 100))); }
@@ -715,7 +735,7 @@ function draw(now) {
   const ax = state.ar ? -sensor.tiltX * W * 0.6 : 0, ay = state.ar ? -sensor.tiltY * H * 0.5 : 0;
   if (id === 'light') state.lamps.forEach((l0) => { l0.y -= l0.v * (1 + sensor.blow * 7); l0.x += Math.sin(t + l0.ph) * 0.3; const l = { x: l0.x + (l0.ar ? ax : 0), y: l0.y + (l0.ar ? ay : 0) }; const r = 10 + Math.sin(t * 3 + l0.ph) * 2; const lg = g.createRadialGradient(l.x, l.y, 0, l.x, l.y, r * 2.4); lg.addColorStop(0, 'rgba(255,240,205,.95)'); lg.addColorStop(1, 'rgba(255,214,150,0)'); g.fillStyle = lg; g.beginPath(); g.arc(l.x, l.y, r * 2.4, 0, 6.283); g.fill(); if (l0.y < -40) l0.y = H + 40; });
   if (state.ar && id !== 'light') stopAR();
-  if (id === 'hunger' && !reading && state.hold > 0.05) { g.strokeStyle = `rgba(255,248,230,${0.5 * state.hold})`; g.beginPath(); g.arc(ptr.x, ptr.y, 26 + state.hold * 10, -Math.PI / 2, -Math.PI / 2 + state.hold * 6.283); g.stroke(); }
+  if (id === 'hunger' && !hold && state.hold > 0.05) { g.strokeStyle = `rgba(255,248,230,${0.5 * state.hold})`; g.beginPath(); g.arc(ptr.x, ptr.y, 26 + state.hold * 10, -Math.PI / 2, -Math.PI / 2 + state.hold * 6.283); g.stroke(); }
   sound.update(id, p, { freeze: state.freeze, lamps: state.lamps.length });
   placeLabels(id, p);
 }
@@ -723,7 +743,7 @@ function draw(now) {
 // ---------------- 캔버스 인터랙션 ----------------
 addEventListener('click', (e) => {
   if (e.target.closest('.card, .bs-top, .bs-menu, .bs-progress, .lab, .bs-credits, .lb')) return;
-  if (readCard) return; // 이야기를 읽는 동안에는 체험을 받지 않음
+  if (hold) return; // 이야기를 읽는 동안·다 읽기 전에는 체험을 받지 않음
   const id = SCENES[cur].id;
   if (id === 'prologue' && Math.hypot(e.clientX - X[0], e.clientY - Y[0]) < 60) { state.entered = true; sound.ping('enter'); sensor.vibrate(25); setTimeout(() => window.scrollTo({ top: sections[0].offsetTop + sections[0].offsetHeight * 0.55, behavior: 'smooth' }), 300); }
   if (id === 'life') {
@@ -776,7 +796,7 @@ if (IS_MOBILE) {
   addEventListener('click', function once() { removeEventListener('click', once, true); sensor.enable(); }, true); // iPhone: 첫 탭에서 기울기 권한
   sensor.onShake((v) => {
     const id = SCENES[cur].id;
-    if (readCard || id === 'boundary' || id === 'mine' || id === 'truth') return;
+    if (hold || id === 'boundary' || id === 'mine' || id === 'truth') return;
     if (id === 'hunger') { jarShake(); return; }
     sound.rattle(0.4 + v * 0.6); sensor.vibrate([25, 30, 25]);
   });
@@ -787,20 +807,20 @@ if (IS_MOBILE) {
     try { await startMic(); btn.textContent = tr('후~ 불면 빛이 떠올라요'); btn.disabled = true; } catch (err) { btn.textContent = tr('마이크를 쓸 수 없어요'); }
   }));
   sensor.onBlow((v) => {
-    if (SCENES[cur].id !== 'light' || readCard) return;
+    if (SCENES[cur].id !== 'light' || hold) return;
     const n = 1 + Math.round(v * 3);
     for (let k = 0; k < n && state.lamps.length < 60; k++) state.lamps.push({ x: W * (0.15 + Math.random() * 0.7), y: H + 20, v: 0.5 + Math.random() * 0.6, ph: Math.random() * 6 });
     document.querySelectorAll('.lamp-n').forEach((el) => (el.textContent = state.lamps.length)); sound.ping('lamp'); sensor.vibrate(12);
   });
   // 여러 손가락: 빛 장면에서 손가락마다 빛 하나
   addEventListener('touchstart', (e) => {
-    if (SCENES[cur].id !== 'light' || readCard || e.touches.length < 2 || e.target.closest('.card, .bs-top, .lb')) return;
+    if (SCENES[cur].id !== 'light' || hold || e.touches.length < 2 || e.target.closest('.card, .bs-top, .lb')) return;
     [...e.touches].forEach((tt) => { if (state.lamps.length < 60) state.lamps.push({ x: tt.clientX, y: tt.clientY, v: 0.25 + Math.random() * 0.35, ph: Math.random() * 6 }); });
     document.querySelectorAll('.lamp-n').forEach((el) => (el.textContent = state.lamps.length)); sound.ping('lamp'); sensor.vibrate(20);
   }, { passive: true });
   // 돌리기: 나눔 장면에서 주먹밥이 한 자리씩 옆으로
   sensor.onSpin((dir) => {
-    if (SCENES[cur].id !== 'share' || readCard) return;
+    if (SCENES[cur].id !== 'share' || hold) return;
     state.balls.forEach((bl) => { bl.ta += dir * Math.PI * 2 / 10; });
     state.share++; document.querySelectorAll('.share-n').forEach((el) => (el.textContent = state.share)); sound.ping('share'); sensor.vibrate([15, 30, 15]);
   });

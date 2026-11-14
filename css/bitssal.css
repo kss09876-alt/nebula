@@ -359,3 +359,24 @@ body.phase-read #hud > div, body.phase-read #labels, body.phase-read .hud-tip { 
 body.phase-open #hud > div, body.phase-open #labels { opacity: 0 !important; pointer-events: none !important; transition: opacity .5s; }
 .card.story p.st-next { font-family: inherit !important; font-size: 13px !important; line-height: 1.6 !important; color: var(--muted) !important; }
 @media (max-width: 760px) { .card.play { padding: 16px 16px 14px; border-radius: 10px; background: rgba(5,5,5,.66); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); } }
+
+/* ---------- 하나씩, 여유 있게 (2026-11-14 오후) ---------- */
+/* 이야기 문단: 시간 순서대로 하나씩 (bitssal.js runSeq) */
+.card.story.in p.seq-p:not(.shown) { opacity: 0 !important; transform: translateY(10px) !important; filter: blur(3px) !important; }
+.card.story.in p.seq-p.shown { opacity: 1; transform: none; filter: none; transition: opacity 1.2s var(--ease), transform 1.2s var(--ease), filter 1.2s var(--ease); transition-delay: 0s !important; }
+/* 장 표지: 번호 → 제목 → 선 순서로 */
+.card.chap-open small, .card.chap-open b { opacity: 0; transform: translateY(12px); transition: opacity 1.2s var(--ease), transform 1.2s var(--ease); }
+.card.chap-open.in small { opacity: 1; transform: none; }
+.card.chap-open.in b { opacity: 1; transform: none; transition-delay: .7s; }
+.card.chap-open.in i { transition-delay: 1.6s; }
+/* 체험 카드: 이야기를 다 읽기 전에는 잠김 */
+.card.play .lock-note { display: none; }
+.card.play.locked { opacity: .32 !important; filter: grayscale(.6); pointer-events: none; }
+.card.play.locked .lock-note { display: block; margin: 0 0 10px; font-size: 12px; font-weight: 700; color: var(--warm); letter-spacing: .02em; }
+.card.play.locked .play-tag::before { animation: none; box-shadow: none; opacity: .4; }
+.card.play.opened { transition: opacity 1.4s var(--ease), filter 1.4s var(--ease), transform .7s var(--ease); }
+.card.play.opened .play-tag::before { animation: playPing 1.6s ease-out 2; }
+@keyframes playPing { 0% { box-shadow: 0 0 0 0 rgba(255,214,150,.7); } 100% { box-shadow: 0 0 0 10px rgba(255,214,150,0); } }
+@media (prefers-reduced-motion: reduce) { .card.chap-open small, .card.chap-open b { transition: none; opacity: 1; transform: none; } }
+/* 내레이션 버튼은 지금 쓰지 않음 */
+.bs-narr, .st-listen { display: none !important; }
