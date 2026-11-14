@@ -5,7 +5,7 @@ import { sound } from './bitssal-sound.js?v=7';
 import { lang, tr, langSwitcher } from './i18n.js?v=6';
 import { videoHTML, mountVideos, playVideo, onVideo, stopVideos } from './video.js?v=2';
 import { IS_MOBILE, sensor, startCamera, startMic, getPosition, distanceKm, keepAwake } from './sensors.js?v=4';
-import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=5';
+import { buildScenes, YEARS_AT } from './bitssal-scenes.js?v=6';
 import { facePoints, drawPortrait } from './bitssal-faces.js?v=3';
 import * as MB from './membership.js?v=6';
 // 화면 문구 (읽기 → 체험 · 내레이션)
@@ -68,7 +68,7 @@ function relayout() {
       const extra = !prev ? 0 : P('chap-open') ? innerHeight * 0.55 : P('story') && !C('story') ? innerHeight * 0.9 : P('play') ? innerHeight * 0.6 : C('story') ? innerHeight * 0.6 : 0;
       const top = Math.max(+c.dataset.at * base, y + extra); c.style.top = `${Math.round(top)}px`; y = top + c.offsetHeight + gap; prev = c;
     });
-    sc.style.height = `${Math.round(Math.max(base, y + innerHeight * 0.7))}px`; // 체험 뒤에도 한 화면 가까이 머물 자리
+    sc.style.height = `${Math.round(Math.max(base, y + innerHeight * (sc.querySelector(':scope > .card.play') ? 1.1 : 0.7)))}px`; // 체험 뒤에도 한 화면 가까이 머물 자리
   });
 }
 let relT = 0; const relSoon = () => { cancelAnimationFrame(relT); relT = requestAnimationFrame(relayout); };
@@ -191,7 +191,7 @@ function runSeq(c) {
   const chars = ps.reduce((n, p) => n + p.textContent.trim().length, 0);
   let wait = 1400, read = Math.max(4000, Math.min(14000, chars * (lang === 'en' ? 18 : 45))), shown = false;
   const tick = () => {
-    if (!c.classList.contains('in')) { setTimeout(tick, 400); return; } // 화면 밖이면 멈춤
+    if (!c.classList.contains('in')) { if (c.getBoundingClientRect().bottom < 0) { ps.forEach((p) => p.classList.add('shown')); unlockAfter(c); return; } setTimeout(tick, 400); return; } // 화면 밖이면 멈춤, 이미 지나 내려갔으면 열어 둠
     if (!shown) { if ((wait -= 200) > 0) { setTimeout(tick, 200); return; } shown = true; ps.forEach((p, k) => setTimeout(() => p.classList.add('shown'), k * 350)); }
     if ((read -= 200) > 0) { setTimeout(tick, 200); return; }
     unlockAfter(c);
@@ -277,7 +277,7 @@ let stopARref = null;
 const state = { entered: false, share: 0, balls: [], memories: [], bowls: new Array(10).fill(0), voice: 0, hold: 0, lamps: [], rub: new Float32Array(900), carK: 0, flowT: 0, jar: 0, jarOut: 0, wait: 0, dawn: false, july: 0, brotherLight: false };
 const TROT = new Float32Array(N);
 let ptrDown = false;
-addEventListener('pointerdown', (e) => { if (!e.target.closest('.card, .bs-top, .bs-menu, .bs-progress, .lab, .lb')) ptrDown = true; });
+addEventListener('pointerdown', (e) => { if (!e.target.closest('.card, .bs-top, .bs-menu, .bs-progress, .lab, .lb')) { ptrDown = true; state.ptrDownAt = performance.now(); ptr.x = e.clientX; ptr.y = e.clientY; } });
 addEventListener('pointerup', () => (ptrDown = false)); addEventListener('pointercancel', () => (ptrDown = false));
 try { state.memories = JSON.parse(localStorage.getItem('xpace-bitssal-v2') || '[]'); } catch (e) {}
 
@@ -315,14 +315,19 @@ function showTip(title, text, el) {
 const BOWLS = UI.family.map((t, k) => ({ t: fmt(UI.bowlOf, { n: t }), a: (k / 10) * Math.PI * 2 - Math.PI / 2 })); // 열 식구의 그릇
 const bowlPos = (k) => ({ x: CX + Math.cos(BOWLS[k].a) * R * 0.85, y: CY + Math.sin(BOWLS[k].a) * R * 0.62 });
 // 쌀독 (굶주림 장면, 왼쪽) — 털 때마다 나오는 쌀이 줄어듦
-const jarPos = () => ({ x: CX - R * 1.05, y: CY + R * 0.75 });
+const jarPos = () => ({ x: CX, y: CY + R * 0.05 }); const JAR_S = () => (mobile ? 1.5 : 2); // 상 한가운데 큰 쌀독
 const JAR_YIELD = [6, 5, 4, 3, 3, 2, 2, 1, 1, 1, 0];
 function jarShake() {
   const n = JAR_YIELD[Math.min(state.jar, JAR_YIELD.length - 1)]; state.jar++;
   state.jarOut = Math.min(40, state.jarOut + n); state.jarShakeT = performance.now();
   document.querySelectorAll('.jar-n').forEach((el) => (el.textContent = state.jarOut));
+  const jp = jarPos(), s0 = JAR_S(); for (let k = 0; k < n * 4; k++) fly.push({ x: jp.x + (Math.random() - 0.5) * 30 * s0, y: jp.y - 34 * s0, vx: (Math.random() - 0.5) * 7, vy: -6 - Math.random() * 7, r: Math.random() * 6, t: 0 });
   if (n) { sound.rattle(0.15 + n * 0.07); sensor.vibrate(n * 6); } else { sound.ping('reveal'); sensor.vibrate([10, 60, 10]); if (!state.jarTip) { state.jarTip = true; const q = jarPos(); showTip(UI.jarEmpty, UI.jarEmptyT, { getBoundingClientRect: () => ({ left: q.x - 40, top: q.y - 90 }) }); } }
 }
+// 쌀: 모여든 사람들 (쌀알 하나 = 10명)
+function addCrowd(n) { const before = Math.floor((state.crowd || 0) / 100); state.crowd = Math.min(1300, (state.crowd || 0) + n); if (Math.floor(state.crowd / 100) > before) { sound.rattle(0.35); sensor.vibrate(12); } }
+// 날아가는 쌀알 (쌀독을 털 때)
+const fly = [];
 // 7월의 밥 한 그릇 (진실규명 장면): 한 번 누를 때마다 한 해
 const julyPos = (k) => { const cols = mobile ? 12 : 19, gw = R * 2 / (cols - 1); return { x: CX - R + (k % cols) * gw, y: CY - R * 0.78 + Math.floor(k / cols) * R * (mobile ? 0.1 : 0.12) }; };
 function addJuly() {
@@ -387,7 +392,7 @@ const TARGETS = {
     hideAll(900);
   },
   life(p) {
-    const k = seg(p, 0, 0.3);
+    const k = seg(p, 0, 0.12);
     let gi = 0;
     for (let i = 0; i < 140; i++, gi++) {
       const b = bowlPos(i % 10), ang = R2[i] * 6.28, rr = Math.sqrt(R3[i]) * 16;
@@ -409,11 +414,12 @@ const TARGETS = {
       else setT(i, b.x + Math.cos(ang) * rr, b.y + Math.sin(ang) * rr * 0.6, 1, 0);
     }
     const sb = bowlPos(3), jp = jarPos();
-    for (let j = 0; j < 40; j++) { const i = 140 + j; if (j < state.jarOut) { const ang = R2[i] * 6.28, rr = Math.sqrt(R3[i]) * 14; setT(i, sb.x + Math.cos(ang) * rr, sb.y - 4 + Math.sin(ang) * rr * 0.5, 1, 3); } else setT(i, jp.x + (R1[i] - 0.5) * 20, jp.y + 4, 0, 0); }
+    for (let j = 0; j < 40; j++) { const i = 140 + j; if (j < state.jarOut) { const ang = R2[i] * 6.28, rr = Math.sqrt(R3[i]) * 14; setT(i, sb.x + Math.cos(ang) * rr, sb.y - 4 + Math.sin(ang) * rr * 0.5, 1, 3); } else setT(i, jp.x + (R1[i] - 0.5) * 20 * JAR_S(), jp.y + 4, 0, 0); }
     hideAll(180);
   },
   demand(p) {
-    const n = Math.round(lerp(100, 1500, seg(p, 0.55, 0.85)));
+    const n = Math.min(1500, Math.round(100 + (state.crowd || 0) + 500 * seg(p, 0.15, 0.85)));
+    if ((state.crowdShown || 0) !== n) { state.crowdShown = n; document.querySelectorAll('.crowd-n').forEach((el) => (el.textContent = (n * 10).toLocaleString())); }
     const att = ptr.in && (TOUCH || (!mobile && ptr.x > W * 0.38)), tlt = IS_MOBILE && sensor.on; const ax = (att ? lerp(CX, ptr.x, TOUCH ? 0.75 : 0.55) : CX) + (tlt ? sensor.tiltX * R * 0.55 : 0), ay = (att ? lerp(CY, ptr.y, TOUCH ? 0.75 : 0.55) : CY) + (tlt ? sensor.tiltY * R * 0.4 : 0);
     const rc = R * 0.92 * Math.sqrt(n / 1500) + 14;
     for (let i = 0; i < N; i++) {
@@ -489,7 +495,7 @@ const TARGETS = {
     }
     hideAll(1800);
     hud.depth.innerHTML = `<small>${tr('깊이')}</small><b>${Math.round(seg(p, 0, 0.9) * 100)}</b>`;
-    state.torch = seg(p, 0.05, 0.2);
+    state.torch = seg(p, 0.02, 0.12);
   },
   truth(p) {
     const hy = CY + R * 0.8, hw = R * 0.85;
@@ -506,7 +512,7 @@ const TARGETS = {
     state.truthLine = line;
   },
   share(p) {
-    const k = seg(p, 0.05, 0.35);
+    const k = seg(p, 0, 0.12);
     for (let i = 0; i < 600; i++) {
       const b = state.balls[i % 10], ang = R2[i] * 6.28, rr = Math.sqrt(R3[i]) * 22 * b.size;
       const bx = CX + Math.cos(b.a) * R * b.r, by = CY + Math.sin(b.a) * R * b.r * 0.75;
@@ -571,11 +577,11 @@ function drawBackdrop(id, p, t) {
       g.beginPath(); g.moveTo(sx - 36, sy - 30); g.quadraticCurveTo(sx - 46, sy + 30, sx, sy + 34); g.quadraticCurveTo(sx + 46, sy + 30, sx + 36, sy - 30); g.closePath(); g.stroke();
       g.fillStyle = `rgba(255,248,230,${0.55 * k})`; g.font = '12px Pretendard, sans-serif'; g.textAlign = 'center'; g.fillText(tr('수집'), sx, sy - 40);
       // 쌀독 (항아리) — 털면 잠깐 흔들림
-      const jp = jarPos(), jk = seg(p, 0.02, 0.2), wob = Math.max(0, 1 - (performance.now() - (state.jarShakeT || 0)) / 400) * Math.sin(t * 40) * 0.08;
-      g.save(); g.translate(jp.x, jp.y); g.rotate(wob); g.strokeStyle = `rgba(255,248,230,${0.5 * jk})`;
+      const jp = jarPos(), jk = hold ? seg(p, 0.02, 0.2) : 1, wob = Math.max(0, 1 - (performance.now() - (state.jarShakeT || 0)) / 400) * Math.sin(t * 40) * 0.08;
+      g.save(); g.translate(jp.x, jp.y); g.scale(JAR_S(), JAR_S()); g.rotate(wob * 2.5); g.lineWidth = 1.4 / JAR_S(); g.strokeStyle = `rgba(255,248,230,${0.5 * jk})`;
       g.beginPath(); g.moveTo(-18, -34); g.quadraticCurveTo(-44, -18, -38, 10); g.quadraticCurveTo(-30, 36, 0, 38); g.quadraticCurveTo(30, 36, 38, 10); g.quadraticCurveTo(44, -18, 18, -34); g.closePath(); g.stroke();
       g.beginPath(); g.ellipse(0, -34, 18, 5, 0, 0, 6.283); g.stroke(); g.restore();
-      g.fillStyle = `rgba(255,248,230,${0.6 * jk})`; g.font = '12px Pretendard, sans-serif'; g.textAlign = 'center'; g.fillText(UI.jar, jp.x, jp.y - 46);
+      g.fillStyle = `rgba(255,248,230,${0.6 * jk})`; g.font = '12px Pretendard, sans-serif'; g.textAlign = 'center'; g.fillText(UI.jar, jp.x, jp.y - 48 * JAR_S());
       // 콜레라·수해: 물결 (p 0.6~)
       const wv = seg(p, 0.6, 0.8);
       if (wv > 0) { g.strokeStyle = `rgba(150,180,200,${0.25 * wv})`; for (let k2 = 0; k2 < 4; k2++) { g.beginPath(); for (let x = 0; x <= W; x += 12) g.lineTo(x, H - 30 - k2 * 14 + Math.sin(x / 40 + t * 1.5 + k2) * 5); g.stroke(); } }
@@ -601,7 +607,13 @@ function drawBackdrop(id, p, t) {
     g.beginPath(); g.moveTo(CX - R * 1.2, CY - R * 0.62); g.lineTo(CX + R * 1.2, CY - R * 0.5); g.stroke(); g.setLineDash([]);
     const cf = seg(p, 0.86, 0.98) * (1 - (state.dawnK || 0) * 0.8); if (cf > 0) { g.fillStyle = `rgba(0,0,0,${cf * 0.6})`; g.fillRect(0, 0, W, H); }
     if (state.dawnK > 0) { const dg = g.createLinearGradient(0, H, 0, H * 0.3); dg.addColorStop(0, `rgba(255,190,120,${0.22 * state.dawnK})`); dg.addColorStop(1, 'rgba(255,190,120,0)'); g.fillStyle = dg; g.fillRect(0, 0, W, H); }
-    if (p > 0.82 && !state.dawn && state.wait > 0.01) { g.strokeStyle = 'rgba(255,214,150,.7)'; g.lineWidth = 2; g.beginPath(); g.arc(CX, CY + R * 0.9, 22, -Math.PI / 2, -Math.PI / 2 + state.wait * 6.283); g.stroke(); g.lineWidth = 1; }
+    // 기다리는 동안: 별이 하나둘 돋고, 큰 고리가 차오름
+    if (!hold && !state.dawn && state.wait > 0.01) {
+      for (let k = 0; k < 90; k++) { const sy = (k * 61) % Math.round(H * 0.7); const tw = 0.5 + 0.5 * Math.sin(t * 2 + k); if (k / 90 < state.wait) { g.fillStyle = `rgba(255,248,230,${0.25 + 0.45 * tw})`; g.fillRect((k * 131) % W, sy, 1.6, 1.6); } }
+      g.strokeStyle = 'rgba(255,248,230,.1)'; g.lineWidth = 6; g.beginPath(); g.arc(CX, CY, R * 0.62, 0, 6.283); g.stroke();
+      g.strokeStyle = 'rgba(255,214,150,.8)'; g.beginPath(); g.arc(CX, CY, R * 0.62, -Math.PI / 2, -Math.PI / 2 + state.wait * 6.283); g.stroke(); g.lineWidth = 1;
+      g.fillStyle = 'rgba(255,248,230,.85)'; g.font = `600 ${Math.round(R * 0.22)}px Pretendard, sans-serif`; g.textAlign = 'center'; g.fillText(`${Math.round(state.wait * 100)}%`, CX, CY + R * 0.08);
+    }
   }
   if (id === 'spread') {
     REGIONS.forEach((rg) => {
@@ -655,6 +667,12 @@ function placeLabels(id, p) {
 // ---------------- 루프 ----------------
 let last = performance.now();
 // 지금 읽고 있는 이야기 카드 (화면 가운데 띠에 걸친 것) → 읽기 단계
+// 체험 진행도: 체험 카드가 화면 아래에 닿은 때(0)부터 장이 끝날 때(1)까지. 장면 움직임은 이 값으로 → 읽는 동안이 아니라 체험할 때 펼쳐짐
+function playProgress(i, p) {
+  const sc = sections[i], pc = sc.querySelector(':scope > .card.play'); if (!pc) return p;
+  const sr = sc.getBoundingClientRect(), top = sr.top + (parseFloat(pc.style.top) || 0);
+  return Math.max(0, Math.min(1, (innerHeight * 0.72 - top) / Math.max(1, sr.bottom - top - innerHeight * 0.18)));
+}
 let readCard = null, hold = false; // hold: 지금은 체험을 받지 않음 (읽는 중이거나 아직 이야기를 다 읽지 않음)
 function findReadCard() {
   const band0 = innerHeight * 0.22, band1 = innerHeight * 0.78; let best = null, bd = 1e9;
@@ -689,7 +707,9 @@ function draw(now) {
   state.openK = Math.max(0, Math.min(1, (state.openK || 0) + (opening ? dt * 2.5 : -dt * 1.5)));
   document.body.classList.toggle('phase-open', opening);
   narr.follow(readCard);
-  TARGETS[id](p);
+  const pp = playProgress(cur, p);
+  state.freeze = false; // 밤 장면에서만 켜짐 (다른 장으로 넘어가면 풀림)
+  TARGETS[id](pp);
   applyFace(id);
   document.body.dataset.scene = id;
   // HUD 가시성
@@ -704,22 +724,44 @@ function draw(now) {
   prog.children[cur].querySelector('i').style.width = Math.round(p * 100) + '%';
 
   if (!state.ar) { g.fillStyle = id === 'mine' ? '#020202' : '#050505'; g.fillRect(0, 0, W, H); }
-  g.globalAlpha = 1 - Math.max(0.97 * state.readK, 0.95 * state.openK); drawBackdrop(id, p, t); g.globalAlpha = 1; // 읽는 동안 장면 그림은 뒤로 물러남
+  g.globalAlpha = 1 - Math.max(0.97 * state.readK, 0.95 * state.openK); drawBackdrop(id, pp, t); g.globalAlpha = 1; // 읽는 동안 장면 그림은 뒤로 물러남
   const wander = TOUCH && !ptr.in; // 터치: 누르지 않을 땐 손전등이 천천히 바닥을 훑음
   const torch = id === 'mine' && !hold && (ptr.in || TOUCH) ? state.torch || 0 : 0, tx = wander ? CX + Math.sin(t * 0.5) * R * 0.7 : ptr.x, ty = wander ? CY + R * 0.62 + Math.sin(t * 0.9) * R * 0.08 : ptr.y;
   // 모바일: 기울이면 쌀알이 낮은 쪽으로 쏠리고(밥상·굶주림 장면에선 그릇에서 쏟아짐), 흔들면 떨림. 광산·진실규명 장에서는 쓰지 않음
   const calm = hold || id === 'boundary' || id === 'mine' || id === 'truth';
   const gx = IS_MOBILE && sensor.on && !calm ? sensor.tiltX : 0, gy = IS_MOBILE && sensor.on && !calm ? sensor.tiltY : 0, sh = IS_MOBILE && !calm ? sensor.shake : 0;
-  // 밥상: 폰을 기울인 쪽 그릇에 밥이 담김
-  if (IS_MOBILE && sensor.on && !hold && id === 'life' && Math.abs(gx) > 0.3) {
-    let changed = false;
-    BOWLS.forEach((b, k) => { if (Math.sign(Math.cos(b.a)) === Math.sign(gx) && Math.abs(Math.cos(b.a)) > 0.2 && state.bowls[k] < 1) { state.bowls[k] = Math.min(1, state.bowls[k] + dt * 0.5 * Math.abs(gx)); changed = true; } });
-    if (changed && now - (state.rt || 0) > 160) { state.rt = now; sound.rattle(0.2 + Math.abs(gx) * 0.3); sensor.vibrate(6); const done = state.bowls.filter((v) => v >= 1).length; document.querySelectorAll('.bowl-n').forEach((n) => (n.textContent = done)); if (done === 10 && !state.bowlTip) { state.bowlTip = true; sound.ping('bowlsDone'); showTip(UI.bowlsDone, UI.bowlsDoneT, { getBoundingClientRect: () => ({ left: CX - 120, top: CY + R * 0.7 }) }); } }
+  // 밥상: 폰을 기울인 쪽(어느 방향이든) 그릇으로 위에서 쌀이 쏟아짐 · PC·터치는 그릇을 누르고 있으면 담김
+  state.pour = -1;
+  if (id === 'life' && !hold) {
+    let k = -1, rate = 0;
+    if (IS_MOBILE && sensor.on) { const tx = sensor.tiltX, ty = sensor.tiltY, mag = Math.hypot(tx, ty); if (mag > 0.22) { let bd = -2; BOWLS.forEach((b, j) => { const q = bowlPos(j), dx = q.x - CX, dy = q.y - CY, d = (dx * tx + dy * ty) / (Math.hypot(dx, dy) * mag); if (d > bd) { bd = d; k = j; } }); rate = Math.min(1, mag * 1.6); } }
+    if (k < 0 && ptrDown) BOWLS.forEach((b, j) => { const q = bowlPos(j); if (Math.hypot(ptr.x - q.x, ptr.y - q.y) < 52) { k = j; rate = 1; } });
+    if (k >= 0 && state.bowls[k] < 1) {
+      state.pour = k; const was = state.bowls[k]; state.bowls[k] = Math.min(1, was + dt * 0.55 * rate);
+      if (now - (state.rt || 0) > 140) { state.rt = now; sound.rattle(0.15 + rate * 0.25); sensor.vibrate(5); }
+      if (state.bowls[k] >= 1) { const done = state.bowls.filter((v) => v >= 1).length; document.querySelectorAll('.bowl-n').forEach((n) => (n.textContent = done)); sound.ping(done === 10 ? 'bowlsDone' : 'bowl'); sensor.vibrate(done === 10 ? [30, 50, 30, 50, 80] : 18); if (done === 10) showTip(UI.bowlsDone, UI.bowlsDoneT, { getBoundingClientRect: () => ({ left: CX - 120, top: CY - R * 0.2 }) }); }
+    }
   }
+  // 쌀: 제자리에서 몸을 돌면(나침반) 사방에서 사람들이 모여듦
+  if (id === 'demand' && !hold && IS_MOBILE && sensor.heading != null) {
+    if (state.lastHd != null) { let d = sensor.heading - state.lastHd; d = ((d + 540) % 360) - 180; if (Math.abs(d) < 45 && Math.abs(d) > 0.4) { state.turned = (state.turned || 0) + Math.abs(d); addCrowd(Math.abs(d) * 3.2); } }
+    state.lastHd = sensor.heading;
+  } else state.lastHd = null;
+  // 7월: 길게 누르고 있으면 해마다 이어서 한 그릇씩
+  if (id === 'truth' && !hold && ptrDown && now - (state.ptrDownAt || now) > 450 && now - (state.julyT || 0) > 130) { state.julyT = now; addJuly(); }
+  // 주먹밥: 폰을 핸들처럼 돌리면(화면 축 회전) 고리 전체가 함께 돎 · PC는 끌어서 돌림
+  if (id === 'share' && !hold) {
+    let da = 0;
+    if (IS_MOBILE && sensor.on && Math.abs(sensor.spin) > 12) da = -sensor.spin * dt * Math.PI / 180;
+    if (ptrDown && state.dragX != null) { da += (ptr.x - state.dragX) * 0.008; } state.dragX = ptrDown ? ptr.x : null;
+    if (da) { state.balls.forEach((b) => { b.ta += da; b.a += da; }); state.ringAcc = (state.ringAcc || 0) + Math.abs(da); if (state.ringAcc > Math.PI * 2 / 10) { state.ringAcc = 0; state.share++; sound.ping('share'); sensor.vibrate(14); document.querySelectorAll('.share-n').forEach((n) => (n.textContent = state.share)); } }
+  }
+  // 낮은 목소리: 후~ 불면 흐려진 기록의 먼지가 걷힘
+  if (id === 'erased' && !hold && sensor.blow > 0.15) for (let i = 0; i < 900; i++) if (Math.random() < sensor.blow * 0.08) state.rub[i] = Math.min(1, state.rub[i] + 0.2);
   // 통행금지의 밤: 움직이지 않고 기다리면 새벽이 옴 (폰은 기울기·흔들림, PC는 마우스)
   if (id === 'street' && !hold && sections[cur].querySelector('.card.play.in') && !state.dawn) {
-    const still = IS_MOBILE && sensor.on ? Math.abs(sensor.tiltX - (state.ptx ?? 0)) + Math.abs(sensor.tiltY - (state.pty ?? 0)) < 0.004 && sensor.shake < 0.05 : now - ptr.t > 700;
-    state.wait = Math.max(0, Math.min(1, state.wait + (still ? dt / 6 : -dt / 2)));
+    const still = IS_MOBILE && sensor.on ? sensor.faceDown || (Math.abs(sensor.tiltX - (state.ptx ?? 0)) + Math.abs(sensor.tiltY - (state.pty ?? 0)) < 0.006 && sensor.shake < 0.08) : now - ptr.t > 700;
+    state.wait = Math.max(0, Math.min(1, state.wait + (still ? dt / 7 : -dt / 3)));
     if (now - (state.wt || 0) > 200) { state.wt = now; document.querySelectorAll('.wait-n').forEach((el) => (el.textContent = Math.round(state.wait * 100))); }
     if (state.wait >= 1) { state.dawn = true; document.querySelectorAll('.wait-n').forEach((el) => (el.textContent = 100)); sound.ping('enter'); sensor.vibrate([40, 80, 40]); showTip(UI.dawn, UI.dawnT, { getBoundingClientRect: () => ({ left: CX - 120, top: CY + R * 0.5 }) }); }
   }
@@ -747,11 +789,18 @@ function draw(now) {
   }
   if (torch > 0) { const tg = g.createRadialGradient(tx, ty, 0, tx, ty, 170); tg.addColorStop(0, `rgba(255,236,200,${0.1 * torch})`); tg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = tg; g.fillRect(tx - 170, ty - 170, 340, 340); }
   const ax = state.ar ? -sensor.tiltX * W * 0.6 : 0, ay = state.ar ? -sensor.tiltY * H * 0.5 : 0;
-  if (id === 'light') state.lamps.forEach((l0) => { l0.y -= l0.v * (1 + sensor.blow * 7); l0.x += Math.sin(t + l0.ph) * 0.3; const l = { x: l0.x + (l0.ar ? ax : 0), y: l0.y + (l0.ar ? ay : 0) }; const r = 10 + Math.sin(t * 3 + l0.ph) * 2; const lg = g.createRadialGradient(l.x, l.y, 0, l.x, l.y, r * 2.4); lg.addColorStop(0, 'rgba(255,240,205,.95)'); lg.addColorStop(1, 'rgba(255,214,150,0)'); g.fillStyle = lg; g.beginPath(); g.arc(l.x, l.y, r * 2.4, 0, 6.283); g.fill(); if (l0.y < -40) l0.y = H + 40; });
+  if (id === 'light') state.lamps.forEach((l0) => { l0.y -= l0.v * (1 + sensor.blow * 7 + (IS_MOBILE && sensor.on ? Math.max(0, sensor.tiltY - 0.35) * 6 : 0)); l0.x += Math.sin(t + l0.ph) * 0.3; const l = { x: l0.x + (l0.ar ? ax : 0), y: l0.y + (l0.ar ? ay : 0) }; const r = 10 + Math.sin(t * 3 + l0.ph) * 2; const lg = g.createRadialGradient(l.x, l.y, 0, l.x, l.y, r * 2.4); lg.addColorStop(0, 'rgba(255,240,205,.95)'); lg.addColorStop(1, 'rgba(255,214,150,0)'); g.fillStyle = lg; g.beginPath(); g.arc(l.x, l.y, r * 2.4, 0, 6.283); g.fill(); if (l0.y < -40) l0.y = H + 40; });
   if (state.ar && id !== 'light') stopAR();
+  // 밥상: 위에서 쏟아지는 쌀 줄기
+  if (id === 'life' && state.pour >= 0) { const q = bowlPos(state.pour), sx = CX, sy = CY - R * 1.35; for (let k = 0; k < 26; k++) { const u = ((t * 1.6 + k / 26) % 1), x = lerp(sx, q.x, u) + Math.sin(k * 7.1) * 5, y = lerp(sy, q.y - 6, u * u); grain(x, y, k, 0.9, WARM, 1); } const gl = g.createRadialGradient(q.x, q.y, 0, q.x, q.y, 46); gl.addColorStop(0, 'rgba(255,214,150,.35)'); gl.addColorStop(1, 'rgba(255,214,150,0)'); g.fillStyle = gl; g.fillRect(q.x - 46, q.y - 46, 92, 92); }
+  if (id === 'life' && state.bowls.every((v) => v >= 1)) BOWLS.forEach((b, k) => { const q = bowlPos(k); g.strokeStyle = `rgba(255,214,150,${0.45 + 0.25 * Math.sin(t * 2 + k)})`; g.lineWidth = 2; g.beginPath(); g.ellipse(q.x, q.y, 30, 16, 0, 0, 6.283); g.stroke(); g.lineWidth = 1; g.fillStyle = 'rgba(255,248,230,.8)'; g.font = '12px Pretendard, sans-serif'; g.textAlign = 'center'; g.fillText(UI.family[k], q.x, q.y + 32); });
+  // 쌀독에서 튀어 오르는 쌀알
+  for (let k = fly.length - 1; k >= 0; k--) { const f = fly[k]; f.vy += 0.42; f.x += f.vx; f.y += f.vy; f.r += 0.2; f.t += dt; grain(f.x, f.y, f.r, Math.max(0, 1 - f.t / 1.4), RICE, 1.3); if (f.t > 1.4 || id !== 'hunger') fly.splice(k, 1); }
+  // 쌀: 몸을 돈 만큼 둘레에 고리가 차오름
+  if (id === 'demand' && (state.turned || 0) > 2) { const a = Math.min(1, state.turned / 360); g.strokeStyle = 'rgba(255,214,150,.6)'; g.lineWidth = 3; g.beginPath(); g.arc(CX, CY, R * 1.08, -Math.PI / 2, -Math.PI / 2 + a * 6.283); g.stroke(); g.lineWidth = 1; }
   if (id === 'hunger' && !hold && state.hold > 0.05) { g.strokeStyle = `rgba(255,248,230,${0.5 * state.hold})`; g.beginPath(); g.arc(ptr.x, ptr.y, 26 + state.hold * 10, -Math.PI / 2, -Math.PI / 2 + state.hold * 6.283); g.stroke(); }
-  sound.update(id, p, { freeze: state.freeze, lamps: state.lamps.length });
-  placeLabels(id, p);
+  sound.update(id, pp, { freeze: state.freeze, lamps: state.lamps.length });
+  placeLabels(id, pp);
 }
 
 // ---------------- 캔버스 인터랙션 ----------------
@@ -761,10 +810,11 @@ addEventListener('click', (e) => {
   const id = SCENES[cur].id;
   if (id === 'prologue' && Math.hypot(e.clientX - X[0], e.clientY - Y[0]) < 60) { state.entered = true; sound.ping('enter'); sensor.vibrate(25); setTimeout(() => window.scrollTo({ top: sections[0].offsetTop + sections[0].offsetHeight * 0.55, behavior: 'smooth' }), 300); }
   if (id === 'life') {
-    BOWLS.forEach((b, k) => { const q = bowlPos(k); if (Math.hypot(e.clientX - q.x, e.clientY - q.y) < 36 && state.bowls[k] < 1) { state.bowls[k] = Math.min(1, state.bowls[k] + 0.5); const done = state.bowls.filter((v) => v >= 1).length; sound.ping(done === 10 && state.bowls[k] >= 1 ? 'bowlsDone' : 'bowl'); sensor.vibrate(done === 10 && state.bowls[k] >= 1 ? [30, 50, 30, 50, 60] : 15); sound.rattle(0.3); document.querySelectorAll('.bowl-n').forEach((n) => (n.textContent = done)); if (done === 10) { state.bowlTip = true; showTip(UI.bowlsDone, UI.bowlsDoneT, { getBoundingClientRect: () => ({ left: CX - 120, top: CY + R * 0.7 }) }); } else showTip(b.t, state.bowls[k] >= 1 ? UI.bowlFull : UI.bowlMore, { getBoundingClientRect: () => ({ left: q.x - 40, top: q.y - 10 }) }); } });
+    BOWLS.forEach((b, k) => { const q = bowlPos(k); if (Math.hypot(e.clientX - q.x, e.clientY - q.y) < 44 && state.bowls[k] < 1) { state.bowls[k] = Math.min(1, state.bowls[k] + 0.34); const done = state.bowls.filter((v) => v >= 1).length; sound.ping(done === 10 && state.bowls[k] >= 1 ? 'bowlsDone' : 'bowl'); sensor.vibrate(done === 10 && state.bowls[k] >= 1 ? [30, 50, 30, 50, 60] : 15); sound.rattle(0.3); document.querySelectorAll('.bowl-n').forEach((n) => (n.textContent = done)); if (done === 10) { state.bowlTip = true; showTip(UI.bowlsDone, UI.bowlsDoneT, { getBoundingClientRect: () => ({ left: CX - 120, top: CY + R * 0.7 }) }); } else showTip(b.t, state.bowls[k] >= 1 ? UI.bowlFull : UI.bowlMore, { getBoundingClientRect: () => ({ left: q.x - 40, top: q.y - 10 }) }); } });
   }
-  if (id === 'hunger') { const q = jarPos(); if (Math.hypot(e.clientX - q.x, e.clientY - q.y) < 60) jarShake(); }
-  if (id === 'truth') addJuly();
+  if (id === 'hunger') { const q = jarPos(); if (Math.hypot(e.clientX - q.x, e.clientY - q.y) < 60 * JAR_S()) jarShake(); }
+  if (id === 'truth' && performance.now() - (state.ptrDownAt || 0) < 450) addJuly();
+  if (id === 'demand') { addCrowd(70); sound.ping('voice'); }
   if (TOUCH && (id === 'mine' || id === 'truth')) { // 터치: 밝은 점 근처를 누르면 설명
     for (let i = 0; i < 1800; i += 14) { if (C[i] === 3 && A[i] > 0.5 && Math.hypot(e.clientX - X[i], e.clientY - Y[i]) < 24) { showTip(tr('신원이 확인된 사람'), tr('127명 가운데 한 사람입니다. 이 전시는 이름을 표시하지 않습니다.'), { getBoundingClientRect: () => ({ left: X[i] - 20, top: Y[i] }) }); break; } }
   }
@@ -807,7 +857,7 @@ document.fonts.ready.catch(() => {}).then(() => { document.querySelector('.bs-lo
 // ---------------- 모바일 전용: 센서 · 흔들기 · AR ----------------
 if (IS_MOBILE) {
   document.body.classList.add('is-mobile');
-  addEventListener('click', function once() { removeEventListener('click', once, true); sensor.enable(); }, true); // iPhone: 첫 탭에서 기울기 권한
+  addEventListener('click', function once() { if (sensor.on) { removeEventListener('click', once, true); return; } sensor.enable(); }, true); // iPhone: 탭할 때 기울기 권한 (켜질 때까지 다시 시도)
   sensor.onShake((v) => {
     const id = SCENES[cur].id;
     if (hold || id === 'boundary' || id === 'mine' || id === 'truth') return;
@@ -818,7 +868,7 @@ if (IS_MOBILE) {
   // 후 불기: 빛 장면에서 빛이 떠오름 (빛이 없으면 아래에서 새로 생김)
   document.querySelectorAll('.mic-btn').forEach((btn) => btn.addEventListener('click', async (e) => {
     e.stopPropagation();
-    try { await startMic(); btn.textContent = tr('후~ 불면 빛이 떠올라요'); btn.disabled = true; } catch (err) { btn.textContent = tr('마이크를 쓸 수 없어요'); }
+    try { await startMic(); btn.textContent = btn.dataset.on || tr('후~ 불면 빛이 떠올라요'); btn.disabled = true; } catch (err) { btn.textContent = tr('마이크를 쓸 수 없어요'); }
   }));
   sensor.onBlow((v) => {
     if (SCENES[cur].id !== 'light' || hold) return;
